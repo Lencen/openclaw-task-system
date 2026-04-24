@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>检查清单管理 - 任务系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content {
+      padding: 24px;
+    }
+    
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .tabs-bar {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+    
+    .tab-btn {
+      padding: 12px 20px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    
+    .tab-btn:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    
+    .content-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .info-table th, .info-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .info-table th {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .info-table tr:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .tag.high {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+    }
+    
+    .tag.medium {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+    }
+    
+    .tag.low {
+      background: rgba(59, 130, 246, 0.2);
+      color: var(--primary);
+    }
+    
+    .tag.success {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+    }
+    
+    .tag.warning {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+    
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+    }
+    
+    .btn-success:hover {
+      opacity: 0.9;
+    }
+    
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      margin: 16px 0;
+      overflow-x: auto;
+    }
+    
+    .flow-node {
+      padding: 8px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    
+    .flow-node.highlight {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    
+    .flow-arrow {
+      color: var(--text-secondary);
+      font-size: 20px;
+    }
+    
+    .cron-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      margin-top: 12px;
+    }
+    
+    .cron-info code {
+      background: var(--bg-secondary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    
+    .tab-pane {
+      display: none;
+      padding: 20px;
+    }
+    
+    .tab-pane.active {
+      display: block;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <span>检查清单管理</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="执行所有检查" onclick="runAllChecks()">
+            <i class="ri-play-line"></i>
+          </button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <div class="page-content">
+          <div class="tabs-bar" id="tabs-bar">
+            <button class="tab-btn active" data-tab="project">📁 项目检查</button>
+            <button class="tab-btn" data-tab="task">📋 任务检查</button>
+            <button class="tab-btn" data-tab="doc">📄 文档检查</button>
+            <button class="tab-btn" data-tab="skill">🛠️ 技能检查</button>
+            <button class="tab-btn" data-tab="knowledge">🧠 知识检查</button>
+            <button class="tab-btn" data-tab="memory">💾 记忆检查</button>
+            <button class="tab-btn" data-tab="reflection">🔄 反思检查</button>
+            <button class="tab-btn" data-tab="page">🖼️ 页面规范</button>
+          </div>
+          
+          <div class="content-card" id="checklist-content">
+            <!-- 内容由 JS 动态渲染 -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // 检查清单数据
+    const checklists = {
+      project: {
+        name: '项目检查清单',
+        description: '检查项目数据完整性、文档完整性、状态一致性',
+        checks: [
+          { id: 'proj-001', name: '项目ID格式', rule: '必须为 proj-{timestamp}-{random} 格式', severity: 'high', autoFix: false },
+          { id: 'proj-002', name: '必填字段', rule: '必须包含: id, name, status, progress, created_at', severity: 'high', autoFix: false },
+          { id: 'proj-003', name: '项目文档目录', rule: 'docs/projects/{project_id}/ 必须存在', severity: 'medium', autoFix: true },
+          { id: 'proj-004', name: '标准文档', rule: '必须包含: PRD.md, ARCHITECTURE.md, TEST-CASES.md, ACCEPTANCE.md', severity: 'medium', autoFix: true },
+          { id: 'proj-006', name: '任务关联', rule: 'tasks 数组中的任务必须存在', severity: 'high', autoFix: false },
+          { id: 'proj-007', name: '进度一致性', rule: 'progress 字段与任务完成比例一致', severity: 'low', autoFix: true },
+          { id: 'proj-009', name: 'index.json 同步', rule: '项目必须在 index.json 中存在', severity: 'high', autoFix: true }
+        ],
+        triggers: ['项目验收', '项目完成', '每30分钟定时'],
+        cronTask: { id: 'cron-project-check', schedule: '*/30 * * * *', enabled: true },
+        api: '/api/checklists/run/project'
+      },
+      task: {
+        name: '任务检查清单',
+        description: '检查任务分析完整性、拆解完整性、状态一致性',
+        checks: [
+          { id: 'task-001', name: '任务ID格式', rule: '必须为 task-{timestamp}-{random} 格式', severity: 'high', autoFix: false },
+          { id: 'task-002', name: '必填字段', rule: '必须包含: id, title, status, priority, created_at', severity: 'high', autoFix: false },
+          { id: 'task-003', name: '分析完整性', rule: 'analysis 必须包含: thought, conclusion, summary', severity: 'medium', autoFix: false },
+          { id: 'task-004', name: '拆解完整性', rule: 'breakdown.steps 每项必须包含: id, title, status', severity: 'medium', autoFix: false },
+          { id: 'task-005', name: '状态一致性', rule: 'status 与 steps 完成状态一致', severity: 'low', autoFix: true }
+        ],
+        triggers: ['任务验收', '任务完成', '每10分钟定时'],
+        cronTask: { id: 'cron-task-check', schedule: '*/10 * * * *', enabled: true },
+        api: '/api/checklists/run/task'
+      },
+      doc: {
+        name: '文档检查清单',
+        description: '检查文档命名规范、内容结构、链接有效',
+        checks: [
+          { id: 'doc-001', name: '命名规范', rule: '文档名称符合命名规范', severity: 'medium', autoFix: false },
+          { id: 'doc-002', name: '版本号', rule: '文档包含版本号', severity: 'low', autoFix: false },
+          { id: 'doc-003', name: '修订记录', rule: '文档包含修订记录', severity: 'medium', autoFix: false },
+          { id: 'doc-004', name: '链接有效', rule: '文档内链接可访问', severity: 'low', autoFix: false }
+        ],
+        triggers: ['文档创建', '文档更新', '系统检查'],
+        cronTask: null,
+        api: '/api/checklists/run/doc'
+      },
+      skill: {
+        name: '技能检查清单',
+        description: '检查技能文件结构、内容结构、可用性',
+        checks: [
+          { id: 'skill-001', name: 'SKILL.md 存在', rule: '技能目录必须包含 SKILL.md', severity: 'high', autoFix: false },
+          { id: 'skill-002', name: '描述字段', rule: 'SKILL.md 必须包含描述', severity: 'medium', autoFix: false },
+          { id: 'skill-003', name: '触发场景', rule: 'SKILL.md 必须说明触发场景', severity: 'medium', autoFix: false }
+        ],
+        triggers: ['技能创建', '技能更新', '系统检查'],
+        cronTask: null,
+        api: '/api/checklists/run/skill'
+      },
+      knowledge: {
+        name: '知识检查清单',
+        description: '检查知识目录结构、内容质量、时效性',
+        checks: [
+          { id: 'know-001', name: '目录结构', rule: '符合 HOT/WARM/COLD 三层架构', severity: 'medium', autoFix: false },
+          { id: 'know-002', name: '内容质量', rule: '知识内容完整、有价值', severity: 'low', autoFix: false }
+        ],
+        triggers: ['知识创建', '知识更新', '系统检查'],
+        cronTask: null,
+        api: '/api/checklists/run/knowledge'
+      },
+      memory: {
+        name: '记忆检查清单',
+        description: '检查记忆文件存在、内容质量、结构清晰',
+        checks: [
+          { id: 'mem-001', name: '每日记忆', rule: '当天有记忆文件', severity: 'low', autoFix: false },
+          { id: 'mem-002', name: 'EVOLUTION-LOG', rule: '进化日志存在且更新', severity: 'medium', autoFix: false }
+        ],
+        triggers: ['记忆更新', '系统检查'],
+        cronTask: null,
+        api: '/api/checklists/run/memory'
+      },
+      reflection: {
+        name: '反思检查清单',
+        description: '检查反思三段式结构、评分完整、应用状态',
+        checks: [
+          { id: 'ref-001', name: '三段式结构', rule: '包含 CONTEXT/REFLECTION/LESSON', severity: 'medium', autoFix: false },
+          { id: 'ref-002', name: '评分完整', rule: '包含 score 字段', severity: 'low', autoFix: false }
+        ],
+        triggers: ['反思创建', '系统检查'],
+        cronTask: null,
+        api: '/api/checklists/run/reflection'
+      },
+      page: {
+        name: '页面规范检查清单',
+        description: '检查页面是否符合统一框架规范',
+        checks: [
+          { id: 'page-001', name: '引入 frame.css', rule: '必须引入 css/frame.css', severity: 'high', autoFix: false },
+          { id: 'page-002', name: '引入 sidebar.css', rule: '必须引入 css/sidebar.css', severity: 'high', autoFix: false },
+          { id: 'page-003', name: '引入 sidebar.js', rule: '必须引入 js/sidebar.js', severity: 'high', autoFix: false },
+          { id: 'page-004', name: '调用 Sidebar.init()', rule: '必须调用 Sidebar.init()', severity: 'high', autoFix: false },
+          { id: 'page-005', name: '使用统一框架结构', rule: '必须包含 layout, sidebar-container, main, header, content', severity: 'high', autoFix: false },
+          { id: 'page-006', name: '禁止内联框架样式', rule: '不允许内联 .layout, .main, .header 等样式', severity: 'medium', autoFix: false },
+          { id: 'page-007', name: '禁止 iframe 侧边栏', rule: '不允许使用 frame-sidebar.html', severity: 'high', autoFix: false },
+          { id: 'page-008', name: '设置暗色主题', rule: '必须设置 data-theme="dark"', severity: 'medium', autoFix: false }
+        ],
+        triggers: ['页面创建', '页面修改', '定时检查'],
+        cronTask: { id: 'cron-page-check', schedule: '0 * * * *', enabled: true },
+        api: '/api/checklists/run/page'
+      }
+    };
+    
+    // 渲染检查清单
+    function renderChecklist(type) {
+      const data = checklists[type];
+      if (!data) return;
+      
+      const container = document.getElementById('checklist-content');
+      
+      container.innerHTML = `
+        <div class="tab-pane active">
+          <div class="section-header">
+            <div class="section-title">${data.name}</div>
+            <button class="btn btn-success" onclick="runCheck('${type}')">
+              <i class="ri-play-line"></i>
+              执行检查
+            </button>
+          </div>
+          
+          <div style="padding: 20px;">
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">${data.description}</p>
+            
+            <!-- 触发流程 -->
+            <h4 style="margin-bottom: 12px;">🔄 应用流程</h4>
+            <div class="flow-diagram">
+              ${data.triggers.map((t, i) => `
+                <div class="flow-node">${t}</div>
+                ${i < data.triggers.length - 1 ? '<span class="flow-arrow">→</span>' : ''}
+              `).join('')}
+              <span class="flow-arrow">→</span>
+              <div class="flow-node highlight">执行检查</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-node">生成报告</div>
+            </div>
+            
+            <!-- 关联定时任务 -->
+            ${data.cronTask ? `
+              <h4 style="margin-top: 24px; margin-bottom: 12px;">⏰ 关联定时任务</h4>
+              <div class="cron-info">
+                <i class="ri-time-line"></i>
+                <span><strong>${data.cronTask.id}</strong></span>
+                <code>${data.cronTask.schedule}</code>
+                <span class="tag ${data.cronTask.enabled ? 'success' : 'warning'}">${data.cronTask.enabled ? '已启用' : '已禁用'}</span>
+                <a href="cron-tasks.html" class="btn btn-sm btn-secondary">管理</a>
+              </div>
+            ` : '<p style="color: var(--text-secondary); margin-top: 16px;">暂无关联定时任务</p>'}
+            
+            <!-- 检查项列表 -->
+            <h4 style="margin-top: 24px; margin-bottom: 12px;">📋 检查项详情</h4>
+            <table class="info-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>检查项</th>
+                  <th>规则</th>
+                  <th>严重程度</th>
+                  <th>自动修复</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.checks.map(c => `
+                  <tr>
+                    <td><code>${c.id}</code></td>
+                    <td><strong>${c.name}</strong></td>
+                    <td style="color: var(--text-secondary);">${c.rule}</td>
+                    <td><span class="tag ${c.severity}">${getSeverityLabel(c.severity)}</span></td>
+                    <td>${c.autoFix ? '<span class="tag success">✓ 支持</span>' : '<span style="color: var(--text-secondary);">-</span>'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            
+            <!-- 操作按钮 -->
+            <div style="margin-top: 24px; display: flex; gap: 12px;">
+              <button class="btn btn-primary" onclick="runCheck('${type}')">
+                <i class="ri-play-line"></i>
+                执行检查
+              </button>
+              <a href="check-records.html" class="btn btn-secondary">
+                <i class="ri-file-list-line"></i>
+                查看检查记录
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 执行检查
+    async function runCheck(type) {
+      const data = checklists[type];
+      if (!data) return;
+      
+      const btn = event.target.closest('button');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="ri-loader-line"></i> 执行中...';
+      btn.disabled = true;
+      
+      try {
+        const res = await fetch(data.api, { method: 'POST' });
+        const result = await res.json();
+        
+        if (result.success) {
+          alert(`检查完成！\n通过: ${result.passed || 0}\n失败: ${result.failed || 0}`);
+        } else {
+          alert('执行失败: ' + result.error);
+        }
+      } catch (error) {
+        alert('执行失败: ' + error.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+    
+    // 执行所有检查
+    async function runAllChecks() {
+      const types = Object.keys(checklists);
+      let passed = 0, failed = 0;
+      
+      for (const type of types) {
+        try {
+          const res = await fetch(checklists[type].api, { method: 'POST' });
+          const result = await res.json();
+          if (result.success) {
+            passed += result.passed || 0;
+            failed += result.failed || 0;
+          }
+        } catch (e) {}
+      }
+      
+      alert(`所有检查完成！\n通过: ${passed}\n失败: ${failed}`);
+    }
+    
+    // 获取严重程度标签
+    function getSeverityLabel(severity) {
+      const labels = { high: '高', medium: '中', low: '低' };
+      return labels[severity] || severity;
+    }
+    
+    // Tab 切换
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderChecklist(btn.dataset.tab);
+      });
+    });
+    
+    // 初始化
+    renderChecklist('project');
+  </script>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'checklists' });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

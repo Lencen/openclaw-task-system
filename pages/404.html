@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - 页面未找到</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+    }
+    
+    .container {
+      text-align: center;
+      padding: 40px;
+    }
+    
+    .error-code {
+      font-size: 120px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #10b981, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 24px;
+    }
+    
+    .error-title {
+      font-size: 28px;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    
+    .error-message {
+      font-size: 16px;
+      color: #888;
+      margin-bottom: 32px;
+      max-width: 400px;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e0e0e0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .illustration {
+      font-size: 80px;
+      margin-bottom: 24px;
+    }
+    
+    .suggestions {
+      margin-top: 40px;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .suggestions h3 {
+      font-size: 14px;
+      color: #10b981;
+      margin-bottom: 12px;
+    }
+    
+    .suggestions ul {
+      list-style: none;
+      font-size: 14px;
+    }
+    
+    .suggestions li {
+      padding: 8px 0;
+      color: #888;
+    }
+    
+    .suggestions a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+    
+    .suggestions a:hover {
+      text-decoration: underline;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="container">
+    <div class="illustration">🔍</div>
+    <div class="error-code">404</div>
+    <h1 class="error-title">页面未找到</h1>
+    <p class="error-message">
+      抱歉，您访问的页面不存在或已被移动。请检查 URL 是否正确，或返回首页继续浏览。
+    </p>
+    
+    <div class="actions">
+      <a href="/" class="btn btn-primary">🏠 返回首页</a>
+      <a href="javascript:history.back()" class="btn btn-secondary">← 返回上一页</a>
+    </div>
+    
+    <div class="suggestions">
+      <h3>💡 您可能在寻找：</h3>
+      <ul>
+        <li>📋 <a href="tasks-kanban.html">任务看板</a></li>
+        <li>📁 <a href="projects.html">项目管理</a></li>
+        <li>📚 <a href="knowledge-library.html">知识库</a></li>
+        <li>⚙️ <a href="automation-guide.html">自动化机制</a></li>
+        <li>🎓 <a href="learning-mechanism.html">学习机制</a></li>
+      </ul>
+    </div>
+  </div>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

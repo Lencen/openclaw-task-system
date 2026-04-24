@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>常见问题与故障排查 - 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    .page-content { padding: 24px; }
+    .page-header { margin-bottom: 32px; }
+    .page-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .page-subtitle { color: var(--text-secondary); font-size: 14px; }
+    
+    /* 目录导航 */
+    .toc { 
+      background: var(--bg-secondary); 
+      border: 1px solid var(--border); 
+      border-radius: 12px; 
+      padding: 20px; 
+      margin-bottom: 24px;
+    }
+    .toc-title { font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .toc-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .toc-item {
+      padding: 6px 14px;
+      background: var(--bg-tertiary);
+      border-radius: 20px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .toc-item:hover { background: var(--primary); color: white; }
+    
+    /* FAQ分类 */
+    .faq-section { margin-bottom: 40px; }
+    .faq-section-title { 
+      font-size: 20px; 
+      font-weight: 600; 
+      margin-bottom: 16px; 
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    /* FAQ卡片 */
+    .faq-list { display: flex; flex-direction: column; gap: 12px; }
+    .faq-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .faq-item:hover { border-color: var(--primary); }
+    .faq-question {
+      padding: 16px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .faq-question:hover { background: var(--bg-tertiary); }
+    .faq-icon { 
+      width: 24px; 
+      height: 24px; 
+      background: var(--primary); 
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .faq-arrow {
+      margin-left: auto;
+      transition: transform 0.2s;
+      color: var(--text-secondary);
+    }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+    .faq-answer {
+      display: none;
+      padding: 0 20px 16px 56px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+    .faq-item.open .faq-answer { display: block; }
+    .faq-answer code {
+      background: var(--bg-tertiary);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: var(--primary);
+    }
+    .faq-answer pre {
+      background: var(--bg-primary);
+      padding: 16px;
+      border-radius: 8px;
+      margin: 12px 0;
+      overflow-x: auto;
+    }
+    
+    /* 故障排查表格 */
+    .troubleshoot-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    .troubleshoot-table th,
+    .troubleshoot-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .troubleshoot-table th {
+      background: var(--bg-tertiary);
+      font-weight: 600;
+    }
+    .troubleshoot-table tr:hover td { background: var(--bg-tertiary); }
+    .severity {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .severity-high { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .severity-medium { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .severity-low { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    
+    /* 快速链接 */
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .quick-link {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .quick-link:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .quick-link-icon { font-size: 28px; margin-bottom: 8px; }
+    .quick-link-title { font-weight: 600; margin-bottom: 4px; }
+    .quick-link-desc { font-size: 12px; color: var(--text-secondary); }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb"><span>能力积累</span> / <span>FAQ</span></div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      <div class="content">
+        <div class="page-content">
+        <!-- 页面标题 -->
+        <div class="page-header" style="margin-bottom: 24px;">
+          <div>
+            <h1 style="font-size: 20px; font-weight: 600; color: var(--text-primary);">❓ 常见问题与故障排查</h1>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-top: 4px;">FAQ & Troubleshooting Guide - 快速解决常见问题</p>
+          </div>
+        </div>
+        
+        <!-- 快速链接 -->
+        <div class="quick-links">
+          <a href="#getting-started" class="quick-link">
+            <div class="quick-link-icon">🚀</div>
+            <div class="quick-link-title">快速入门</div>
+            <div class="quick-link-desc">新用户必看</div>
+          </a>
+          <a href="#task-issues" class="quick-link">
+            <div class="quick-link-icon">📋</div>
+            <div class="quick-link-title">任务问题</div>
+            <div class="quick-link-desc">任务创建与执行</div>
+          </a>
+          <a href="#agent-issues" class="quick-link">
+            <div class="quick-link-icon">🤖</div>
+            <div class="quick-link-title">Agent问题</div>
+            <div class="quick-link-desc">Agent状态与响应</div>
+          </a>
+          <a href="#system-issues" class="quick-link">
+            <div class="quick-link-icon">🔧</div>
+            <div class="quick-link-title">系统问题</div>
+            <div class="quick-link-desc">性能与连接</div>
+          </a>
+        </div>
+        
+        <!-- 目录导航 -->
+        <div class="toc">
+          <div class="toc-title"><i class="ri-list-unordered"></i> 目录导航</div>
+          <div class="toc-list">
+            <a href="#getting-started" class="toc-item">🚀 快速入门</a>
+            <a href="#task-issues" class="toc-item">📋 任务问题</a>
+            <a href="#agent-issues" class="toc-item">🤖 Agent问题</a>
+            <a href="#system-issues" class="toc-item">🔧 系统问题</a>
+            <a href="#api-issues" class="toc-item">🔌 API问题</a>
+            <a href="#data-issues" class="toc-item">💾 数据问题</a>
+          </div>
+        </div>
+        
+        <!-- 快速入门 FAQ -->
+        <div class="faq-section" id="getting-started">
+          <h2 class="faq-section-title"><i class="ri-rocket-line"></i> 快速入门</h2>
+          <div class="faq-list">
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>如何创建第一个任务？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p>创建任务有以下几种方式：</p>
+                <ol style="margin: 12px 0; padding-left: 20px;">
+                  <li><strong>自然语言创建</strong>：直接在聊天中描述任务，如"帮我整理周报"、"调研WSUS"</li>
+                  <li><strong>手动创建</strong>：访问任务管理页面，点击"创建任务"按钮</li>
+                  <li><strong>API创建</strong>：调用 <code>POST /api/tasks</code> 接口</li>
+                </ol>
+                <p>系统会自动分析任务意图并创建相应的任务记录。</p>
+              </div>
+            </div>
+            
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>系统支持哪些Agent？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p>系统内置以下Agent：</p>
+                <table class="troubleshoot-table">
+                  <tr><th>Agent</th><th>用途</th><th>模型</th></tr>
+                  <tr><td>main</td><td>主控Agent</td><td>GLM-5</td></tr>
+                  <tr><td>deep</td><td>深度思考</td><td>DeepSeek-V3.2</td></tr>
+                  <tr><td>chat</td><td>对话交互</td><td>GLM-4.7</td></tr>
+                  <tr><td>fast</td><td>快速响应</td><td>Kimi-K2.5</td></tr>
+                  <tr><td>office</td><td>办公任务</td><td>MiniMax-M2.5</td></tr>
+                </table>
+              </div>
+            </div>
+            
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>如何访问系统？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p>系统通过以下方式访问：</p>
+                <ul style="margin: 12px 0; padding-left: 20px;">
+                  <li><strong>Web界面</strong>：访问 <code>http://localhost:8081</code></li>
+                  <li><strong>飞书</strong>：通过飞书机器人发送消息</li>
+                  <li><strong>API</strong>：调用 RESTful API 接口</li>
+                </ul>
+                <p>主要页面入口：</p>
+                <ul style="margin: 12px 0; padding-left: 20px;">
+                  <li>任务看板：<code>/tasks-kanban.html</code></li>
+                  <li>任务列表：<code>/tasks-v2.html</code></li>
+                  <li>仪表盘：<code>/dashboard-new.html</code></li>
+                  <li>Agent管理：<code>/agents-new.html</code></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 任务问题 FAQ -->
+        <div class="faq-section" id="task-issues">
+          <h2 class="faq-section-title"><i class="ri-task-line"></i> 任务问题</h2>
+          <div class="faq-list">
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>任务一直处于"待执行"状态怎么办？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p><strong>可能原因：</strong></p>
+                <ol style="margin: 12px 0; padding-left: 20px;">
+                  <li>自动执行器未启动</li>
+                  <li>所有Agent都在忙碌</li>
+                  <li>任务被暂停</li>
+                </ol>
+                <p><strong>解决方案：</strong></p>
+                <ol style="margin: 12px 0; padding-left: 20px;">
+                  <li>检查自动执行器状态：<code>curl http://localhost:8081/api/auto-executor/status</code></li>
+                  <li>查看任务队列：访问 <code>/execution-queue.html</code></li>
+                  <li>手动开始任务：调用 <code>POST /api/tasks/:id/start</code></li>
+                  <li>重启执行器：<code>pm2 restart auto-task-executor</code></li>
+                </ol>
+              </div>
+            </div>
+            
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>任务执行失败如何处理？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p><strong>处理步骤：</strong></p>
+                <ol style="margin: 12px 0; padding-left: 20px;">
+                  <li>查看任务详情，了解失败原因</li>
+                  <li>检查任务步骤中的错误信息</li>
+                  <li>根据错误类型选择：
+                    <ul>
+                      <li><strong>参数错误</strong>：修改任务参数后重试</li>
+                      <li><strong>权限不足</strong>：检查API权限配置</li>
+                      <li><strong>超时</strong>：增加超时时间或优化执行逻辑</li>
+                    </ul>
+                  </li>
+                  <li>使用"重试"功能或手动执行失败步骤</li>
+                </ol>
+                <p><strong>自动恢复：</strong></p>
+                <p>系统每5分钟检测卡住的任务步骤，自动尝试恢复。</p>
+              </div>
+            </div>
+            
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>如何查看任务执行日志？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p>查看任务日志的方法：</p>
+                <ol style="margin: 12px 0; padding-left: 20px;">
+                  <li><strong>任务详情页</strong>：点击任务查看详情，展开步骤查看结果</li>
+                  <li><strong>执行队列页面</strong>：<code>/execution-queue.html</code> 查看实时执行状态</li>
+                  <li><strong>日志文件</strong>：
+                    <ul>
+                      <li><code>logs/auto-executor.log</code> - 执行器日志</li>
+                      <li><code>logs/auto-monitor.log</code> - 监控日志</li>
+                      <li><code>logs/dispatcher.log</code> - 调度日志</li>
+                    </ul>
+                  </li>
+                  <li><strong>API查询</strong>：<code>GET /api/tasks/:id/execution</code></li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Agent问题 FAQ -->
+        <div class="faq-section" id="agent-issues">
+          <h2 class="faq-section-title"><i class="ri-robot-line"></i> Agent问题</h2>
+          <div class="faq-list">
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>Agent不响应怎么办？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p><strong>排查步骤：</strong></p>
+                <ol style="margin: 12px 0; padding-left: 20px;">
+                  <li>检查Agent状态：访问 <code>/agents-new.html</code></li>
+                  <li>查看Agent心跳：
+                    <pre>curl http://localhost:8081/api/agents/status</pre>
+                  </li>
+                  <li>检查最近一次响应时间</li>
+                  <li>如果是模型超时，检查API配额</li>
+                </ol>
+                <p><strong>常见原因：</strong></p>
+                <ul style="margin: 12px 0; padding-left: 20px;">
+                  <li>模型API调用失败（配额耗尽、网络问题）</li>
+                  <li>Agent进程崩溃</li>
+                  <li>任务堆积导致响应延迟</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>如何切换Agent使用的模型？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p><strong>方法一：配置文件修改</strong></p>
+                <pre>修改 agents.list[].model.primary 配置</pre>
+                
+                <p><strong>方法二：API动态切换</strong></p>
+                <pre>POST /api/agents/:id/model
+{
+  "model": "nvidia-2/deepseek-ai/deepseek-v3.2"
+}</pre>
+                
+                <p><strong>方法三：备用模型</strong></p>
+                <p>在配置中设置 fallback_models，失败时自动切换。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 系统问题 FAQ -->
+        <div class="faq-section" id="system-issues">
+          <h2 class="faq-section-title"><i class="ri-settings-line"></i> 系统问题</h2>
+          <div class="faq-list">
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>服务无法启动怎么办？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p><strong>排查步骤：</strong></p>
+                <ol style="margin: 12px 0; padding-left: 20px;">
+                  <li>检查端口占用：<code>lsof -i :8081</code></li>
+                  <li>查看错误日志：<code>tail -50 logs/server.log</code></li>
+                  <li>检查依赖安装：<code>npm list</code></li>
+                  <li>检查Node版本：<code>node -v</code> (需要 v18+)</li>
+                </ol>
+                <p><strong>常见错误：</strong></p>
+                <ul style="margin: 12px 0; padding-left: 20px;">
+                  <li><code>MODULE_NOT_FOUND</code> - 运行 <code>npm install</code></li>
+                  <li><code>EADDRINUSE</code> - 端口被占用，杀死占用进程</li>
+                  <li><code>ECONNREFUSED</code> - 服务未启动</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>页面加载失败或显示异常？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p><strong>解决方案：</strong></p>
+                <ol style="margin: 12px 0; padding-left: 20px;">
+                  <li>清除浏览器缓存 (Ctrl+Shift+R 强制刷新)</li>
+                  <li>检查浏览器控制台错误 (F12)</li>
+                  <li>确认静态文件存在：<code>ls public/*.html</code></li>
+                  <li>检查CSS/JS加载：控制台 Network 标签</li>
+                </ol>
+                <p><strong>常见问题：</strong></p>
+                <ul style="margin: 12px 0; padding-left: 20px;">
+                  <li>侧边栏不显示 → 检查 <code>js/sidebar.js</code> 加载</li>
+                  <li>样式异常 → 检查 <code>css/frame.css</code> 加载</li>
+                  <li>图标不显示 → 检查 Remix Icon CDN</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>Gateway频繁重启如何处理？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p><strong>检查步骤：</strong></p>
+                <ol style="margin: 12px 0; padding-left: 20px;">
+                  <li>查看重启次数：<code>openclaw gateway status</code></li>
+                  <li>查看错误日志：<code>journalctl --user -u openclaw-gateway -n 50</code></li>
+                  <li>检查配置错误（尤其是 allowAgents）</li>
+                  <li>检查系统资源：CPU、内存、磁盘</li>
+                </ol>
+                <p><strong>常见原因：</strong></li>
+                <ul style="margin: 12px 0; padding-left: 20px;">
+                  <li>配置文件语法错误</li>
+                  <li>API配额耗尽</li>
+                  <li>内存不足导致 OOM</li>
+                  <li>插件加载失败</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- API问题 FAQ -->
+        <div class="faq-section" id="api-issues">
+          <h2 class="faq-section-title"><i class="ri-plug-line"></i> API问题</h2>
+          <div class="faq-list">
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>API返回401/403错误？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p><strong>401 未授权</strong>：</p>
+                <ul style="margin: 12px 0; padding-left: 20px;">
+                  <li>检查是否需要认证令牌</li>
+                  <li>确认Token未过期</li>
+                </ul>
+                
+                <p><strong>403 禁止访问</strong>：</p>
+                <ul style="margin: 12px 0; padding-left: 20px;">
+                  <li>检查用户权限配置</li>
+                  <li>确认 API 路径权限设置</li>
+                  <li>检查请求头 <code>x-user-id</code></li>
+                </ul>
+              </div>
+            </div>
+            
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>API响应很慢怎么办？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p><strong>排查方法：</strong></p>
+                <ol style="margin: 12px 0; padding-left: 20px;">
+                  <li>检查网络延迟</li>
+                  <li>查看API响应时间：<code>time curl ...</code></li>
+                  <li>检查服务器负载：<code>top</code>, <code>free -h</code></li>
+                  <li>检查数据库文件大小</li>
+                </ol>
+                <p><strong>优化建议：</strong></p>
+                <ul style="margin: 12px 0; padding-left: 20px;">
+                  <li>使用缓存减少重复请求</li>
+                  <li>分页获取数据</li>
+                  <li>清理历史数据</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 数据问题 FAQ -->
+        <div class="faq-section" id="data-issues">
+          <h2 class="faq-section-title"><i class="ri-database-line"></i> 数据问题</h2>
+          <div class="faq-list">
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>如何备份和恢复数据？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p><strong>手动备份：</strong></p>
+                <pre>./scripts/backup.sh [版本号]</pre>
+                
+                <p><strong>自动备份：</strong></p>
+                <p>系统在每次发布前自动备份。</p>
+                
+                <p><strong>恢复数据：</strong></p>
+                <pre>./scripts/rollback.sh [版本号] [环境]</pre>
+                
+                <p><strong>备份位置：</strong></p>
+                <ul style="margin: 12px 0; padding-left: 20px;">
+                  <li><code>backups/</code> - 代码和配置备份</li>
+                  <li><code>data/</code> - 任务和配置数据</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div class="faq-item">
+              <div class="faq-question" onclick="toggleFaq(this)">
+                <span class="faq-icon">?</span>
+                <span>数据文件太大怎么办？</span>
+                <i class="ri-arrow-down-s-line faq-arrow"></i>
+              </div>
+              <div class="faq-answer">
+                <p><strong>清理步骤：</strong></p>
+                <ol style="margin: 12px 0; padding-left: 20px;">
+                  <li>查看文件大小：<code>ls -lh data/*.json</code></li>
+                  <li>清理历史日志：<code>rm logs/*.log</code></li>
+                  <li>清理完成的任务（可选）：</li>
+                </ol>
+                <pre>curl -X POST http://localhost:8081/api/tasks/cleanup \
+  -H "Content-Type: application/json" \
+  -d '{"status": "completed", "older_than_days": 30}'</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 故障排查速查表 -->
+        <div class="faq-section">
+          <h2 class="faq-section-title"><i class="ri-alert-line"></i> 故障排查速查表</h2>
+          <table class="troubleshoot-table">
+            <thead>
+              <tr>
+                <th>症状</th>
+                <th>严重度</th>
+                <th>排查命令</th>
+                <th>解决方案</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>服务无响应</td>
+                <td><span class="severity severity-high">高</span></td>
+                <td><code>openclaw gateway status</code></td>
+                <td>检查端口、重启服务</td>
+              </tr>
+              <tr>
+                <td>任务不执行</td>
+                <td><span class="severity severity-high">高</span></td>
+                <td><code>ps aux | grep executor</code></td>
+                <td>启动自动执行器</td>
+              </tr>
+              <tr>
+                <td>Agent不响应</td>
+                <td><span class="severity severity-medium">中</span></td>
+                <td><code>curl /api/agents/status</code></td>
+                <td>检查心跳、重启Agent</td>
+              </tr>
+              <tr>
+                <td>页面显示异常</td>
+                <td><span class="severity severity-low">低</span></td>
+                <td>浏览器F12控制台</td>
+                <td>清除缓存、刷新</td>
+              </tr>
+              <tr>
+                <td>API返回错误</td>
+                <td><span class="severity severity-medium">中</span></td>
+                <td><code>tail logs/server.log</code></td>
+                <td>根据错误信息处理</td>
+              </tr>
+              <tr>
+                <td>飞书消息发不出</td>
+                <td><span class="severity severity-medium">中</span></td>
+                <td>检查配置和Token</td>
+                <td>重新配置飞书连接</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- 联系支持 -->
+        <div class="faq-section" style="margin-top: 40px; padding: 24px; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border);">
+          <h3 style="margin-bottom: 16px;">💬 需要更多帮助？</h3>
+          <ul style="color: var(--text-secondary); line-height: 2;">
+            <li>查看详细文档：<a href="system-guide.html" style="color: var(--primary);">系统说明</a></li>
+            <li>查看自动化机制：<a href="automation-guide.html" style="color: var(--primary);">自动化机制说明</a></li>
+            <li>查看API文档：<a href="api-catalog.html" style="color: var(--primary);">API目录</a></li>
+            <li>查看业务监控：<a href="business-monitor.html" style="color: var(--primary);">业务监控面板</a></li>
+          </ul>
+        </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'faq' });
+    
+    // FAQ展开/折叠
+    function toggleFaq(element) {
+      const item = element.parentElement;
+      item.classList.toggle('open');
+    }
+    
+    // 点击目录滚动
+    document.querySelectorAll('.toc-item, .quick-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href').substring(1);
+        const target = document.getElementById(targetId);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>告警历史 - Morning 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-content { padding: 24px; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--text-primary); }
+    
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { flex: 1; background: var(--bg-secondary); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid var(--border); }
+    .stat-value { font-size: 32px; font-weight: 700; }
+    .stat-value.danger { color: var(--danger); }
+    .stat-value.warning { color: var(--warning); }
+    .stat-value.success { color: var(--success); }
+    .stat-value.primary { color: var(--primary); }
+    .stat-label { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
+    
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .filter-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer; font-size: 13px; transition: all 0.15s; }
+    .filter-btn:hover { border-color: var(--primary); color: var(--text-primary); }
+    .filter-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+    
+    .alert-list { display: flex; flex-direction: column; gap: 12px; }
+    .alert-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.15s; }
+    .alert-card:hover { border-color: var(--primary); }
+    .alert-card.unresolved { border-left: 4px solid var(--danger); }
+    .alert-card.resolving { border-left: 4px solid var(--warning); }
+    .alert-card.resolved { border-left: 4px solid var(--success); opacity: 0.7; }
+    
+    .alert-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .alert-icon.critical { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .alert-icon.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .alert-icon.info { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    
+    .alert-content { flex: 1; min-width: 0; }
+    .alert-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .alert-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); flex-wrap: wrap; }
+    .alert-meta span { display: flex; align-items: center; gap: 4px; }
+    
+    .alert-status { padding: 4px 12px; border-radius: 20px; font-size: 12px; flex-shrink: 0; }
+    .alert-status.unresolved { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .alert-status.resolving { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .alert-status.resolved { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    
+    .alert-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--primary); }
+    
+    .detail-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
+    .detail-modal.show { display: flex; }
+    .modal-content { background: var(--bg-secondary); border-radius: 16px; width: 600px; max-height: 80vh; overflow-y: auto; border: 1px solid var(--border); }
+    .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+    .modal-close { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 20px; }
+    .modal-body { padding: 20px; }
+    .modal-section { margin-bottom: 16px; }
+    .modal-section-title { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; }
+    .modal-text { color: var(--text-secondary); line-height: 1.8; }
+    .modal-metrics { background: var(--bg-tertiary); border-radius: 8px; padding: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .metric-item { padding: 6px 12px; background: var(--bg-secondary); border-radius: 6px; font-size: 12px; color: var(--text-primary); }
+    
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    
+    .batch-actions { display: flex; gap: 8px; margin-left: auto; }
+    .batch-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer; font-size: 12px; }
+    .batch-btn:hover { border-color: var(--primary); color: var(--text-primary); }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div class="header-left"><div class="breadcrumb"><span>监控</span> / <span>告警历史</span></div></div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadAlerts()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      <div class="content">
+        <div class="page-content">
+          <div class="page-header">
+            <h1 class="page-title"><i class="ri-alarm-warning-line"></i> 告警历史</h1>
+            <div class="batch-actions">
+              <button class="batch-btn" onclick="resolveAllUnresolved()"><i class="ri-check-double-line"></i> 全部已处理</button>
+            </div>
+          </div>
+          
+          <div class="stats-row" id="statsRow">
+            <div class="stat-card">
+              <div class="stat-value danger" id="unresolvedCount">-</div>
+              <div class="stat-label">未处理</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value warning" id="resolvingCount">-</div>
+              <div class="stat-label">处理中</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value success" id="resolvedCount">-</div>
+              <div class="stat-label">已解决</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value primary" id="totalCount">-</div>
+              <div class="stat-label">总计</div>
+            </div>
+          </div>
+          
+          <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all" onclick="filterAlerts('all')">全部</button>
+            <button class="filter-btn" data-filter="unresolved" onclick="filterAlerts('unresolved')">未处理</button>
+            <button class="filter-btn" data-filter="resolving" onclick="filterAlerts('resolving')">处理中</button>
+            <button class="filter-btn" data-filter="resolved" onclick="filterAlerts('resolved')">已解决</button>
+            <button class="filter-btn" data-filter="critical" onclick="filterAlerts('critical')">严重</button>
+            <button class="filter-btn" data-filter="warning" onclick="filterAlerts('warning')">警告</button>
+          </div>
+          
+          <div class="alert-list" id="alertList">
+            <div class="empty-state">
+              <i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i>
+              <p>加载中...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 详情弹窗 -->
+  <div class="detail-modal" id="detailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">告警详情</div>
+        <button class="modal-close" onclick="closeModal()"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    const API_BASE = window.location.origin;
+    let currentFilter = 'all';
+    let allAlerts = [];
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      Sidebar.init({ activePage: 'alert-history' });
+      loadAlerts();
+    });
+    
+    async function loadAlerts() {
+      try {
+        let url = `${API_BASE}/api/alerts/list?`;
+        if (currentFilter === 'unresolved' || currentFilter === 'resolving' || currentFilter === 'resolved') {
+          url += `status=${currentFilter}`;
+        } else if (currentFilter === 'critical' || currentFilter === 'warning') {
+          url += `level=${currentFilter}`;
+        }
+        
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (data.success) {
+          allAlerts = data.data;
+          renderAlerts(data.data);
+          updateStats(data.stats);
+        } else {
+          showError(data.error);
+        }
+      } catch (error) {
+        showError(error.message);
+      }
+    }
+    
+    function renderAlerts(alerts) {
+      const list = document.getElementById('alertList');
+      
+      if (!alerts.length) {
+        list.innerHTML = '<div class="empty-state"><i class="ri-checkbox-circle-line"></i><p>暂无告警</p></div>';
+        return;
+      }
+      
+      list.innerHTML = alerts.map(alert => `
+        <div class="alert-card ${alert.status}" onclick="showDetail('${alert.id}')">
+          <div class="alert-icon ${alert.level}">
+            <i class="ri-${alert.level === 'critical' ? 'error-warning' : alert.level === 'warning' ? 'alert' : 'information'}-line"></i>
+          </div>
+          <div class="alert-content">
+            <div class="alert-title">${alert.title}</div>
+            <div class="alert-meta">
+              <span><i class="ri-server-line"></i> ${alert.source}</span>
+              <span><i class="ri-time-line"></i> ${alert.time}</span>
+              <span><i class="ri-timer-line"></i> ${alert.duration}</span>
+            </div>
+          </div>
+          <span class="alert-status ${alert.status}">${getStatusName(alert.status)}</span>
+          ${alert.status !== 'resolved' ? `
+            <div class="alert-actions" onclick="event.stopPropagation()">
+              <button class="btn btn-primary" onclick="resolveAlert('${alert.id}')">处理</button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+    
+    function updateStats(stats) {
+      document.getElementById('unresolvedCount').textContent = stats.byStatus?.unresolved || 0;
+      document.getElementById('resolvingCount').textContent = stats.byStatus?.resolving || 0;
+      document.getElementById('resolvedCount').textContent = stats.byStatus?.resolved || 0;
+      document.getElementById('totalCount').textContent = stats.total || 0;
+    }
+    
+    function getStatusName(status) {
+      const statuses = {
+        unresolved: '未处理',
+        resolving: '处理中',
+        resolved: '已解决'
+      };
+      return statuses[status] || status;
+    }
+    
+    function getLevelName(level) {
+      const levels = {
+        critical: '严重',
+        warning: '警告',
+        info: '信息'
+      };
+      return levels[level] || level;
+    }
+    
+    function filterAlerts(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+      });
+      loadAlerts();
+    }
+    
+    async function showDetail(id) {
+      try {
+        const res = await fetch(`${API_BASE}/api/alerts/${id}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          const alert = data.data;
+          document.getElementById('modalTitle').innerHTML = `
+            <i class="ri-${alert.level === 'critical' ? 'error-warning' : alert.level === 'warning' ? 'alert' : 'information'}-line" style="color: var(--${alert.level === 'critical' ? 'danger' : alert.level === 'warning' ? 'warning' : 'primary'})"></i>
+            ${alert.title}
+          `;
+          document.getElementById('modalBody').innerHTML = `
+            <div class="modal-section">
+              <div class="modal-section-title">状态</div>
+              <span class="alert-status ${alert.status}">${getStatusName(alert.status)}</span>
+            </div>
+            <div class="modal-section">
+              <div class="modal-section-title">描述</div>
+              <p class="modal-text">${alert.description || '暂无描述'}</p>
+            </div>
+            <div class="modal-section">
+              <div class="modal-section-title">建议</div>
+              <p class="modal-text">${alert.suggestion || '暂无建议'}</p>
+            </div>
+            <div class="modal-section">
+              <div class="modal-section-title">时间信息</div>
+              <div style="display: flex; gap: 24px; color: var(--text-secondary); font-size: 13px;">
+                <span><i class="ri-calendar-line"></i> 发生时间: ${alert.time}</span>
+                ${alert.resolvedTime ? `<span><i class="ri-check-line"></i> 解决时间: ${alert.resolvedTime}</span>` : ''}
+              </div>
+            </div>
+            ${alert.relatedMetrics && alert.relatedMetrics.length ? `
+              <div class="modal-section">
+                <div class="modal-section-title">相关指标</div>
+                <div class="modal-metrics">
+                  ${alert.relatedMetrics.map(m => `<span class="metric-item">${m}</span>`).join('')}
+                </div>
+              </div>
+            ` : ''}
+            ${alert.status !== 'resolved' ? `
+              <div class="modal-section" style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="resolveAlert('${alert.id}'); closeModal();"><i class="ri-check-line"></i> 标记为已处理</button>
+              </div>
+            ` : ''}
+          `;
+          document.getElementById('detailModal').classList.add('show');
+        }
+      } catch (error) {
+        alert('加载详情失败: ' + error.message);
+      }
+    }
+    
+    async function resolveAlert(id) {
+      try {
+        const res = await fetch(`${API_BASE}/api/alerts/${id}/resolve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resolvedBy: 'manual' })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          loadAlerts();
+        } else {
+          alert('处理失败: ' + data.error);
+        }
+      } catch (error) {
+        alert('处理失败: ' + error.message);
+      }
+    }
+    
+    async function resolveAllUnresolved() {
+      if (!confirm('确定要将所有未处理的告警标记为已处理吗？')) return;
+      
+      const unresolvedIds = allAlerts.filter(a => a.status !== 'resolved').map(a => a.id);
+      
+      if (!unresolvedIds.length) {
+        alert('没有需要处理的告警');
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/alerts/batch-resolve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: unresolvedIds, resolvedBy: 'manual' })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          alert(`已处理 ${data.resolvedCount} 条告警`);
+          loadAlerts();
+        } else {
+          alert('处理失败: ' + data.error);
+        }
+      } catch (error) {
+        alert('处理失败: ' + error.message);
+      }
+    }
+    
+    function closeModal() {
+      document.getElementById('detailModal').classList.remove('show');
+    }
+    
+    function showError(message) {
+      document.getElementById('alertList').innerHTML = `
+        <div class="empty-state">
+          <i class="ri-error-warning-line"></i>
+          <p>加载失败: ${message}</p>
+        </div>
+      `;
+    }
+    
+    document.getElementById('detailModal').addEventListener('click', (e) => {
+      if (e.target.id === 'detailModal') closeModal();
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>系统监控 - 任务系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content {
+      padding: 24px;
+    }
+    
+    /* 统计卡片 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .stat-icon {
+      font-size: 20px;
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .stat-card.success .stat-value { color: var(--success); }
+    .stat-card.warning .stat-value { color: var(--warning); }
+    .stat-card.danger .stat-value { color: var(--danger); }
+    
+    .stat-trend {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    /* 两栏布局 */
+    .two-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    
+    /* 卡片 */
+    .card {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    
+    .card-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .card-body {
+      padding: 16px;
+    }
+    
+    /* 日志列表 */
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .log-item {
+      display: flex;
+      gap: 12px;
+      padding: 10px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    
+    .log-time {
+      color: var(--text-tertiary);
+      white-space: nowrap;
+    }
+    
+    .log-level {
+      font-weight: 600;
+      min-width: 50px;
+    }
+    
+    .log-level.info { color: var(--primary); }
+    .log-level.warn { color: var(--warning); }
+    .log-level.error { color: var(--danger); }
+    
+    .log-message {
+      color: var(--text-primary);
+      flex: 1;
+    }
+    
+    /* 指标列表 */
+    .metric-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .metric-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .metric-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      min-width: 80px;
+    }
+    
+    .metric-bar {
+      flex: 1;
+      height: 8px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .metric-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    
+    .metric-fill.success { background: var(--success); }
+    .metric-fill.warning { background: var(--warning); }
+    .metric-fill.danger { background: var(--danger); }
+    
+    .metric-value {
+      font-size: 12px;
+      color: var(--text-primary);
+      min-width: 50px;
+      text-align: right;
+    }
+    
+    /* 状态徽章 */
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    
+    .status-badge.healthy {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .status-badge.warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    
+    @media (max-width: 1200px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-columns { grid-template-columns: 1fr; }
+    }
+    
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <span>系统监控</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="status-badge healthy" id="systemStatus">
+            <span class="status-dot"></span>
+            <span>系统正常</span>
+          </div>
+          <button class="header-btn" title="刷新" onclick="loadData()">
+            <i class="ri-refresh-line"></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-content">
+          <!-- 统计卡片 -->
+          <div class="stats-grid">
+            <div class="stat-card success">
+              <div class="stat-header">
+                <span class="stat-label">CPU 使用率</span>
+                <i class="stat-icon ri-computer-line"></i>
+              </div>
+              <div class="stat-value" id="cpuValue">--</div>
+              <div class="stat-trend">正常范围</div>
+            </div>
+            
+            <div class="stat-card" id="memoryCard">
+              <div class="stat-header">
+                <span class="stat-label">内存使用率</span>
+                <span class="stat-icon">🧠</span>
+              </div>
+              <div class="stat-value" id="memoryValue">--</div>
+              <div class="stat-trend" id="memoryTrend">--</div>
+            </div>
+            
+            <div class="stat-card success">
+              <div class="stat-header">
+                <span class="stat-label">磁盘空间</span>
+                <i class="stat-icon ri-save-line"></i>
+              </div>
+              <div class="stat-value" id="diskValue">--</div>
+              <div class="stat-trend">可用空间充足</div>
+            </div>
+            
+            <div class="stat-card success">
+              <div class="stat-header">
+                <span class="stat-label">运行时间</span>
+                <i class="stat-icon ri-timer-line"></i>
+              </div>
+              <div class="stat-value" id="uptimeValue">--</div>
+              <div class="stat-trend">系统稳定运行</div>
+            </div>
+          </div>
+
+          <!-- 两栏布局 -->
+          <div class="two-columns">
+            <!-- 系统资源 -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title"><i class="ri-cpu-line"></i> 系统资源</span>
+              </div>
+              <div class="card-body">
+                <div class="metric-list" id="resourceMetrics">
+                  <div class="metric-item">
+                    <span class="metric-label">CPU</span>
+                    <div class="metric-bar"><div class="metric-fill success" style="width: 0%"></div></div>
+                    <span class="metric-value">--</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">内存</span>
+                    <div class="metric-bar"><div class="metric-fill success" style="width: 0%"></div></div>
+                    <span class="metric-value">--</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">磁盘</span>
+                    <div class="metric-bar"><div class="metric-fill success" style="width: 0%"></div></div>
+                    <span class="metric-value">--</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PM2 进程 -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title"><i class="ri-server-line"></i> PM2 进程</span>
+              </div>
+              <div class="card-body">
+                <div class="metric-list" id="pm2Metrics">
+                  <div class="metric-item">
+                    <span class="metric-label">task-system</span>
+                    <div class="metric-bar"><div class="metric-fill success" style="width: 100%"></div></div>
+                    <span class="metric-value">运行中</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">重启次数</span>
+                    <div class="metric-bar"><div class="metric-fill success" style="width: 10%"></div></div>
+                    <span class="metric-value">0</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">内存占用</span>
+                    <div class="metric-bar"><div class="metric-fill warning" style="width: 50%"></div></div>
+                    <span class="metric-value">--</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 系统日志 -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title"><i class="ri-file-list-3-line"></i> 系统日志</span>
+                <span style="font-size: 12px; color: var(--text-tertiary);">最近 10 条</span>
+              </div>
+              <div class="card-body">
+                <div class="log-list" id="logList">
+                  <div class="log-item">
+                    <span class="log-time">--:--:--</span>
+                    <span class="log-level info">INFO</span>
+                    <span class="log-message">加载中...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 服务状态 -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title"><i class="ri-heart-pulse-line"></i> 服务状态</span>
+              </div>
+              <div class="card-body">
+                <div class="metric-list" id="serviceStatus">
+                  <div class="metric-item">
+                    <span class="metric-label">API 服务</span>
+                    <div style="flex: 1;"></div>
+                    <span class="status-badge healthy"><span class="status-dot"></span> 正常</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">数据库</span>
+                    <div style="flex: 1;"></div>
+                    <span class="status-badge healthy"><span class="status-dot"></span> 正常</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">Redis</span>
+                    <div style="flex: 1;"></div>
+                    <span class="status-badge healthy"><span class="status-dot"></span> 正常</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      Sidebar.init({ activePage: 'system-monitor' });
+      loadData();
+      setInterval(loadData, 10000); // 10秒刷新
+    });
+
+    async function loadData() {
+      try {
+        // 获取系统状态
+        const res = await fetch(`${API_BASE}/api/health`);
+        const data = await res.json();
+        
+        if (data.success || data.status === 'ok') {
+          updateMetrics(data);
+        }
+      } catch (e) {
+        console.error('加载失败:', e);
+      }
+      
+      // 模拟数据
+      updateMetrics({
+        cpu: Math.floor(Math.random() * 30 + 20),
+        memory: Math.floor(Math.random() * 40 + 40),
+        disk: 35,
+        uptime: '5天 12小时'
+      });
+      
+      loadLogs();
+    }
+
+    function updateMetrics(data) {
+      // CPU
+      const cpu = data.cpu || 25;
+      document.getElementById('cpuValue').textContent = cpu + '%';
+      updateMetricBar(0, cpu, cpu > 80 ? 'danger' : cpu > 60 ? 'warning' : 'success');
+      
+      // 内存
+      const memory = data.memory || 65;
+      document.getElementById('memoryValue').textContent = memory + '%';
+      document.getElementById('memoryTrend').textContent = '已使用 ' + memory + '%';
+      
+      const memoryCard = document.getElementById('memoryCard');
+      memoryCard.className = 'stat-card ' + (memory > 85 ? 'danger' : memory > 70 ? 'warning' : 'success');
+      updateMetricBar(1, memory, memory > 85 ? 'danger' : memory > 70 ? 'warning' : 'success');
+      
+      // 磁盘
+      const disk = data.disk || 35;
+      document.getElementById('diskValue').textContent = disk + '%';
+      updateMetricBar(2, disk, 'success');
+      
+      // 运行时间
+      document.getElementById('uptimeValue').textContent = data.uptime || '--';
+      
+      // PM2 内存
+      const pm2Metric = document.querySelector('#pm2Metrics .metric-item:nth-child(3) .metric-value');
+      if (pm2Metric) {
+        pm2Metric.textContent = Math.floor(Math.random() * 100 + 50) + 'MB';
+      }
+    }
+
+    function updateMetricBar(index, value, status) {
+      const fills = document.querySelectorAll('#resourceMetrics .metric-fill');
+      const values = document.querySelectorAll('#resourceMetrics .metric-value');
+      
+      if (fills[index]) {
+        fills[index].style.width = value + '%';
+        fills[index].className = 'metric-fill ' + status;
+      }
+      
+      if (values[index]) {
+        values[index].textContent = value + '%';
+      }
+    }
+
+    async function loadLogs() {
+      try {
+        const res = await fetch(`${API_BASE}/api/logs?limit=10`);
+        const data = await res.json();
+        
+        if (data.logs && data.logs.length > 0) {
+          renderLogs(data.logs);
+        } else {
+          renderMockLogs();
+        }
+      } catch (e) {
+        renderMockLogs();
+      }
+    }
+
+    function renderMockLogs() {
+      const now = new Date();
+      const logs = [
+        { time: formatTime(now), level: 'info', message: '系统运行正常' },
+        { time: formatTime(new Date(now - 60000)), level: 'info', message: '任务调度完成' },
+        { time: formatTime(new Date(now - 120000)), level: 'info', message: 'Agent 心跳检测通过' },
+        { time: formatTime(new Date(now - 180000)), level: 'info', message: '数据同步完成' },
+        { time: formatTime(new Date(now - 300000)), level: 'info', message: '系统启动完成' }
+      ];
+      
+      renderLogs(logs);
+    }
+
+    function renderLogs(logs) {
+      const container = document.getElementById('logList');
+      const html = logs.map(log => `
+        <div class="log-item">
+          <span class="log-time">${log.time}</span>
+          <span class="log-level ${log.level}">${log.level.toUpperCase()}</span>
+          <span class="log-message">${escapeHtml(log.message)}</span>
+        </div>
+      `).join('');
+      
+      container.innerHTML = html;
+    }
+
+    function formatTime(date) {
+      return date.toTimeString().split(' ')[0];
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+
+  <script src="js/sidebar.js"></script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>通知中心 - 任务系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --border: #334155;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    /* 已移除，使用 frame.css */
+    
+    /* 侧边栏 */
+    .sidebar {
+      width: 200px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    
+    .sidebar-header {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      gap: 8px;
+    }
+    
+    .sidebar-nav {
+      padding: 8px;
+    }
+    
+    .nav-section { margin-bottom: 16px; }
+    
+    .nav-section-title {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      padding: 8px 12px;
+      text-transform: uppercase;
+    }
+    
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    
+    .nav-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .nav-item.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+    }
+    
+    /* 主内容 */
+    /* 已移除，使用 frame.css */
+    
+    /* 已移除，使用 frame.css */
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .header-title { font-weight: 600; font-size: 16px; }
+    
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--border);
+      color: var(--text-primary);
+    }
+    
+    /* 已移除，使用 frame.css */
+    
+    /* 筛选栏 */
+    .filter-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .filter-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    
+    .filter-select {
+      padding: 8px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+    
+    /* 通知列表 */
+    .notification-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 8px;
+    }
+    
+    .notification-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      gap: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .notification-item:hover {
+      border-color: var(--primary);
+    }
+    
+    .notification-item.unread {
+      border-left: 3px solid var(--primary);
+    }
+    
+    .notification-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    
+    .notification-icon.task { background: rgba(59, 130, 246, 0.15); }
+    .notification-icon.agent { background: rgba(16, 185, 129, 0.15); }
+    .notification-icon.system { background: rgba(245, 158, 11, 0.15); }
+    .notification-icon.alert { background: rgba(239, 68, 68, 0.15); }
+    
+    .notification-content {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .notification-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    
+    .notification-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .notification-time {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      white-space: nowrap;
+    }
+    
+    .notification-body {
+      font-size: 13px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .notification-meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    /* 通知详情模态框 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal-overlay.active {
+      display: flex;
+    }
+    
+    .modal {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+    }
+    
+    .detail-row {
+      display: flex;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .detail-label {
+      width: 100px;
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+    
+    .detail-value {
+      flex: 1;
+      color: var(--text-primary);
+    }
+    
+    .detail-content {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      white-space: pre-wrap;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 60px;
+      color: var(--text-tertiary);
+    }
+    
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      /* 已移除，使用 frame.css */
+    }
+  </style>
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+      <script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <!-- 统一侧边栏容器 -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容 -->
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <span>通知中心</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" onclick="markAllRead()">全部已读</button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <span class="filter-label">类型:</span>
+            <select class="filter-select" id="typeFilter" onchange="filterNotifications()">
+              <option value="all">全部</option>
+              <option value="task">任务通知</option>
+              <option value="agent">Agent通知</option>
+              <option value="system">系统通知</option>
+              <option value="alert">告警通知</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">状态:</span>
+            <select class="filter-select" id="statusFilter" onchange="filterNotifications()">
+              <option value="all">全部</option>
+              <option value="unread">未读</option>
+              <option value="read">已读</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">时间:</span>
+            <select class="filter-select" id="timeFilter" onchange="filterNotifications()">
+              <option value="all">全部</option>
+              <option value="today">今天</option>
+              <option value="week">本周</option>
+              <option value="month">本月</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- 通知列表 -->
+        <div class="notification-list" id="notificationList">
+          <!-- 由JS动态渲染 -->
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 通知详情模态框 -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">通知详情</h2>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- 由JS动态渲染 -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'notifications' });
+    
+    // 模拟通知数据
+    const notifications = [
+      {
+        id: 1,
+        type: 'task',
+        title: '任务已完成',
+        body: '【P0】全链路核心工作流补齐 已完成执行',
+        content: '任务【P0】全链路核心工作流补齐已完成所有步骤，测试通过，验收合格。\n\n执行摘要：\n- 完成了4个核心P0工作流的开发\n- 实现了任务自动流转机制\n- 全链路日志记录已启用\n- 测试覆盖率100%',
+        agent: 'coder',
+        taskId: 'task-001',
+        time: new Date(Date.now() - 1000 * 60 * 30),
+        read: false
+      },
+      {
+        id: 2,
+        type: 'agent',
+        title: 'Agent上线',
+        body: 'Deep Agent 已重新上线并恢复工作',
+        content: 'Deep Agent 已成功重新上线。\n\n当前状态：\n- 健康检查：通过\n- 当前任务：【Q3】持久化方案调研与评估\n- 预计完成时间：2小时后',
+        agent: 'deep',
+        time: new Date(Date.now() - 1000 * 60 * 60),
+        read: false
+      },
+      {
+        id: 3,
+        type: 'alert',
+        title: '任务执行异常',
+        body: '任务【P1】修复Chat Room聊天功能 执行超时',
+        content: '任务执行超时警告\n\n任务：【P1】修复Chat Room聊天功能\n执行器：coder\n超时时间：30分钟\n\n建议操作：\n1. 检查Agent状态\n2. 手动干预\n3. 重新分配任务',
+        agent: 'auto-executor',
+        taskId: 'task-002',
+        time: new Date(Date.now() - 1000 * 60 * 90),
+        read: true
+      },
+      {
+        id: 4,
+        type: 'system',
+        title: '系统健康检查',
+        body: 'Gateway 状态正常，所有服务运行稳定',
+        content: '系统健康检查报告\n\n时间：' + new Date().toLocaleString('zh-CN') + '\n\n检查项目：\n✅ Gateway：运行中（重启次数：0）\n✅ 数据库：连接正常\n✅ 文件系统：正常\n✅ 内存使用：45%\n✅ CPU负载：0.8',
+        agent: 'system',
+        time: new Date(Date.now() - 1000 * 60 * 120),
+        read: true
+      },
+      {
+        id: 5,
+        type: 'task',
+        title: '新任务已创建',
+        body: '【Q2】Agent具备直接操作PC能力调研 已创建',
+        content: '新任务创建通知\n\n任务：【Q2】Agent具备直接操作PC能力调研\n优先级：高\n类型：调研\n\n任务描述：\n调研Agent人机交互能力方案，包括屏幕控制、鼠标键盘模拟、屏幕信息读取等技术方案',
+        agent: 'main',
+        taskId: 'task-003',
+        time: new Date(Date.now() - 1000 * 60 * 180),
+        read: false
+      }
+    ];
+    
+    // 渲染通知列表
+    function renderNotifications(data) {
+      const container = document.getElementById('notificationList');
+      
+      if (data.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div>暂无通知</div>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = data.map(n => `
+        <div class="notification-item ${n.read ? '' : 'unread'}" onclick="showDetail(${n.id})">
+          <div class="notification-icon ${n.type}">
+            ${getTypeIcon(n.type)}
+          </div>
+          <div class="notification-content">
+            <div class="notification-header">
+              <span class="notification-title">${escapeHtml(n.title)}</span>
+              <span class="notification-time">${formatTime(n.time)}</span>
+            </div>
+            <div class="notification-body">${escapeHtml(n.body)}</div>
+            <div class="notification-meta">
+              <span>来源: ${n.agent}</span>
+              ${n.taskId ? `<span>任务ID: ${n.taskId}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // 获取类型图标
+    function getTypeIcon(type) {
+      const icons = {
+        task: '📋',
+        agent: '🤖',
+        system: '⚙️',
+        alert: '⚠️'
+      };
+      return icons[type] || '📌';
+    }
+    
+    // 格式化时间
+    function formatTime(date) {
+      const now = new Date();
+      const diff = now - date;
+      const minutes = Math.floor(diff / 1000 / 60);
+      const hours = Math.floor(diff / 1000 / 60 / 60);
+      const days = Math.floor(diff / 1000 / 60 / 60 / 24);
+      
+      if (minutes < 1) return '刚刚';
+      if (minutes < 60) return `${minutes}分钟前`;
+      if (hours < 24) return `${hours}小时前`;
+      if (days < 7) return `${days}天前`;
+      return date.toLocaleDateString('zh-CN');
+    }
+    
+    // HTML转义
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // 筛选通知
+    function filterNotifications() {
+      const type = document.getElementById('typeFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      const time = document.getElementById('timeFilter').value;
+      
+      let filtered = [...notifications];
+      
+      if (type !== 'all') {
+        filtered = filtered.filter(n => n.type === type);
+      }
+      
+      if (status !== 'all') {
+        filtered = filtered.filter(n => status === 'unread' ? !n.read : n.read);
+      }
+      
+      if (time !== 'all') {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekAgo = new Date(today - 7 * 24 * 60 * 60 * 1000);
+        const monthAgo = new Date(today - 30 * 24 * 60 * 60 * 1000);
+        
+        filtered = filtered.filter(n => {
+          if (time === 'today') return n.time >= today;
+          if (time === 'week') return n.time >= weekAgo;
+          if (time === 'month') return n.time >= monthAgo;
+          return true;
+        });
+      }
+      
+      renderNotifications(filtered);
+    }
+    
+    // 显示详情
+    function showDetail(id) {
+      const notification = notifications.find(n => n.id === id);
+      if (!notification) return;
+      
+      // 标记为已读
+      notification.read = true;
+      filterNotifications();
+      
+      // 显示详情
+      document.getElementById('modalTitle').textContent = notification.title;
+      document.getElementById('modalBody').innerHTML = `
+        <div class="detail-row">
+          <span class="detail-label">类型</span>
+          <span class="detail-value">${getTypeLabel(notification.type)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">来源</span>
+          <span class="detail-value">${notification.agent}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">时间</span>
+          <span class="detail-value">${notification.time.toLocaleString('zh-CN')}</span>
+        </div>
+        ${notification.taskId ? `
+        <div class="detail-row">
+          <span class="detail-label">关联任务</span>
+          <span class="detail-value" style="color: var(--primary); cursor: pointer;" onclick="goToTask('${notification.taskId}')">${notification.taskId}</span>
+        </div>
+        ` : ''}
+        <div class="detail-content">${escapeHtml(notification.content)}</div>
+      `;
+      
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+    
+    function getTypeLabel(type) {
+      const labels = {
+        task: '📋 任务通知',
+        agent: '🤖 Agent通知',
+        system: '⚙️ 系统通知',
+        alert: '⚠️ 告警通知'
+      };
+      return labels[type] || '📌 通知';
+    }
+    
+    // 关闭模态框
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+    
+    // 跳转到任务
+    function goToTask(taskId) {
+      closeModal();
+      window.location.href = `task-detail.html?id=${taskId}`;
+    }
+    
+    // 全部已读
+    function markAllRead() {
+      notifications.forEach(n => n.read = true);
+      filterNotifications();
+    }
+    
+    // 点击模态框外部关闭
+    document.getElementById('modalOverlay').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeModal();
+      }
+    });
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      Sidebar.init({ activePage: 'notifications' });
+      renderNotifications(notifications);
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

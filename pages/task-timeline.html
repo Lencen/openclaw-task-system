@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务时间线 - Morning Task System</title>
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/tips.css">
+  <style>
+    .timeline-header { padding: 24px; border-bottom: 1px solid var(--border); }
+    .timeline-title { font-size: 24px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+    .timeline-subtitle { color: var(--text-secondary); }
+    
+    .timeline-content { padding: 24px; }
+    .timeline { position: relative; padding-left: 32px; }
+    .timeline::before { content: ''; position: absolute; left: 12px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+    
+    .timeline-item { position: relative; margin-bottom: 24px; }
+    .timeline-item::before { content: ''; position: absolute; left: -24px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); border: 2px solid var(--bg-primary); }
+    .timeline-item.pending::before { background: var(--warning); }
+    .timeline-item.assigned::before { background: var(--primary); }
+    .timeline-item.doing::before { background: var(--primary); }
+    .timeline-item.done::before { background: var(--success); }
+    .timeline-item.failed::before { background: var(--danger); }
+    
+    .timeline-time { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+    .timeline-desc { font-size: 14px; color: var(--text-primary); }
+    .timeline-icon { margin-right: 8px; }
+    
+    .current-status { background: var(--bg-secondary); border-radius: 8px; padding: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+    .status-info { display: flex; align-items: center; gap: 16px; }
+    .status-badge { padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 500; }
+    .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .status-assigned { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+    .status-doing { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+    .status-done { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .status-failed { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <h1>任务时间线</h1>
+      </header>
+      <div class="content">
+        <div id="timeline-container">
+          <div class="loading">加载中...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script src="js/tips.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'tasks' });
+    TipsComponent.init('task-timeline');
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const taskId = urlParams.get('id');
+    
+    if (!taskId) {
+      document.getElementById('timeline-container').innerHTML = '<div class="error">缺少任务 ID</div>';
+    } else {
+      loadTimeline(taskId);
+    }
+    
+    async function loadTimeline(id) {
+      try {
+        const response = await fetch(`/api/tasks/${id}/timeline`);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          renderTimeline(result.data);
+        } else {
+          document.getElementById('timeline-container').innerHTML = `<div class="error">加载失败</div>`;
+        }
+      } catch (err) {
+        document.getElementById('timeline-container').innerHTML = `<div class="error">加载失败: ${err.message}</div>`;
+      }
+    }
+    
+    function renderTimeline(data) {
+      const { task, timeline, currentStatus, agent } = data;
+      const statusClass = `status-${currentStatus}`;
+      
+      let html = `
+        <div class="timeline-header">
+          <div class="timeline-title">${task.title}</div>
+          <div class="timeline-subtitle">任务 ID: ${task.id}</div>
+        </div>
+        
+        <div class="timeline-content">
+          <div class="current-status">
+            <div class="status-info">
+              <span class="status-badge ${statusClass}">${currentStatus}</span>
+              ${agent ? `<span>执行者: ${agent}</span>` : ''}
+            </div>
+            <a href="task-detail.html?id=${task.id}" style="color: var(--primary);">查看详情</a>
+          </div>
+          
+          <div class="timeline">
+      `;
+      
+      for (const item of timeline) {
+        html += `
+          <div class="timeline-item ${item.status}">
+            <div class="timeline-time">${formatTime(item.timestamp)}</div>
+            <div class="timeline-desc"><span class="timeline-icon">${item.icon}</span>${item.description}</div>
+            ${item.sessionKey ? `<div class="timeline-time" style="margin-top: 4px;">Session: ${item.sessionKey}</div>` : ''}
+          </div>
+        `;
+      }
+      
+      html += `
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('timeline-container').innerHTML = html;
+    }
+    
+    function formatTime(timestamp) {
+      if (!timestamp) return '-';
+      const date = new Date(timestamp);
+      return date.toLocaleString('zh-CN', { 
+        month: '2-digit', day: '2-digit', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit' 
+      });
+    }
+  </script>
+</body>
+</html>

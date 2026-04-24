@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>反思系统 - 任务管理系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    
+    /* Tab 切换 */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: var(--bg-secondary);
+      padding: 4px;
+      border-radius: 12px;
+      width: fit-content;
+    }
+    
+    .tab-btn {
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+    
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+    
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* 统计卡片 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .stat-card .value {
+      font-size: 2em;
+      font-weight: 600;
+    }
+    
+    .stat-card .value.danger { color: var(--danger); }
+    .stat-card .value.warning { color: var(--warning); }
+    .stat-card .value.success { color: var(--success); }
+    .stat-card .value.primary { color: var(--primary); }
+    
+    .stat-card .label {
+      color: var(--text-secondary);
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+    
+    .stat-card .trend {
+      font-size: 0.8em;
+      margin-top: 4px;
+    }
+    
+    .stat-card .trend.up { color: var(--danger); }
+    .stat-card .trend.down { color: var(--success); }
+    
+    /* 图表区域 */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    
+    @media (max-width: 1000px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .chart-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    
+    .chart-card h3 {
+      color: var(--text-primary);
+      font-size: 1em;
+      margin-bottom: 16px;
+    }
+    
+    .chart-container {
+      height: 200px;
+    }
+    
+    /* 总结卡片 */
+    .summary-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    
+    .summary-card h3 {
+      color: var(--primary);
+      font-size: 1em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .summary-version {
+      color: var(--text-secondary);
+      font-size: 0.85em;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .summary-content {
+      color: var(--text-primary);
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+    
+    /* 问题列表 */
+    .issue-list {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .issue-item {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    
+    .issue-item:last-child {
+      border-bottom: none;
+    }
+    
+    .issue-item:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .issue-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    
+    .issue-title {
+      color: var(--text-primary);
+      font-weight: 500;
+      flex: 1;
+    }
+    
+    .issue-type {
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.75em;
+      font-weight: 500;
+    }
+    
+    .issue-type.bug { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    .issue-type.config { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .issue-type.process { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+    .issue-type.performance { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+    .issue-type.security { background: rgba(220, 38, 38, 0.2); color: #dc2626; }
+    
+    .issue-meta {
+      display: flex;
+      gap: 16px;
+      color: var(--text-secondary);
+      font-size: 0.85em;
+    }
+    
+    .issue-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .issue-status.resolved { color: var(--success); }
+    .issue-status.open { color: var(--warning); }
+    .issue-status.recurring { color: var(--danger); }
+    
+    /* 模态框 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal-overlay.show {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 80vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.1em;
+      color: var(--text-primary);
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    
+    .detail-section {
+      margin-bottom: 20px;
+    }
+    
+    .detail-section h4 {
+      color: var(--primary);
+      font-size: 0.95em;
+      margin-bottom: 8px;
+    }
+    
+    .detail-section p {
+      color: var(--text-primary);
+      line-height: 1.6;
+      margin: 0;
+      background: var(--bg-secondary);
+      padding: 12px;
+      border-radius: 8px;
+    }
+    
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .detail-item {
+      background: var(--bg-secondary);
+      padding: 12px;
+      border-radius: 8px;
+    }
+    
+    .detail-item .label {
+      color: var(--text-secondary);
+      font-size: 0.85em;
+      margin-bottom: 4px;
+    }
+    
+    .detail-item .value {
+      color: var(--text-primary);
+    }
+    
+    /* 筛选栏 */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .filter-select {
+      padding: 8px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    /* 区块标题 */
+    .section-title {
+      font-size: 1.1em;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .section {
+      margin-bottom: 24px;
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+    
+    /* 问题环节统计 */
+    .weakness-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .weakness-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .weakness-item:last-child {
+      border-bottom: none;
+    }
+    
+    .weakness-rank {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--danger);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .weakness-rank.rank-1 { background: var(--danger); }
+    .weakness-rank.rank-2 { background: var(--warning); }
+    .weakness-rank.rank-3 { background: #f59e0b; }
+    
+    .weakness-info {
+      flex: 1;
+    }
+    
+    .weakness-name {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    
+    .weakness-count {
+      color: var(--text-secondary);
+      font-size: 0.85em;
+    }
+    
+    .weakness-bar {
+      width: 100px;
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .weakness-bar-fill {
+      height: 100%;
+      background: var(--danger);
+      border-radius: 3px;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <h1 class="header-title">🔮 反思系统</h1>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadAll()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <!-- Tab 切换 -->
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="switchTab('stats')">📊 统计与总结</button>
+          <button class="tab-btn" onclick="switchTab('issues')">📋 问题列表</button>
+          <button class="tab-btn" onclick="switchTab('reflections')">💭 任务反思</button>
+        </div>
+        
+        <!-- Tab 1: 统计与总结 -->
+        <div id="tab-stats" class="tab-content active">
+          <!-- 统计卡片 -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="value danger" id="totalIssues">-</div>
+              <div class="label">总问题数</div>
+            </div>
+            <div class="stat-card">
+              <div class="value success" id="resolvedCount">-</div>
+              <div class="label">已解决</div>
+            </div>
+            <div class="stat-card">
+              <div class="value warning" id="recurringCount">-</div>
+              <div class="label">反复出现</div>
+              <div class="trend up" id="recurringTrend"></div>
+            </div>
+            <div class="stat-card">
+              <div class="value primary" id="improvementCount">-</div>
+              <div class="label">改进沉淀</div>
+            </div>
+          </div>
+          
+          <!-- 图表区域 -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <h3>问题类型分布</h3>
+              <div class="chart-container">
+                <canvas id="typeChart"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <h3>问题趋势（近30天）</h3>
+              <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 薄弱环节 -->
+          <div class="section">
+            <h2 class="section-title">⚠️ 薄弱环节分析</h2>
+            <div class="summary-card">
+              <h3>最容易出问题的环节</h3>
+              <ul class="weakness-list" id="weaknessList">
+                <li class="weakness-item">
+                  <span class="weakness-rank rank-1">1</span>
+                  <div class="weakness-info">
+                    <div class="weakness-name">配置管理</div>
+                    <div class="weakness-count">15 次问题 · 3 次反复出现</div>
+                  </div>
+                  <div class="weakness-bar"><div class="weakness-bar-fill" style="width: 75%"></div></div>
+                </li>
+                <li class="weakness-item">
+                  <span class="weakness-rank rank-2">2</span>
+                  <div class="weakness-info">
+                    <div class="weakness-name">Gateway 服务</div>
+                    <div class="weakness-count">10 次问题 · 5 次反复出现</div>
+                  </div>
+                  <div class="weakness-bar"><div class="weakness-bar-fill" style="width: 50%"></div></div>
+                </li>
+                <li class="weakness-item">
+                  <span class="weakness-rank rank-3">3</span>
+                  <div class="weakness-info">
+                    <div class="weakness-name">记忆系统</div>
+                    <div class="weakness-count">6 次问题 · 1 次反复出现</div>
+                  </div>
+                  <div class="weakness-bar"><div class="weakness-bar-fill" style="width: 30%"></div></div>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <!-- 总结 -->
+          <div class="section">
+            <h2 class="section-title">📝 阶段性总结</h2>
+            <div class="summary-card">
+              <h3>最新总结 <span id="summaryVersion" style="font-weight: normal; color: var(--text-secondary);"></span></h3>
+              <div class="summary-version">更新时间: <span id="summaryUpdateTime">-</span></div>
+              <div id="summaryContent" class="summary-content">
+                加载中...
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tab 2: 问题列表 -->
+        <div id="tab-issues" class="tab-content">
+          <!-- 筛选栏 -->
+          <div class="filter-bar">
+            <select class="filter-select" id="filterType" onchange="filterIssues()">
+              <option value="">全部类型</option>
+              <option value="bug">缺陷</option>
+              <option value="config">配置</option>
+              <option value="process">流程</option>
+              <option value="performance">性能</option>
+              <option value="integration">集成</option>
+              <option value="security">安全</option>
+              <option value="ui">界面</option>
+              <option value="data">数据</option>
+            </select>
+            <select class="filter-select" id="filterStatus" onchange="filterIssues()">
+              <option value="">全部状态</option>
+              <option value="open">待处理</option>
+              <option value="in_progress">处理中</option>
+              <option value="resolved">已解决</option>
+            </select>
+            <select class="filter-select" id="filterTime" onchange="filterIssues()">
+              <option value="">全部时间</option>
+              <option value="7">近7天</option>
+              <option value="30">近30天</option>
+              <option value="90">近3个月</option>
+            </select>
+            <button class="btn btn-primary" onclick="window.location.href='issues.html'">📋 完整问题管理</button>
+          </div>
+          
+          <!-- 问题列表 -->
+          <div class="issue-list" id="issueList">
+            <div class="empty-state">加载中...</div>
+          </div>
+        </div>
+        
+        <!-- Tab 3: 任务反思 -->
+        <div id="tab-reflections" class="tab-content">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="value primary" id="reflTotal">0</div>
+              <div class="label">反思记录总数</div>
+            </div>
+            <div class="stat-card">
+              <div class="value success" id="reflAvgScore">0</div>
+              <div class="label">平均评分</div>
+            </div>
+            <div class="stat-card">
+              <div class="value" style="color: var(--success);" id="reflApplied">0</div>
+              <div class="label">已应用</div>
+            </div>
+            <div class="stat-card">
+              <div class="value warning" id="reflPending">0</div>
+              <div class="label">待应用</div>
+            </div>
+          </div>
+          
+          <!-- 过滤器 -->
+          <div class="filter-bar" style="display: flex; gap: 12px; margin-bottom: 16px; align-items: center;">
+            <select class="filter-select" id="reflFilterApplied" onchange="filterReflections()">
+              <option value="">全部状态</option>
+              <option value="true">已应用</option>
+              <option value="false">待应用</option>
+            </select>
+            <select class="filter-select" id="reflFilterScore" onchange="filterReflections()">
+              <option value="">全部评分</option>
+              <option value="8">8分及以上</option>
+              <option value="6">6分及以上</option>
+              <option value="4">4分以下</option>
+            </select>
+          </div>
+          
+          <!-- 反思列表 -->
+          <div class="reflection-list" id="reflectionList">
+            <div class="empty-state">加载中...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 详情模态框 -->
+  <div id="issueModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">问题详情</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        加载中...
+      </div>
+    </div>
+  </div>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script src="assets/js/chart.min.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'reflection-dashboard' });
+  </script>
+  
+  <!-- 页面逻辑 -->
+  <script>
+    const API_BASE = '/api/reflection';
+    let allIssues = [];
+    let charts = {};
+    
+    // Tab 切换
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+    
+    // 加载统计数据
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API_BASE}/stats`);
+        const data = await res.json();
+        
+        if (data.success) {
+          document.getElementById('totalIssues').textContent = data.stats.total || 0;
+          document.getElementById('resolvedCount').textContent = data.stats.resolved || 0;
+          document.getElementById('recurringCount').textContent = data.stats.recurring || 0;
+          document.getElementById('improvementCount').textContent = data.stats.improvements || 0;
+          
+          if (data.stats.recurringTrend > 0) {
+            document.getElementById('recurringTrend').textContent = `↑ ${data.stats.recurringTrend}`;
+          }
+        }
+      } catch (e) {
+        console.error('加载统计失败:', e);
+      }
+    }
+    
+    // 加载问题列表
+    async function loadIssues() {
+      try {
+        // 使用新的问题管理 API
+        const res = await fetch('/api/issues');
+        const data = await res.json();
+        
+        if (data.success) {
+          allIssues = data.issues || [];
+          renderIssues(allIssues);
+          updateIssueStats(data.stats);
+        }
+      } catch (e) {
+        console.error('加载问题列表失败:', e);
+        document.getElementById('issueList').innerHTML = '<div class="empty-state">加载失败</div>';
+      }
+    }
+    
+    // 更新问题统计显示
+    function updateIssueStats(stats) {
+      // 如果有统计显示区域，更新它们
+      if (stats) {
+        console.log('[Reflection] 问题统计:', stats);
+      }
+    }
+    
+    // 渲染问题列表
+    function renderIssues(issues) {
+      if (issues.length === 0) {
+        document.getElementById('issueList').innerHTML = '<div class="empty-state">暂无问题记录</div>';
+        return;
+      }
+      
+      const html = issues.map(issue => `
+        <div class="issue-item" onclick="showIssueDetail('${issue.id}')">
+          <div class="issue-header">
+            <span class="issue-title">${issue.title}</span>
+            <span class="issue-type ${issue.type}">${getTypeName(issue.type)}</span>
+          </div>
+          <div class="issue-meta">
+            <span>${issue.createdAt ? new Date(issue.createdAt).toLocaleDateString() : '未知时间'}</span>
+            <span class="issue-status ${issue.status}">${getStatusName(issue.status)}</span>
+            ${issue.recurring ? '<span class="issue-status recurring">⚠️ 反复出现 ' + issue.recurringCount + ' 次</span>' : ''}
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('issueList').innerHTML = html;
+    }
+    
+    // 筛选问题
+    function filterIssues() {
+      const type = document.getElementById('filterType').value;
+      const status = document.getElementById('filterStatus').value;
+      const days = parseInt(document.getElementById('filterTime').value) || 0;
+      
+      let filtered = allIssues;
+      
+      if (type) {
+        filtered = filtered.filter(i => i.type === type);
+      }
+      
+      if (status) {
+        filtered = filtered.filter(i => i.status === status);
+      }
+      
+      if (days > 0) {
+        const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+        filtered = filtered.filter(i => new Date(i.time || i.date).getTime() > cutoff);
+      }
+      
+      renderIssues(filtered);
+    }
+    
+    // 显示问题详情
+    async function showIssueDetail(issueId) {
+      const issue = allIssues.find(i => i.id === issueId);
+      if (!issue) return;
+      
+      document.getElementById('modalTitle').textContent = issue.title;
+      
+      const html = `
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="label">问题类型</div>
+            <div class="value">${getTypeName(issue.type)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="label">发现时间</div>
+            <div class="value">${issue.time || issue.date}</div>
+          </div>
+          <div class="detail-item">
+            <div class="label">状态</div>
+            <div class="value">${getStatusName(issue.status)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="label">出现次数</div>
+            <div class="value">${issue.recurringCount || 1} 次</div>
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <h4>📌 背景</h4>
+          <p>${issue.background || '暂无记录'}</p>
+        </div>
+        
+        <div class="detail-section">
+          <h4>🔍 原因</h4>
+          <p>${issue.reason || '暂无记录'}</p>
+        </div>
+        
+        <div class="detail-section">
+          <h4>✅ 解决方式</h4>
+          <p>${issue.solution || '暂无记录'}</p>
+        </div>
+        
+        <div class="detail-section">
+          <h4>💡 反思与提升</h4>
+          <p>${issue.reflection || '暂无记录'}</p>
+        </div>
+        
+        ${issue.recurring ? `
+        <div class="detail-section">
+          <h4>⚠️ 反复出现原因</h4>
+          <p>${issue.recurringReason || '暂未分析'}</p>
+        </div>
+        ` : ''}
+      `;
+      
+      document.getElementById('modalBody').innerHTML = html;
+      document.getElementById('issueModal').classList.add('show');
+    }
+    
+    // 关闭模态框
+    function closeModal() {
+      document.getElementById('issueModal').classList.remove('show');
+    }
+    
+    // 获取类型名称
+    function getTypeName(type) {
+      const types = {
+        bug: '缺陷',
+        config: '配置',
+        process: '流程',
+        performance: '性能',
+        security: '安全',
+        integration: '集成',
+        ui: '界面',
+        data: '数据'
+      };
+      return types[type] || type;
+    }
+    
+    // 获取状态名称
+    function getStatusName(status) {
+      const statuses = {
+        resolved: '✅ 已解决',
+        open: '🔴 待处理',
+        in_progress: '🟡 处理中',
+        recurring: '🔄 反复出现'
+      };
+      return statuses[status] || status;
+    }
+    
+    // 加载总结
+    async function loadSummary() {
+      try {
+        const res = await fetch(`${API_BASE}/summary`);
+        const data = await res.json();
+        
+        if (data.success && data.summary) {
+          document.getElementById('summaryVersion').textContent = 'v' + (data.summary.version || '1.0');
+          document.getElementById('summaryUpdateTime').textContent = data.summary.updateTime || '-';
+          document.getElementById('summaryContent').textContent = data.summary.content || '暂无总结';
+        } else {
+          document.getElementById('summaryContent').textContent = '暂无阶段性总结，请先添加问题记录。';
+        }
+      } catch (e) {
+        console.error('加载总结失败:', e);
+        document.getElementById('summaryContent').textContent = '加载失败';
+      }
+    }
+    
+    // 渲染图表
+    function renderCharts() {
+      // 类型分布图
+      const typeCtx = document.getElementById('typeChart').getContext('2d');
+      if (charts.type) charts.type.destroy();
+      
+      charts.type = new Chart(typeCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Bug', '配置问题', '流程问题', '性能问题', '安全问题'],
+          datasets: [{
+            data: [12, 15, 8, 5, 3],
+            backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#dc2626'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { color: '#94a3b8' }
+            }
+          }
+        }
+      });
+      
+      // 趋势图
+      const trendCtx = document.getElementById('trendChart').getContext('2d');
+      if (charts.trend) charts.trend.destroy();
+      
+      charts.trend = new Chart(trendCtx, {
+        type: 'line',
+        data: {
+          labels: getLast30Days(),
+          datasets: [{
+            label: '问题数量',
+            data: generateTrendData(),
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              grid: { color: '#334155' },
+              ticks: { color: '#94a3b8', maxTicksLimit: 7 }
+            },
+            y: {
+              grid: { color: '#334155' },
+              ticks: { color: '#94a3b8' }
+            }
+          }
+        }
+      });
+    }
+    
+    // 获取近30天日期
+    function getLast30Days() {
+      const days = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        days.push((d.getMonth() + 1) + '/' + d.getDate());
+      }
+      return days;
+    }
+    
+    // 生成趋势数据
+    function generateTrendData() {
+      const data = [];
+      for (let i = 0; i < 30; i++) {
+        data.push(Math.floor(Math.random() * 5));
+      }
+      return data;
+    }
+    
+    // ESC 关闭模态框
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+    
+    // 加载全部
+    // 加载任务反思列表
+    let allReflections = [];
+    
+    async function loadReflections() {
+      try {
+        const res = await fetch('/api/reflections/all?limit=100');
+        const data = await res.json();
+        
+        if (data.success) {
+          allReflections = data.reflections || [];
+          renderReflections(allReflections);
+          updateReflectionStats(data.stats);
+        }
+      } catch (e) {
+        console.error('加载反思列表失败:', e);
+        document.getElementById('reflectionList').innerHTML = '<div class="empty-state">加载失败</div>';
+      }
+    }
+    
+    // 更新反思统计显示
+    function updateReflectionStats(stats) {
+      if (stats) {
+        document.getElementById('reflTotal').textContent = stats.total || 0;
+        document.getElementById('reflAvgScore').textContent = (stats.avg_score || 0).toFixed(1);
+        document.getElementById('reflApplied').textContent = stats.applied_count || 0;
+        document.getElementById('reflPending').textContent = (stats.total || 0) - (stats.applied_count || 0);
+      }
+    }
+    
+    // 渲染反思列表
+    function renderReflections(reflections) {
+      if (reflections.length === 0) {
+        document.getElementById('reflectionList').innerHTML = '<div class="empty-state">暂无反思记录</div>';
+        return;
+      }
+      
+      const html = reflections.map(r => `
+        <div class="reflection-item" style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; cursor: pointer;" onclick="showReflectionDetail('${r.id}')">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+            <div style="flex: 1;">
+              <div style="font-weight: 500; color: var(--text-primary); margin-bottom: 4px;">
+                ${escapeHtml(r.task_title || '未知任务')}
+              </div>
+              <div style="font-size: 12px; color: var(--text-secondary);">
+                ${escapeHtml(r.context || '')}
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span style="padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; background: ${r.score >= 8 ? 'rgba(34, 197, 94, 0.2)' : r.score >= 6 ? 'rgba(234, 179, 8, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${r.score >= 8 ? '#22c55e' : r.score >= 6 ? '#eab308' : '#ef4444'};">
+                ${r.score || 0}分
+              </span>
+              <span style="padding: 4px 10px; border-radius: 12px; font-size: 11px; background: ${r.applied ? 'rgba(34, 197, 94, 0.2)' : 'var(--bg-tertiary)'}; color: ${r.applied ? '#22c55e' : 'var(--text-secondary)'};">
+                ${r.applied ? '✓ 已应用' : '待应用'}
+              </span>
+            </div>
+          </div>
+          ${r.lesson ? `
+          <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 8px; font-size: 13px; color: var(--text-secondary);">
+            💡 ${escapeHtml(r.lesson.substring(0, 100))}${r.lesson.length > 100 ? '...' : ''}
+          </div>
+          ` : ''}
+          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+            ${formatTime(r.timestamp || r.created_at)}
+            ${r.agent ? ` · Agent: ${r.agent}` : ''}
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('reflectionList').innerHTML = html;
+    }
+    
+    // 过滤反思
+    function filterReflections() {
+      const appliedFilter = document.getElementById('reflFilterApplied').value;
+      const scoreFilter = document.getElementById('reflFilterScore').value;
+      
+      let filtered = allReflections;
+      
+      if (appliedFilter !== '') {
+        filtered = filtered.filter(r => String(r.applied) === appliedFilter);
+      }
+      
+      if (scoreFilter !== '') {
+        const minScore = parseFloat(scoreFilter);
+        if (minScore === 4) {
+          filtered = filtered.filter(r => (r.score || 0) < 4);
+        } else {
+          filtered = filtered.filter(r => (r.score || 0) >= minScore);
+        }
+      }
+      
+      renderReflections(filtered);
+    }
+    
+    // 显示反思详情
+    function showReflectionDetail(reflId) {
+      const r = allReflections.find(x => x.id === reflId);
+      if (!r) return;
+      
+      const html = `
+        <div style="padding: 20px;">
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">关联任务</div>
+            <a href="task-detail.html?id=${r.task_id}" style="color: var(--primary); text-decoration: none;">${escapeHtml(r.task_title || '未知')}</a>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">上下文</div>
+            <div style="color: var(--text-primary);">${escapeHtml(r.context || '-')}</div>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">反思内容</div>
+            <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; color: var(--text-primary); white-space: pre-wrap;">${escapeHtml(r.reflection || r.content?.reflection || '-')}</div>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">经验教训</div>
+            <div style="background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: 8px; color: var(--text-primary);">💡 ${escapeHtml(r.lesson || r.content?.lesson || '-')}</div>
+          </div>
+          <div style="display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary);">
+            <span>评分: <strong style="color: ${r.score >= 8 ? '#22c55e' : r.score >= 6 ? '#eab308' : '#ef4444'};">${r.score || 0}</strong></span>
+            <span>状态: ${r.applied ? '✓ 已应用' : '待应用'}</span>
+            <span>${formatTime(r.timestamp || r.created_at)}</span>
+          </div>
+          ${r.applied_to ? `
+          <div style="margin-top: 12px; font-size: 12px; color: var(--text-secondary);">
+            应用到: ${escapeHtml(r.applied_to)}
+          </div>
+          ` : ''}
+        </div>
+      `;
+      
+      document.getElementById('modalTitle').textContent = '反思详情';
+      document.getElementById('modalBody').innerHTML = html;
+      document.getElementById('issueModal').classList.add('show');
+    }
+    
+    // 时间格式化
+    function formatTime(timestamp) {
+      if (!timestamp) return '-';
+      const d = new Date(timestamp);
+      return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // HTML 转义
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    
+    function loadAll() {
+      loadStats();
+      loadIssues();
+      loadSummary();
+      loadReflections();
+      renderCharts();
+    }
+    
+    // 初始化
+    loadAll();
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

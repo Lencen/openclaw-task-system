@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>研发管理 - 产品管理</title>
+  
+  <!-- Remix Icon -->
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    
+    .stat-card h3 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .stat-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+    
+    .product-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 16px;
+      max-width: 1400px;
+    }
+    
+    .product-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .product-card:hover {
+      border-color: var(--primary);
+    }
+    
+    .product-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    
+    .product-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .product-code {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      background: var(--bg-tertiary);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    
+    .product-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+    
+    .product-meta {
+      display: flex;
+      gap: 24px;
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+    
+    .product-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .status-badge {
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    
+    .status-active {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 24px;
+      width: 500px;
+      max-width: 90%;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-tertiary);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <h1 class="page-title">📦 产品管理</h1>
+      </header>
+      <div class="content">
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3 id="totalProducts">-</h3>
+            <p>产品总数</p>
+          </div>
+          <div class="stat-card">
+            <h3 id="totalProjects">-</h3>
+            <p>项目总数</p>
+          </div>
+          <div class="stat-card">
+            <h3 id="developingCount">-</h3>
+            <p>开发中</p>
+          </div>
+          <div class="stat-card">
+            <h3 id="releasedCount">-</h3>
+            <p>已发布</p>
+          </div>
+        </div>
+        
+        <!-- 工具栏 -->
+        <div class="toolbar">
+          <div></div>
+          <button class="btn btn-primary" onclick="showCreateModal()">
+            <i class="ri-add-line"></i> 创建产品
+          </button>
+        </div>
+        
+        <!-- 产品列表 -->
+        <div class="product-list" id="productList">
+          <div class="empty-state">
+            <i class="ri-inbox-line"></i>
+            <p>暂无产品，点击"创建产品"开始</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 创建产品弹窗 -->
+  <div class="modal" id="createModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">创建产品</h3>
+        <button class="btn btn-secondary" onclick="hideCreateModal()" style="padding: 6px 12px;">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      
+      <form id="createForm">
+        <div class="form-group">
+          <label class="form-label">产品名称 *</label>
+          <input type="text" class="form-input" name="name" required placeholder="如：任务管理系统">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">产品代码</label>
+          <input type="text" class="form-input" name="code" placeholder="如：TASK-SYS（自动生成）">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">产品描述</label>
+          <textarea class="form-input form-textarea" name="description" placeholder="产品简介"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">目标用户</label>
+          <input type="text" class="form-input" name="target_users" placeholder="如：企业团队、开发者">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">产品价值</label>
+          <textarea class="form-input form-textarea" name="value" placeholder="产品提供的核心价值"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">负责人</label>
+          <input type="text" class="form-input" name="owner" placeholder="产品负责人">
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="hideCreateModal()">取消</button>
+          <button type="submit" class="btn btn-primary">创建</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- 侧边栏 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    // 初始化侧边栏
+    if (typeof Sidebar !== 'undefined') {
+      Sidebar.init({ activePage: 'devops-products' });
+    }
+  </script>
+  
+  <!-- 页面逻辑 -->
+  <script>
+    // 加载统计数据
+    async function loadStats() {
+      try {
+        const response = await fetch('/api/devops/stats');
+        const result = await response.json();
+        
+        if (result.success) {
+          document.getElementById('totalProducts').textContent = result.data.products;
+          document.getElementById('totalProjects').textContent = result.data.projects;
+          document.getElementById('developingCount').textContent = result.data.by_status.projects.developing;
+          document.getElementById('releasedCount').textContent = result.data.by_status.projects.released;
+        }
+      } catch (error) {
+        console.error('加载统计失败:', error);
+      }
+    }
+    
+    // 加载产品列表
+    async function loadProducts() {
+      try {
+        const response = await fetch('/api/devops/products');
+        const result = await response.json();
+        
+        if (result.success && result.data.length > 0) {
+          renderProducts(result.data);
+        }
+      } catch (error) {
+        console.error('加载产品失败:', error);
+      }
+    }
+    
+    // 渲染产品列表
+    function renderProducts(products) {
+      const listEl = document.getElementById('productList');
+      
+      listEl.innerHTML = products.map(product => `
+        <div class="product-card" onclick="viewProduct('${product.id}')">
+          <div class="product-header">
+            <div>
+              <div class="product-name">${escapeHtml(product.name)}</div>
+              <div class="product-code">${escapeHtml(product.code || '')}</div>
+            </div>
+            <span class="status-badge status-${product.status}">${getStatusText(product.status)}</span>
+          </div>
+          <div class="product-desc">${escapeHtml(product.description || '暂无描述')}</div>
+          <div class="product-meta">
+            <span><i class="ri-user-line"></i> ${escapeHtml(product.owner || '未指定')}</span>
+            <span><i class="ri-calendar-line"></i> ${formatDate(product.created_at)}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // 创建产品
+    document.getElementById('createForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      const data = {
+        name: formData.get('name'),
+        code: formData.get('code'),
+        description: formData.get('description'),
+        target_users: formData.get('target_users'),
+        value: formData.get('value'),
+        owner: formData.get('owner')
+      };
+      
+      try {
+        const response = await fetch('/api/devops/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          hideCreateModal();
+          loadProducts();
+          loadStats();
+          e.target.reset();
+        } else {
+          alert('创建失败: ' + result.error);
+        }
+      } catch (error) {
+        alert('创建失败: ' + error.message);
+      }
+    });
+    
+    // 查看产品详情
+    function viewProduct(id) {
+      window.location.href = `devops-product-detail.html?id=${id}`;
+    }
+    
+    // 显示/隐藏创建弹窗
+    function showCreateModal() {
+      document.getElementById('createModal').classList.add('active');
+    }
+    
+    function hideCreateModal() {
+      document.getElementById('createModal').classList.remove('active');
+    }
+    
+    // 工具函数
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    function formatDate(dateStr) {
+      if (!dateStr) return '未知';
+      return new Date(dateStr).toLocaleDateString('zh-CN');
+    }
+    
+    function getStatusText(status) {
+      const map = {
+        'active': '活跃',
+        'inactive': '停用',
+        'archived': '归档'
+      };
+      return map[status] || status;
+    }
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStats();
+      loadProducts();
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

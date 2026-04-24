@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统环境 - 任务管理系统</title>
+    <link href="assets/fonts/remixicon.css" rel="stylesheet">
+    
+    <!-- 统一框架样式 -->
+    <link rel="stylesheet" href="css/frame.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    
+    <style>
+        /* ========== 页面专用样式 ========== */
+        
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+        
+        .stat-card.get .stat-value { color: var(--success); }
+        .stat-card.post .stat-value { color: var(--primary); }
+        .stat-card.put .stat-value { color: var(--warning); }
+        .stat-card.delete .stat-value { color: var(--danger); }
+        .stat-card.warning .stat-value { color: var(--warning); }
+        
+        /* Tab 容器 */
+        .tabs-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .tabs-header {
+            display: flex;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+        }
+        
+        .tab-btn {
+            padding: 14px 24px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 24px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* ========== 脚本文件 Tab ========== */
+        .file-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+        
+        .file-item:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        .file-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 14px;
+        }
+        
+        .file-icon.script { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .file-icon.test { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .file-icon.migrate { background: rgba(167, 139, 250, 0.15); color: #a78bfa; }
+        .file-icon.fix { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .file-icon.backup { background: rgba(107, 114, 128, 0.15); color: #6b7280; }
+        
+        .file-info {
+            flex: 1;
+        }
+        
+        .file-name {
+            font-family: monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+        
+        .file-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        
+        .file-meta {
+            text-align: right;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .status-safe { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .status-review { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .status-delete { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .status-keep { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        
+        /* ========== API 目录 Tab（来自 api-catalog.html）========== */
+        
+        /* 筛选工具栏 */
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 16px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tab {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 16px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.15s;
+        }
+        
+        .filter-tab:hover {
+            border-color: var(--primary);
+            color: var(--text-primary);
+        }
+        
+        .filter-tab.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        /* API 分组 */
+        .api-group {
+            margin-bottom: 32px;
+        }
+        
+        .group-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .group-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(59, 130, 246, 0.15);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 18px;
+        }
+        
+        .group-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .group-count {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            background: var(--bg-tertiary);
+            padding: 4px 10px;
+            border-radius: 9999px;
+        }
+        
+        /* API 列表 */
+        .api-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            gap: 12px;
+        }
+        
+        .api-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .api-card:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+        
+        .api-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .method-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .method-badge.get {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+        
+        .method-badge.post {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--primary);
+        }
+        
+        .method-badge.put {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+        
+        .method-badge.delete {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+        
+        .api-path {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+            flex: 1;
+        }
+        
+        .api-status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+        }
+        
+        .api-status-badge.online {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+        
+        .api-status-badge.offline {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+        
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        
+        .api-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        
+        .api-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        
+        .api-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .tag {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+        }
+        
+        .tag.core {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--primary);
+        }
+        
+        .pages-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        
+        .page-tag {
+            font-size: 11px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        
+        /* ========== 页面结构 Tab（来自 page-structure.html）========== */
+        
+        .tree-container {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            max-height: calc(100vh - 300px);
+            overflow-y: auto;
+        }
+        
+        .tree-module {
+            margin-bottom: 16px;
+        }
+        
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .module-header:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .module-icon {
+            font-size: 18px;
+        }
+        
+        .module-name {
+            font-weight: 600;
+            flex: 1;
+            color: var(--text-primary);
+        }
+        
+        .module-count {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .module-toggle {
+            transition: transform 0.2s;
+            color: var(--text-secondary);
+        }
+        
+        .module-header.collapsed .module-toggle {
+            transform: rotate(-90deg);
+        }
+        
+        .module-children {
+            margin-left: 20px;
+            margin-top: 8px;
+            border-left: 2px solid var(--border);
+            padding-left: 12px;
+        }
+        
+        .module-children.hidden {
+            display: none;
+        }
+        
+        .page-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .page-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .page-item .page-icon {
+            font-size: 14px;
+        }
+        
+        .page-item .page-name {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        
+        .page-item .page-file {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+        
+        .page-status {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        
+        .page-status.active {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        
+        .page-status.legacy {
+            background: rgba(234, 179, 8, 0.2);
+            color: #eab308;
+        }
+        
+        /* ========== 清理建议 Tab ========== */
+        
+        .cleanup-section {
+            margin-bottom: 24px;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .section-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .section-icon.script { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .section-icon.api { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+        .section-icon.page { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .section-count {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            background: var(--bg-tertiary);
+            padding: 4px 10px;
+            border-radius: 9999px;
+        }
+        
+        .cleanup-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .cleanup-table th,
+        .cleanup-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .cleanup-table th {
+            background: var(--bg-tertiary);
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+        
+        .cleanup-table tr:hover td {
+            background: var(--bg-tertiary);
+        }
+        
+        .cleanup-table code {
+            font-family: monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 48px;
+            color: var(--text-tertiary);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        /* 推荐说明 */
+        .recommendation {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .recommendation h4 {
+            margin: 0 0 8px 0;
+            color: var(--primary);
+        }
+        
+        .recommendation p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+    </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+    <div class="layout">
+        <div id="sidebar-container"></div>
+        
+        <main class="main">
+            <header class="header">
+                <h1 class="header-title">⚙️ 系统环境</h1>
+            </header>
+            
+            <div class="content">
+                <!-- Tab 容器 -->
+                <div class="tabs-container">
+                    <div class="tabs-header">
+                        <button class="tab-btn active" data-tab="scripts">📜 脚本文件</button>
+                        <button class="tab-btn" data-tab="api">🔌 API 目录</button>
+                        <button class="tab-btn" data-tab="structure">🏗️ 页面结构</button>
+                        <button class="tab-btn" data-tab="cleanup">🧹 清理建议</button>
+                    </div>
+
+                    <!-- 脚本文件 Tab -->
+                    <div class="tab-content active" id="scripts-tab">
+                        <div class="recommendation">
+                            <h4>💡 分析说明</h4>
+                            <p>系统自动分析脚本的使用情况，<span class="status-badge status-safe">安全</span> 表示核心功能文件，<span class="status-badge status-review">待审查</span> 表示可能过时，<span class="status-badge status-delete">可删除</span> 表示确认可清理。</p>
+                        </div>
+                        <div class="file-list" id="scripts-list">
+                            <div class="empty-state">
+                                <i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i>
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API 目录 Tab -->
+                    <div class="tab-content" id="api-tab">
+                        <!-- 统计卡片 -->
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="apiTotal">-</div>
+                                <div class="stat-label">API 总数</div>
+                            </div>
+                            <div class="stat-card get">
+                                <div class="stat-value" id="apiGet">-</div>
+                                <div class="stat-label">GET</div>
+                            </div>
+                            <div class="stat-card post">
+                                <div class="stat-value" id="apiPost">-</div>
+                                <div class="stat-label">POST</div>
+                            </div>
+                            <div class="stat-card put">
+                                <div class="stat-value" id="apiPut">-</div>
+                                <div class="stat-label">PUT</div>
+                            </div>
+                            <div class="stat-card delete">
+                                <div class="stat-value" id="apiDelete">-</div>
+                                <div class="stat-label">DELETE</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 工具栏 -->
+                        <div class="toolbar">
+                            <input type="text" class="search-input" id="apiSearch" placeholder="搜索 API（名称、路径、描述）..." oninput="filterAPIs()">
+                            <div class="filter-tabs" id="apiGroupTabs">
+                                <button class="filter-tab active" onclick="filterByGroup('all')">全部</button>
+                            </div>
+                        </div>
+                        
+                        <!-- API 列表 -->
+                        <div id="apiContainer"></div>
+                    </div>
+
+                    <!-- 页面结构 Tab -->
+                    <div class="tab-content" id="structure-tab">
+                        <!-- 统计 -->
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="pageTotal">-</div>
+                                <div class="stat-label">页面总数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="pageActive">-</div>
+                                <div class="stat-label">活跃页面</div>
+                            </div>
+                            <div class="stat-card warning">
+                                <div class="stat-value" id="pageLegacy">-</div>
+                                <div class="stat-label">遗留页面</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 页面树 -->
+                        <div class="tree-container" id="pageTree">
+                            <div class="empty-state">
+                                <i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i>
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 清理建议 Tab -->
+                    <div class="tab-content" id="cleanup-tab">
+                        <div class="recommendation">
+                            <h4>💡 清理策略</h4>
+                            <p>系统根据文件名、最后修改时间、是否被引用等因素自动判断文件是否可以清理。按文件类型分组显示。</p>
+                        </div>
+                        
+                        <!-- 操作按钮 -->
+                        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                            <button id="createIssuesBtn" onclick="createIssuesFromCleanup()" style="background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                                <i class="ri-add-circle-line"></i>
+                                一键创建问题
+                            </button>
+                            <span id="createIssuesStatus" style="color: var(--text-secondary); font-size: 14px; display: flex; align-items: center;"></span>
+                        </div>
+                        
+                        <!-- 按类型分组显示 -->
+                        <div id="cleanupContainer">
+                            <div class="empty-state">
+                                <i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i>
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/sidebar.js"></script>
+    <script>
+        Sidebar.init({ activePage: 'system-environment' });
+        
+        // Tab 切换
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab + '-tab').classList.add('active');
+            });
+        });
+
+        // ========== 脚本文件 ==========
+        async function loadScripts() {
+            try {
+                const res = await fetch('/api/system/scripts');
+                const data = await res.json();
+                
+                const list = document.getElementById('scripts-list');
+                if (!data.scripts || data.scripts.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><i class="ri-check-line" style="color: var(--success);"></i><p>暂无脚本文件</p></div>';
+                    return;
+                }
+                
+                // 统计
+                const total = data.scripts.length;
+                const obsolete = data.scripts.filter(s => s.status === 'delete' || s.status === 'review').length;
+                
+                // 在列表前添加统计信息
+                let html = `<div style="margin-bottom: 16px; color: var(--text-secondary); font-size: 14px;">
+                    共 <strong style="color: var(--text-primary);">${total}</strong> 个脚本文件，
+                    其中 <strong style="color: var(--warning);">${obsolete}</strong> 个建议清理
+                </div>`;
+                
+                html += data.scripts.map(s => `
+                    <div class="file-item">
+                        <div class="file-icon ${s.type}">${getTypeIcon(s.type)}</div>
+                        <div class="file-info">
+                            <div class="file-name">${s.name}</div>
+                            <div class="file-desc">${s.description || '无描述'}</div>
+                        </div>
+                        <div class="file-meta">
+                            <span class="status-badge status-${s.status}">${getStatusText(s.status)}</span>
+                            <div style="margin-top: 4px;">${s.size || ''}</div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                list.innerHTML = html;
+            } catch (e) {
+                console.error('加载脚本列表失败:', e);
+                document.getElementById('scripts-list').innerHTML = '<div class="empty-state"><i class="ri-error-warning-line" style="color: var(--danger);"></i><p>加载失败</p></div>';
+            }
+        }
+
+        // ========== API 目录 ==========
+        let allAPIs = [];
+        let allStatuses = {};
+        let currentGroup = 'all';
+        let currentSearch = '';
+        
+        async function loadAPIs() {
+            try {
+                // 加载 API 目录
+                const res = await fetch('/api/api-catalog/catalog');
+                const data = await res.json();
+                
+                if (data.success) {
+                    allAPIs = data.data.flat;
+                    updateAPIStats(data.data.stats);
+                    renderGroupTabs(data.data.groups);
+                    renderAPIs();
+                }
+                
+                // 加载 API 状态
+                loadAPIStatus();
+            } catch (e) {
+                console.error('加载 API 目录失败:', e);
+                document.getElementById('apiContainer').innerHTML = '<div class="empty-state"><i class="ri-error-warning-line"></i><p>加载失败</p></div>';
+            }
+        }
+        
+        async function loadAPIStatus() {
+            try {
+                const res = await fetch('/api/api-catalog/status');
+                const data = await res.json();
+                if (data.success) {
+                    allStatuses = data.data;
+                    renderAPIs();
+                }
+            } catch (e) {
+                console.error('加载状态失败:', e);
+            }
+        }
+        
+        function updateAPIStats(stats) {
+            document.getElementById('apiTotal').textContent = stats.total;
+            document.getElementById('apiGet').textContent = stats.methods.GET;
+            document.getElementById('apiPost').textContent = stats.methods.POST;
+            document.getElementById('apiPut').textContent = stats.methods.PUT;
+            document.getElementById('apiDelete').textContent = stats.methods.DELETE;
+        }
+        
+        function renderGroupTabs(groups) {
+            const container = document.getElementById('apiGroupTabs');
+            let html = '<button class="filter-tab active" onclick="filterByGroup(\'all\')">全部</button>';
+            
+            groups.forEach(g => {
+                const icon = getGroupIcon(g.group);
+                html += `<button class="filter-tab" onclick="filterByGroup('${g.group}')">${icon} ${g.group}</button>`;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function getGroupIcon(group) {
+            const icons = {
+                '任务管理': '📋',
+                '日历': '📅',
+                'Agent 管理': '🤖',
+                '项目管理': '📦',
+                '文档和技能': '📚',
+                '系统监控': '📊',
+                '通知': '🔔',
+                '进度推送': '📡',
+                '文件': '📁',
+                '工作日志': '📝',
+                '代码审查': '👁️',
+                '聊天': '💬',
+                '知识库': '🧠',
+                'API 注册': '🔌',
+                '系统': '⚙️'
+            };
+            return icons[group] || '📁';
+        }
+        
+        function filterByGroup(group) {
+            currentGroup = group;
+            document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            renderAPIs();
+        }
+        
+        function filterAPIs() {
+            currentSearch = document.getElementById('apiSearch').value.toLowerCase();
+            renderAPIs();
+        }
+        
+        function renderAPIs() {
+            const container = document.getElementById('apiContainer');
+            
+            let apis = allAPIs;
+            
+            if (currentGroup !== 'all') {
+                apis = apis.filter(api => api.group === currentGroup);
+            }
+            
+            if (currentSearch) {
+                apis = apis.filter(api => 
+                    api.name.toLowerCase().includes(currentSearch) ||
+                    api.path.toLowerCase().includes(currentSearch) ||
+                    api.description.toLowerCase().includes(currentSearch)
+                );
+            }
+            
+            const groups = {};
+            apis.forEach(api => {
+                if (!groups[api.group]) {
+                    groups[api.group] = [];
+                }
+                groups[api.group].push(api);
+            });
+            
+            let html = '';
+            
+            Object.keys(groups).forEach(groupName => {
+                const icon = getGroupIcon(groupName);
+                
+                html += `
+                    <div class="api-group">
+                        <div class="group-header">
+                            <div class="group-icon">${icon}</div>
+                            <div class="group-title">${groupName}</div>
+                            <span class="group-count">${groups[groupName].length} 个</span>
+                        </div>
+                        <div class="api-list">
+                `;
+                
+                groups[groupName].forEach(api => {
+                    const status = allStatuses[`${api.method} ${api.path}`] || { status: 'unknown' };
+                    const statusClass = status.status === 'online' ? 'online' : 'offline';
+                    const statusText = status.status === 'online' ? '在线' : '离线';
+                    
+                    html += `
+                        <div class="api-card">
+                            <div class="api-header">
+                                <span class="method-badge ${api.method.toLowerCase()}">${api.method}</span>
+                                <span class="api-path">${api.path}</span>
+                                <span class="api-status-badge ${statusClass}">
+                                    <span class="status-dot"></span>
+                                    ${statusText}
+                                </span>
+                            </div>
+                            <div class="api-name">${api.name}</div>
+                            <div class="api-description">${api.description}</div>
+                            <div class="api-meta">
+                                <div class="meta-item">
+                                    <i class="ri-file-list-line"></i>
+                                    <span>用于 ${api.pages.length} 个页面</span>
+                                </div>
+                                ${api.tags.map(tag => `<span class="tag ${tag === '核心' ? 'core' : ''}">${tag}</span>`).join('')}
+                            </div>
+                            ${api.pages.length > 0 ? `
+                                <div class="pages-list">
+                                    ${api.pages.slice(0, 5).map(page => `<span class="page-tag">${page}</span>`).join('')}
+                                    ${api.pages.length > 5 ? `<span class="page-tag">+${api.pages.length - 5}</span>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            if (apis.length === 0) {
+                html = '<div class="empty-state"><i class="ri-search-line"></i><p>没有找到匹配的 API</p></div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // ========== 页面结构 ==========
+        async function loadPages() {
+            try {
+                const res = await fetch('/api/system/pages');
+                const data = await res.json();
+                
+                const pages = data.pages || [];
+                
+                // 统计
+                document.getElementById('pageTotal').textContent = pages.length;
+                document.getElementById('pageActive').textContent = pages.filter(p => p.status === 'active').length;
+                document.getElementById('pageLegacy').textContent = pages.filter(p => p.status === 'archive').length;
+                
+                // 按模块分组
+                const modules = groupPagesByModule(pages);
+                renderPageTree(modules, pages);
+            } catch (e) {
+                console.error('加载页面结构失败:', e);
+                document.getElementById('pageTree').innerHTML = '<div class="empty-state"><i class="ri-error-warning-line"></i><p>加载失败</p></div>';
+            }
+        }
+        
+        function groupPagesByModule(pages) {
+            const modules = {};
+            
+            pages.forEach(page => {
+                // 根据页面名称判断模块
+                let moduleName = '其他';
+                let moduleIcon = '📁';
+                
+                if (page.name.includes('task') || page.name.includes('kanban') || page.name.includes('quadrant')) {
+                    moduleName = '任务管理';
+                    moduleIcon = '📋';
+                } else if (page.name.includes('agent')) {
+                    moduleName = 'Agent';
+                    moduleIcon = '🤖';
+                } else if (page.name.includes('project') || page.name.includes('devops')) {
+                    moduleName = '项目/DevOps';
+                    moduleIcon = '📦';
+                } else if (page.name.includes('monitor') || page.name.includes('check') || page.name.includes('alert')) {
+                    moduleName = '监控';
+                    moduleIcon = '📊';
+                } else if (page.name.includes('knowledge') || page.name.includes('skill') || page.name.includes('doc')) {
+                    moduleName = '知识/技能';
+                    moduleIcon = '📚';
+                } else if (page.name.includes('calendar') || page.name.includes('today')) {
+                    moduleName = '日程';
+                    moduleIcon = '📅';
+                } else if (page.name.includes('war-room') || page.name.includes('dashboard')) {
+                    moduleName = '仪表盘';
+                    moduleIcon = '🎯';
+                } else if (page.name.includes('setting') || page.name.includes('config') || page.name.includes('deploy')) {
+                    moduleName = '系统设置';
+                    moduleIcon = '⚙️';
+                }
+                
+                if (!modules[moduleName]) {
+                    modules[moduleName] = { icon: moduleIcon, pages: [] };
+                }
+                modules[moduleName].pages.push(page);
+            });
+            
+            return modules;
+        }
+        
+        function renderPageTree(modules, allPages) {
+            const container = document.getElementById('pageTree');
+            
+            let html = '';
+            
+            Object.keys(modules).forEach(moduleName => {
+                const mod = modules[moduleName];
+                
+                html += `
+                    <div class="tree-module">
+                        <div class="module-header" onclick="toggleModule(this)">
+                            <span class="module-icon">${mod.icon}</span>
+                            <span class="module-name">${moduleName}</span>
+                            <span class="module-count">${mod.pages.length} 个页面</span>
+                            <i class="ri-arrow-down-s-line module-toggle"></i>
+                        </div>
+                        <div class="module-children">
+                `;
+                
+                mod.pages.forEach(page => {
+                    const status = page.status === 'archive' ? 'legacy' : 'active';
+                    const statusText = page.status === 'archive' ? '归档' : '活跃';
+                    
+                    html += `
+                        <div class="page-item">
+                            <span class="page-icon">📄</span>
+                            <span class="page-name">${page.title || page.name}</span>
+                            <span class="page-file">${page.name}</span>
+                            <span class="page-status ${status}">${statusText}</span>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function toggleModule(header) {
+            header.classList.toggle('collapsed');
+            const children = header.nextElementSibling;
+            children.classList.toggle('hidden');
+        }
+
+        // ========== 清理建议 ==========
+        async function loadCleanup() {
+            try {
+                const res = await fetch('/api/system/cleanup');
+                const data = await res.json();
+                
+                const items = data.items || [];
+                
+                // 按类型分组
+                const grouped = {
+                    script: { icon: '📜', title: '脚本文件', items: [] },
+                    api: { icon: '🔌', title: 'API 接口', items: [] },
+                    page: { icon: '📄', title: '页面文件', items: [] }
+                };
+                
+                items.forEach(item => {
+                    const category = item.category || (item.file && item.file.includes('.html') ? 'page' : 'script');
+                    if (grouped[category]) {
+                        grouped[category].items.push(item);
+                    }
+                });
+                
+                const container = document.getElementById('cleanupContainer');
+                
+                // 显示统计信息
+                let statsHtml = `<div style="margin-bottom: 16px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                    <span style="font-size: 14px; color: var(--text-secondary);">深度分析完成，共发现</span>
+                    <strong style="color: var(--warning); font-size: 18px; margin: 0 4px;">${items.length}</strong>
+                    <span style="font-size: 14px; color: var(--text-secondary);">项待清理文件</span>
+                </div>`;
+                
+                // 显示所有分类
+                let html = statsHtml;
+                
+                Object.keys(grouped).forEach(key => {
+                    const group = grouped[key];
+                    
+                    html += `
+                        <div class="cleanup-section">
+                            <div class="section-header">
+                                <div class="section-icon ${key}">${group.icon}</div>
+                                <div class="section-title">${group.title}</div>
+                                <span class="section-count">${group.items.length} 项</span>
+                            </div>
+                    `;
+                    
+                    if (group.items.length === 0) {
+                        html += `
+                            <div style="padding: 24px; text-align: center; color: var(--text-secondary); background: var(--bg-tertiary); border-radius: 8px;">
+                                <i class="ri-check-line" style="font-size: 24px; color: var(--success);"></i>
+                                <p style="margin: 8px 0 0 0;">无需要清理的${group.title}</p>
+                            </div>
+                        `;
+                    } else {
+                        html += `<div style="max-height: 400px; overflow-y: auto;">`;
+                        
+                        group.items.forEach(item => {
+                            const recommendation = item.recommendation || 'review';
+                            const actionText = {
+                                'delete': '🗑️ 可删除',
+                                'review': '⚠️ 需审查',
+                                'caution': '🔶 谨慎',
+                                'keep': '✅ 保留'
+                            };
+                            const statusClass = recommendation === 'delete' ? 'delete' : (recommendation === 'keep' ? 'safe' : 'review');
+                            
+                            html += `
+                                <div style="padding: 12px; margin-bottom: 8px; background: var(--bg-tertiary); border-radius: 8px; border-left: 3px solid ${recommendation === 'delete' ? 'var(--danger)' : recommendation === 'keep' ? 'var(--success)' : 'var(--warning)'};">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <code style="font-size: 14px; color: var(--text-primary);">${item.file || '未知文件'}</code>
+                                        <span class="status-badge status-${statusClass}">${actionText[recommendation] || '⚠️ 需审查'}</span>
+                                    </div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">
+                                        <span style="margin-right: 12px;">类型: ${item.type || '-'}</span>
+                                        ${item.size ? `<span style="margin-right: 12px;">大小: ${item.size}</span>` : ''}
+                                        ${item.lines ? `<span style="margin-right: 12px;">行数: ${item.lines}</span>` : ''}
+                                        ${item.references !== undefined ? `<span>被引用: ${item.references} 次</span>` : ''}
+                                    </div>
+                                    ${item.description ? `
+                                        <details style="margin-top: 8px;">
+                                            <summary style="cursor: pointer; font-size: 12px; color: var(--primary);">查看详细分析</summary>
+                                            <pre style="margin: 8px 0 0 0; padding: 8px; background: var(--bg-secondary); border-radius: 4px; font-size: 11px; white-space: pre-wrap; color: var(--text-secondary);">${item.description}</pre>
+                                        </details>
+                                    ` : ''}
+                                    ${item.risks && item.risks.length > 0 ? `
+                                        <div style="margin-top: 8px; font-size: 12px; color: var(--danger);">
+                                            ⚠️ ${item.risks.join('; ')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        });
+                        
+                        html += `</div>`;
+                    }
+                    
+                    html += `</div>`;
+                });
+                
+                container.innerHTML = html;
+            } catch (e) {
+                console.error('加载清理建议失败:', e);
+                document.getElementById('cleanupContainer').innerHTML = '<div class="empty-state"><i class="ri-error-warning-line"></i><p>加载失败</p></div>';
+            }
+        }
+
+        // 辅助函数
+        function getTypeIcon(type) {
+            const icons = { script: '📜', test: '🧪', migrate: '🔄', fix: '🔧', backup: '📦' };
+            return icons[type] || '📄';
+        }
+
+        function getStatusText(status) {
+            const texts = { safe: '安全', review: '待审查', delete: '可删除', keep: '保留' };
+            return texts[status] || status;
+        }
+
+        // 初始化
+        loadScripts();
+        loadAPIs();
+        loadPages();
+        loadCleanup();
+
+        // ========== 一键创建问题 ==========
+        async function createIssuesFromCleanup() {
+            const btn = document.getElementById('createIssuesBtn');
+            const status = document.getElementById('createIssuesStatus');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> 创建中...';
+            status.textContent = '正在将清理建议创建为问题...';
+            
+            try {
+                const res = await fetch('/api/system/cleanup/create-issues', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    const summary = data.summary;
+                    const actionText = data.action === 'updated' ? '更新' : '创建';
+                    status.innerHTML = `<span style="color: var(--success);">✅ 已${actionText}汇总问题</span>`;
+                    status.innerHTML += `<span style="color: var(--text-secondary);"> - 脚本${summary.scripts}项，页面${summary.pages}项，共${summary.total}项</span>`;
+                    
+                    // 更新按钮状态
+                    btn.innerHTML = '<i class="ri-check-line"></i> 已创建';
+                    btn.style.background = 'var(--success)';
+                    
+                    // 3秒后恢复按钮
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="ri-add-circle-line"></i> 一键创建问题';
+                        btn.style.background = 'var(--primary)';
+                        status.textContent = '';
+                    }, 3000);
+                } else {
+                    status.innerHTML = `<span style="color: var(--danger);">❌ 创建失败: ${data.error}</span>`;
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="ri-add-circle-line"></i> 一键创建问题';
+                }
+            } catch (e) {
+                status.innerHTML = `<span style="color: var(--danger);">❌ 请求失败: ${e.message}</span>`;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ri-add-circle-line"></i> 一键创建问题';
+            }
+        }
+    </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

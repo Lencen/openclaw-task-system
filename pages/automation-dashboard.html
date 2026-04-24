@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>自动化监控 - 任务系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content {
+      padding: 24px;
+    }
+    
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .page-title i {
+      color: var(--primary);
+    }
+    
+    /* 告警区域 */
+    .alerts-container {
+      margin-bottom: 24px;
+    }
+    
+    .alert-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .alert-card.critical {
+      border-left: 4px solid var(--danger);
+    }
+    
+    .alert-card.warning {
+      border-left: 4px solid var(--warning);
+    }
+    
+    .alert-card.info {
+      border-left: 4px solid var(--primary);
+    }
+    
+    .alert-icon {
+      font-size: 24px;
+    }
+    
+    .alert-card.critical .alert-icon { color: var(--danger); }
+    .alert-card.warning .alert-icon { color: var(--warning); }
+    .alert-card.info .alert-icon { color: var(--primary); }
+    
+    .alert-content {
+      flex: 1;
+    }
+    
+    .alert-message {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    
+    .alert-action {
+      color: var(--primary);
+      font-size: 13px;
+      cursor: pointer;
+    }
+    
+    /* 统计区域 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    
+    .stat-icon {
+      font-size: 20px;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .stat-card.success .stat-icon { color: var(--success); }
+    .stat-card.warning .stat-icon { color: var(--warning); }
+    .stat-card.danger .stat-icon { color: var(--danger); }
+    .stat-card.primary .stat-icon { color: var(--primary); }
+    
+    .stat-sub {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: 8px;
+    }
+    
+    /* 双列布局 */
+    .two-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    
+    /* 面板 */
+    .panel {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .panel-body {
+      padding: 20px;
+    }
+    
+    /* 执行器列表 */
+    .executor-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .executor-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      gap: 12px;
+    }
+    
+    .executor-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+    
+    .executor-status.idle {
+      background: var(--warning);
+    }
+    
+    .executor-name {
+      flex: 1;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    
+    .executor-type {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    /* 任务列表 */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .task-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      gap: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .task-item:hover {
+      background: var(--border);
+    }
+    
+    .task-priority {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .task-priority.P0 { background: var(--danger); color: white; }
+    .task-priority.P1 { background: var(--warning); color: white; }
+    .task-priority.P2 { background: var(--primary); color: white; }
+    .task-priority.P3 { background: var(--text-tertiary); color: white; }
+    
+    .task-title {
+      flex: 1;
+      color: var(--text-primary);
+      font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .task-status {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    /* 操作按钮 */
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-tertiary);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      display: block;
+    }
+    
+    /* 响应式 */
+    @media (max-width: 1200px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .two-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <h1 class="header-title">自动化监控</h1>
+        </div>
+        <div class="header-right">
+          <span id="last-update" class="header-time"></span>
+        </div>
+      </header>
+      
+      <div class="content">
+        <div class="page-content">
+          <!-- 告警区域 -->
+          <div id="alerts-container" class="alerts-container"></div>
+          
+          <!-- 操作按钮 -->
+          <div class="action-buttons">
+            <button class="btn btn-primary" onclick="triggerAssignment()">
+              <i class="ri-play-line"></i> 触发任务分配
+            </button>
+            <button class="btn btn-secondary" onclick="triggerFix()">
+              <i class="ri-bug-line"></i> 触发 P0 修复
+            </button>
+            <button class="btn btn-secondary" onclick="refreshData()">
+              <i class="ri-refresh-line"></i> 刷新
+            </button>
+          </div>
+          
+          <!-- 统计卡片 -->
+          <div class="stats-grid">
+            <div class="stat-card primary">
+              <div class="stat-header">
+                <span class="stat-label">任务总数</span>
+                <i class="ri-task-line stat-icon"></i>
+              </div>
+              <div class="stat-value" id="stat-tasks">-</div>
+              <div class="stat-sub"><span id="stat-tasks-doing">0</span> 进行中</div>
+            </div>
+            
+            <div class="stat-card warning">
+              <div class="stat-header">
+                <span class="stat-label">问题总数</span>
+                <i class="ri-bug-line stat-icon"></i>
+              </div>
+              <div class="stat-value" id="stat-issues">-</div>
+              <div class="stat-sub"><span id="stat-issues-p0" style="color: var(--danger)">0</span> P0 待处理</div>
+            </div>
+            
+            <div class="stat-card success">
+              <div class="stat-header">
+                <span class="stat-label">修复队列</span>
+                <i class="ri-tools-line stat-icon"></i>
+              </div>
+              <div class="stat-value" id="stat-fixqueue">-</div>
+              <div class="stat-sub"><span id="stat-fixqueue-pending">0</span> 待处理</div>
+            </div>
+            
+            <div class="stat-card danger">
+              <div class="stat-header">
+                <span class="stat-label">待分配任务</span>
+                <i class="ri-time-line stat-icon"></i>
+              </div>
+              <div class="stat-value" id="stat-pending">-</div>
+              <div class="stat-sub">pending-assignments</div>
+            </div>
+          </div>
+          
+          <!-- 双列布局 -->
+          <div class="two-columns">
+            <!-- 执行器状态 -->
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title"><i class="ri-robot-line"></i> 执行器状态</span>
+              </div>
+              <div class="panel-body">
+                <div id="executor-list" class="executor-list"></div>
+              </div>
+            </div>
+            
+            <!-- 最近任务 -->
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title"><i class="ri-history-line"></i> 最近任务</span>
+                <a href="tasks.html" class="alert-action">查看全部</a>
+              </div>
+              <div class="panel-body">
+                <div id="recent-tasks" class="task-list"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 最近问题 -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title"><i class="ri-alert-line"></i> 最近问题</span>
+              <a href="issues.html" class="alert-action">查看全部</a>
+            </div>
+            <div class="panel-body">
+              <div id="recent-issues" class="task-list"></div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 侧边栏 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'automation' });
+  </script>
+  
+  <script>
+    const API_BASE = window.location.origin;
+    
+    // 加载数据
+    async function loadData() {
+      try {
+        // 加载状态
+        const statusRes = await fetch(`${API_BASE}/api/automation/status`);
+        const statusData = await statusRes.json();
+        
+        if (statusData.success) {
+          updateStats(statusData);
+          updateAlerts(statusData.alerts);
+        }
+        
+        // 加载执行器
+        const executorsRes = await fetch(`${API_BASE}/api/automation/executors`);
+        const executorsData = await executorsRes.json();
+        
+        if (executorsData.success) {
+          updateExecutors(executorsData.executors);
+        }
+        
+        // 加载最近任务
+        const tasksRes = await fetch(`${API_BASE}/api/automation/recent-tasks?limit=5`);
+        const tasksData = await tasksRes.json();
+        
+        if (tasksData.success) {
+          updateRecentTasks(tasksData.tasks);
+        }
+        
+        // 加载最近问题
+        const issuesRes = await fetch(`${API_BASE}/api/automation/recent-issues?limit=5`);
+        const issuesData = await issuesRes.json();
+        
+        if (issuesData.success) {
+          updateRecentIssues(issuesData.issues);
+        }
+        
+        // 更新时间
+        document.getElementById('last-update').textContent = 
+          '最后更新: ' + new Date().toLocaleTimeString();
+          
+      } catch (err) {
+        console.error('加载数据失败:', err);
+      }
+    }
+    
+    // 更新统计
+    function updateStats(data) {
+      document.getElementById('stat-tasks').textContent = data.tasks.total;
+      document.getElementById('stat-tasks-doing').textContent = data.tasks.doing;
+      
+      document.getElementById('stat-issues').textContent = data.issues.total;
+      document.getElementById('stat-issues-p0').textContent = data.issues.p0;
+      
+      document.getElementById('stat-fixqueue').textContent = data.fixQueue.total;
+      document.getElementById('stat-fixqueue-pending').textContent = data.fixQueue.pending;
+      
+      document.getElementById('stat-pending').textContent = data.pendingAssignments;
+    }
+    
+    // 更新告警
+    function updateAlerts(alerts) {
+      const container = document.getElementById('alerts-container');
+      
+      if (!alerts || alerts.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      
+      container.innerHTML = alerts.map(alert => `
+        <div class="alert-card ${alert.level}">
+          <i class="alert-icon ri-${alert.level === 'critical' ? 'error-warning' : alert.level === 'warning' ? 'alarm-warning' : 'information'}-line"></i>
+          <div class="alert-content">
+            <div class="alert-message">${alert.message}</div>
+          </div>
+          ${alert.action ? `<a href="${alert.action}" class="alert-action">查看详情</a>` : ''}
+        </div>
+      `).join('');
+    }
+    
+    // 更新执行器列表
+    function updateExecutors(executors) {
+      const container = document.getElementById('executor-list');
+      
+      container.innerHTML = executors.map(exec => `
+        <div class="executor-item">
+          <div class="executor-status ${exec.status === 'idle' ? 'idle' : ''}"></div>
+          <div class="executor-name">${exec.name}</div>
+          <div class="executor-type">${exec.type}</div>
+        </div>
+      `).join('');
+    }
+    
+    // 更新最近任务
+    function updateRecentTasks(tasks) {
+      const container = document.getElementById('recent-tasks');
+      
+      if (!tasks || tasks.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="ri-inbox-line"></i>暂无任务</div>';
+        return;
+      }
+      
+      container.innerHTML = tasks.map(task => `
+        <div class="task-item" onclick="window.location.href='task-detail.html?id=${task.id}'">
+          <span class="task-priority ${task.priority || 'P2'}">${task.priority || 'P2'}</span>
+          <span class="task-title">${escapeHtml(task.title)}</span>
+          <span class="task-status">${task.status}</span>
+        </div>
+      `).join('');
+    }
+    
+    // 更新最近问题
+    function updateRecentIssues(issues) {
+      const container = document.getElementById('recent-issues');
+      
+      if (!issues || issues.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="ri-checkbox-circle-line"></i>暂无问题</div>';
+        return;
+      }
+      
+      container.innerHTML = issues.map(issue => `
+        <div class="task-item" onclick="window.location.href='issues.html'">
+          <span class="task-priority ${issue.priority || 'P2'}">${issue.priority || 'P2'}</span>
+          <span class="task-title">${escapeHtml(issue.title)}</span>
+          <span class="task-status">${issue.status}</span>
+        </div>
+      `).join('');
+    }
+    
+    // 触发任务分配
+    async function triggerAssignment() {
+      try {
+        const res = await fetch(`${API_BASE}/api/automation/trigger-assignment`, { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || '已触发');
+        setTimeout(loadData, 2000);
+      } catch (err) {
+        alert('触发失败: ' + err.message);
+      }
+    }
+    
+    // 触发 P0 修复
+    async function triggerFix() {
+      try {
+        const res = await fetch(`${API_BASE}/api/automation/trigger-fix`, { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || '已触发');
+        setTimeout(loadData, 2000);
+      } catch (err) {
+        alert('触发失败: ' + err.message);
+      }
+    }
+    
+    // 刷新数据
+    function refreshData() {
+      loadData();
+    }
+    
+    // 转义 HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // 初始化
+    loadData();
+    
+    // 自动刷新（30秒）
+    setInterval(loadData, 30000);
+  </script>
+<script>FieldTips.init({pageType:"automation"});</script></body>
+</html>

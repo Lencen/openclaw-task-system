@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>四象限任务 - Morning Task System V2</title>
+    
+    <link href="assets/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/frame.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+            
+    <style>
+        /* 统一设计系统变量（和 dashboard-new.html 一致） */
+        :root {
+          --bg-primary: #0f172a;
+          --bg-secondary: #1e293b;
+          --bg-tertiary: #334155;
+          --text-primary: #f1f5f9;
+          --text-secondary: #94a3b8;
+          --text-tertiary: #64748b;
+          --border: #334155;
+          --primary: #3b82f6;
+          --success: #10b981;
+          --warning: #f59e0b;
+          --danger: #ef4444;
+          
+          /* 兼容别名 */
+          --theme-bg: var(--bg-primary);
+          --theme-card-bg: var(--bg-secondary);
+          --theme-hover-bg: var(--bg-tertiary);
+          --theme-text: var(--text-primary);
+          --theme-text-secondary: var(--text-secondary);
+          --theme-text-muted: var(--text-tertiary);
+          --theme-border: var(--border);
+          --theme-primary: var(--primary);
+          --theme-success: var(--success);
+          --theme-warning: var(--warning);
+          --theme-danger: var(--danger);
+          --theme-shadow: rgba(0, 0, 0, 0.3);
+          --theme-primary-light: rgba(59, 130, 246, 0.15);
+          --theme-primary-lighter: rgba(59, 130, 246, 0.05);
+        }
+        
+        /* 四象限页面专用样式 */
+        
+        /* ========== 布局框架 ========== */
+        /* 已移除，使用 frame.css */
+        
+        /* ========== 主内容区 ========== */
+        /* 已移除，使用 frame.css */
+        
+        /* ========== 顶部栏 ========== */
+        /* 已移除，使用 frame.css */
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-tertiary);
+        }
+        
+        .breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .header-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .header-btn:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        /* ========== 内容区 ========== */
+        /* 已移除，使用 frame.css */
+        
+        /* ========== 四象限专用 ========== */
+        .quadrant-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+        
+        .quadrant {
+            background: var(--theme-card-bg);
+            border: 1px solid var(--theme-border);
+            border-radius: 12px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .quadrant:hover { border-color: var(--theme-primary); }
+        
+        .quadrant.q1 { border-top: 4px solid var(--theme-danger); }
+        .quadrant.q2 { border-top: 4px solid var(--theme-primary); }
+        .quadrant.q3 { border-top: 4px solid var(--theme-warning); }
+        .quadrant.q4 { border-top: 4px solid var(--theme-success); }
+        
+        .quadrant-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--theme-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .quadrant-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--theme-text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .quadrant-badge {
+            background: var(--theme-primary-light);
+            color: var(--theme-primary);
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .quadrant-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            min-height: 200px;
+        }
+        
+        .quadrant-content.drag-over {
+            background: var(--theme-primary-lighter);
+            border-radius: 0 0 12px 12px;
+        }
+        
+        .task-card {
+            background: var(--theme-card-bg);
+            border: 1px solid var(--theme-border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: grab;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+            border-color: var(--theme-primary);
+        }
+        
+        .task-card:active { cursor: grabbing; }
+        
+        .task-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        
+        .task-card.completed { opacity: 0.6; border-left: 4px solid var(--theme-success); }
+        
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .task-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--theme-text);
+            line-height: 1.5;
+            flex: 1;
+        }
+        
+        .task-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        .priority-badge {
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+        
+        .priority-high { background: rgba(239, 68, 68, 0.15); color: var(--theme-danger); }
+        .priority-medium { background: rgba(245, 158, 11, 0.15); color: var(--theme-warning); }
+        .priority-low { background: rgba(59, 130, 246, 0.15); color: var(--theme-primary); }
+        
+        .task-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding-top: 12px;
+            border-top: 1px solid var(--theme-border);
+            margin-top: 12px;
+        }
+        
+        .task-btn {
+            background: transparent;
+            border: none;
+            color: var(--theme-text-secondary);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .task-btn:hover { background: var(--theme-primary-light); color: var(--theme-primary); }
+        
+        .empty-quadrant {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--theme-text-secondary);
+        }
+        
+        .empty-quadrant-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+        
+        .empty-quadrant-title {
+            font-size: 14px;
+            color: var(--theme-text);
+        }
+        
+        /* 统计卡片 */
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: var(--theme-card-bg);
+            border: 1px solid var(--theme-border);
+            border-radius: 12px;
+            padding: 16px 24px;
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--theme-primary);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--theme-text-secondary);
+            margin-top: 4px;
+        }
+        
+        .stat-card.urgent .stat-value { color: var(--theme-danger); }
+        .stat-card.important .stat-value { color: var(--theme-warning); }
+        
+        /* 快速添加 */
+        .quick-add {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .quick-add-input {
+            flex: 1;
+            background: var(--theme-card-bg);
+            border: 1px solid var(--theme-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--theme-text);
+            font-size: 14px;
+        }
+        
+        .quick-add-input:focus { outline: none; border-color: var(--theme-primary); }
+        
+        .quick-add-btn {
+            background: var(--theme-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .quick-add-btn:hover { opacity: 0.9; }
+        
+        /* 响应式 */
+        @media (max-width: 900px) {
+            .quadrant-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, auto);
+            }
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 48px;
+            right: 48px;
+            background: var(--theme-card-bg);
+            border-left: 4px solid var(--theme-primary);
+            border-radius: 8px;
+            padding: 16px 24px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 1001;
+        }
+        
+        .toast.active { display: flex; }
+    </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <!-- 统一侧边栏 -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容区 -->
+    <main class="main">
+      <!-- 顶部栏 -->
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <span>四象限</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadTasks()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      
+      <!-- 内容区 -->
+      <div class="content">
+        <!-- 统计卡片 -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">总任务</div>
+            </div>
+            <div class="stat-card urgent">
+                <div class="stat-value" id="stat-q1">0</div>
+                <div class="stat-label">🔴 紧急重要</div>
+            </div>
+            <div class="stat-card important">
+                <div class="stat-value" id="stat-q2">0</div>
+                <div class="stat-label">🔵 重要不紧急</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-q3">0</div>
+                <div class="stat-label">🟡 紧急不重要</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-q4">0</div>
+                <div class="stat-label">🟢 不紧急不重要</div>
+            </div>
+        </div>
+        
+        <!-- 快速添加 -->
+        <div class="quick-add">
+            <input type="text" class="quick-add-input" id="quick-add-input" placeholder="快速添加任务（回车提交）...">
+            <select id="quick-quadrant" class="filter-select" style="padding: 12px; border-radius: 8px; background: var(--theme-card-bg); border: 1px solid var(--theme-border); color: var(--theme-text);">
+                <option value="1">Q1 紧急重要</option>
+                <option value="2">Q2 重要不紧急</option>
+                <option value="3">Q3 紧急不重要</option>
+                <option value="4">Q4 不紧急不重要</option>
+            </select>
+            <button class="quick-add-btn" onclick="quickAddTask()">添加</button>
+        </div>
+        
+        <!-- 四象限网格 -->
+        <div class="quadrant-grid">
+            <div class="quadrant q1" data-quadrant="1">
+                <div class="quadrant-header">
+                    <div class="quadrant-title">
+                        <span>🔴</span>
+                        <span>Q1 紧急且重要</span>
+                    </div>
+                    <span class="quadrant-badge" id="badge-q1">0</span>
+                </div>
+                <div class="quadrant-content" data-quadrant="1" id="list-q1">
+                    <div class="empty-quadrant">
+                        <div class="empty-quadrant-icon">📥</div>
+                        <div class="empty-quadrant-title">暂无任务</div>
+                    </div>
+                </div>
+            </div>
+            <div class="quadrant q2" data-quadrant="2">
+                <div class="quadrant-header">
+                    <div class="quadrant-title">
+                        <span>🔵</span>
+                        <span>Q2 重要不紧急</span>
+                    </div>
+                    <span class="quadrant-badge" id="badge-q2">0</span>
+                </div>
+                <div class="quadrant-content" data-quadrant="2" id="list-q2">
+                    <div class="empty-quadrant">
+                        <div class="empty-quadrant-icon">📥</div>
+                        <div class="empty-quadrant-title">暂无任务</div>
+                    </div>
+                </div>
+            </div>
+            <div class="quadrant q3" data-quadrant="3">
+                <div class="quadrant-header">
+                    <div class="quadrant-title">
+                        <span>🟡</span>
+                        <span>Q3 紧急不重要</span>
+                    </div>
+                    <span class="quadrant-badge" id="badge-q3">0</span>
+                </div>
+                <div class="quadrant-content" data-quadrant="3" id="list-q3">
+                    <div class="empty-quadrant">
+                        <div class="empty-quadrant-icon">📥</div>
+                        <div class="empty-quadrant-title">暂无任务</div>
+                    </div>
+                </div>
+            </div>
+            <div class="quadrant q4" data-quadrant="4">
+                <div class="quadrant-header">
+                    <div class="quadrant-title">
+                        <span>🟢</span>
+                        <span>Q4 不重要不紧急</span>
+                    </div>
+                    <span class="quadrant-badge" id="badge-q4">0</span>
+                </div>
+                <div class="quadrant-content" data-quadrant="4" id="list-q4">
+                    <div class="empty-quadrant">
+                        <div class="empty-quadrant-icon">📥</div>
+                        <div class="empty-quadrant-title">暂无任务</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Toast -->
+  <div class="toast" id="toast">
+      <span class="toast-icon">✅</span>
+      <span class="toast-message" id="toast-message">操作成功</span>
+  </div>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'quadrant' });
+  </script>
+  
+  <script>
+    const API_BASE = window.location.origin;
+    let allTasks = [];
+    
+    // 加载任务
+    async function loadTasks() {
+        try {
+            const res = await fetch(`${API_BASE}/api/tasks?showCompleted=true`);
+            const data = await res.json();
+            // 修复: API 返回格式可能为 { tasks: [...], total: N } 或 { data: { tasks: [...] } }
+            // quadrant 存储为整数，不要检查 "Q1" 字符串
+            allTasks = data.data?.tasks || data.tasks || [];
+            console.log('[Quadrant] tasks loaded:', allTasks.length, 'tasks');
+            renderTasks();
+            updateStats();
+        } catch (e) {
+            console.error('加载任务失败:', e);
+        }
+    }
+    
+    // 渲染任务
+    function renderTasks() {
+        for (let q = 1; q <= 4; q++) {
+            const list = document.getElementById(`list-q${q}`);
+            // 修复: quadrant 存储为整数，不要检查 "Q1" 字符串
+            const tasks = allTasks.filter(t => t.quadrant == `Q${q}` || t.quadrant == q);
+            
+            if (tasks.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-quadrant">
+                        <div class="empty-quadrant-icon">📥</div>
+                        <div class="empty-quadrant-title">暂无任务</div>
+                    </div>
+                `;
+            } else {
+                list.innerHTML = tasks.map(t => `
+                    <div class="task-card ${t.status === 'completed' ? 'completed' : ''}" 
+                         draggable="true" 
+                         data-id="${t.id}"
+                         ondragstart="onDragStart(event)"
+                         ondragend="onDragEnd(event)">
+                        <div class="task-header">
+                            <div class="task-title">${escapeHtml(t.title)}</div>
+                        </div>
+                        <div class="task-meta">
+                            ${t.priority ? `<span class="priority-badge priority-${t.priority}">${t.priority.toUpperCase()}</span>` : ''}
+                            <span style="color: var(--theme-text-secondary); font-size: 12px;">${getStatusText(t.status)}</span>
+                        </div>
+                        <div class="task-actions">
+                            <button class="task-btn" onclick="viewTask('${t.id}')">查看</button>
+                            <button class="task-btn" onclick="completeTask('${t.id}')">完成</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            document.getElementById(`badge-q${q}`).textContent = tasks.length;
+        }
+        
+        // 添加拖拽目标事件
+        document.querySelectorAll('.quadrant-content').forEach(el => {
+            el.ondragover = e => { e.preventDefault(); el.classList.add('drag-over'); };
+            el.ondragleave = () => el.classList.remove('drag-over');
+            el.ondrop = e => {
+                e.preventDefault();
+                el.classList.remove('drag-over');
+                const taskId = e.dataTransfer.getData('text/plain');
+                const newQuadrant = el.dataset.quadrant;
+                moveTask(taskId, newQuadrant);
+            };
+        });
+    }
+    
+    // 更新统计
+    function updateStats() {
+        document.getElementById('stat-total').textContent = allTasks.length;
+        for (let q = 1; q <= 4; q++) {
+            // 修复: quadrant 存储为整数，不要检查 "Q1" 字符串
+            document.getElementById(`stat-q${q}`).textContent = allTasks.filter(t => t.quadrant == `Q${q}` || t.quadrant == q).length;
+        }
+    }
+    
+    // 拖拽
+    function onDragStart(e) {
+        e.target.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', e.target.dataset.id);
+    }
+    
+    function onDragEnd(e) {
+        e.target.classList.remove('dragging');
+    }
+    
+    // 移动任务
+    async function moveTask(taskId, newQuadrant) {
+        try {
+            const res = await fetch(`${API_BASE}/api/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quadrant: parseInt(newQuadrant) })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast('任务已移动');
+                loadTasks();
+            }
+        } catch (e) {
+            showToast('移动失败', true);
+        }
+    }
+    
+    // 快速添加
+    async function quickAddTask() {
+        const input = document.getElementById('quick-add-input');
+        const quadrant = document.getElementById('quick-quadrant').value;
+        const title = input.value.trim();
+        
+        if (!title) return;
+        
+        try {
+            const res = await fetch(`${API_BASE}/api/tasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, quadrant: parseInt(quadrant), status: 'pending' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                input.value = '';
+                showToast('任务已创建');
+                loadTasks();
+            }
+        } catch (e) {
+            showToast('创建失败', true);
+        }
+    }
+    
+    // 回车提交
+    document.getElementById('quick-add-input').addEventListener('keypress', e => {
+        if (e.key === 'Enter') quickAddTask();
+    });
+    
+    // 查看任务
+    function viewTask(id) {
+        window.location.href = `task-detail.html?id=${id}`;
+    }
+    
+    // 完成任务
+    async function completeTask(id) {
+        try {
+            const res = await fetch(`${API_BASE}/api/tasks/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'completed' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast('任务已完成');
+                loadTasks();
+            }
+        } catch (e) {
+            showToast('操作失败', true);
+        }
+    }
+    
+    // 显示提示
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        const msgEl = document.getElementById('toast-message');
+        msgEl.textContent = message;
+        toast.classList.add('active');
+        setTimeout(() => toast.classList.remove('active'), 3000);
+    }
+    
+    // 获取状态文本
+    function getStatusText(status) {
+        const map = { pending: '待处理', doing: '进行中', completed: '已完成' };
+        return map[status] || status;
+    }
+    
+    // HTML 转义
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', loadTasks);
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

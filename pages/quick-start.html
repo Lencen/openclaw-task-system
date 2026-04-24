@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>快速开始指南 - 任务管理平台 V3</title>
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .guide-content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .guide-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+    }
+    .guide-section h2 {
+      color: var(--primary);
+      margin-bottom: 15px;
+      font-size: 1.3em;
+    }
+    .guide-section h3 {
+      color: var(--text-primary);
+      margin: 15px 0 10px;
+      font-size: 1.1em;
+    }
+    .code-block {
+      background: var(--bg-primary);
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-family: 'Consolas', monospace;
+      font-size: 0.9em;
+      margin: 10px 0;
+      border-left: 3px solid var(--primary);
+    }
+    .api-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+    }
+    .api-table th, .api-table td {
+      padding: 10px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .api-table th {
+      background: var(--bg-tertiary);
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    .status-good { background: var(--success); color: white; }
+    .status-warning { background: var(--warning); color: black; }
+    .status-critical { background: var(--danger); color: white; }
+    .try-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px 0;
+    }
+    .try-btn:hover {
+      opacity: 0.9;
+    }
+    .result-box {
+      background: var(--bg-primary);
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 10px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <h1>📖 快速开始指南</h1>
+        <p>5分钟快速上手任务管理平台 V3</p>
+      </header>
+      <div class="content">
+        <div class="guide-content">
+
+          <!-- 核心概念 -->
+          <div class="guide-section">
+            <h2>🎯 核心概念（30秒理解）</h2>
+            <div class="code-block">场景 (Scenario) → 产品 (Product) → 项目 (Project) → 任务 (Task)
+     work              任务管理系统        V3重构项目         设计API</div>
+            <table class="api-table">
+              <tr><th>层级</th><th>说明</th><th>示例</th></tr>
+              <tr><td>场景</td><td>应用场景</td><td>work（工作）、home（家庭）</td></tr>
+              <tr><td>产品</td><td>产品线</td><td>任务管理系统、知识库系统</td></tr>
+              <tr><td>项目</td><td>具体项目</td><td>V3重构、文档编写</td></tr>
+              <tr><td>任务</td><td>执行单元</td><td>设计API、编写代码</td></tr>
+            </table>
+          </div>
+
+          <!-- 快速操作 -->
+          <div class="guide-section">
+            <h2>⚡ 快速操作</h2>
+            
+            <h3>1. 查看系统状态</h3>
+            <button class="try-btn" onclick="tryApi('/api/work/stats')">尝试一下</button>
+            <div id="result-stats" class="result-box" style="display:none;"></div>
+            
+            <h3>2. 查看项目列表</h3>
+            <div class="code-block">GET /api/work/projects</div>
+            <button class="try-btn" onclick="tryApi('/api/work/projects')">尝试一下</button>
+            <div id="result-projects" class="result-box" style="display:none;"></div>
+            
+            <h3>3. 创建项目</h3>
+            <div class="code-block">POST /api/work/projects
+{
+  "name": "我的项目",
+  "description": "项目描述",
+  "priority": "high"
+}</div>
+            <button class="try-btn" onclick="createProject()">创建演示项目</button>
+            <div id="result-create" class="result-box" style="display:none;"></div>
+          </div>
+
+          <!-- Agent 管理 -->
+          <div class="guide-section">
+            <h2>🤖 Agent 管理</h2>
+            <button class="try-btn" onclick="tryApi('/api/work/agents')">查看所有 Agent</button>
+            <div id="result-agents" class="result-box" style="display:none;"></div>
+            <br><br>
+            <button class="try-btn" onclick="tryApi('/api/work/agents/available')">查看可用 Agent</button>
+            <div id="result-available" class="result-box" style="display:none;"></div>
+          </div>
+
+          <!-- API 速查表 -->
+          <div class="guide-section">
+            <h2>📋 API 速查表</h2>
+            
+            <h3>项目管理</h3>
+            <table class="api-table">
+              <tr><th>操作</th><th>方法</th><th>端点</th></tr>
+              <tr><td>项目列表</td><td>GET</td><td>/api/work/projects</td></tr>
+              <tr><td>项目详情</td><td>GET</td><td>/api/work/projects/:id</td></tr>
+              <tr><td>创建项目</td><td>POST</td><td>/api/work/projects</td></tr>
+              <tr><td>更新项目</td><td>PUT</td><td>/api/work/projects/:id</td></tr>
+              <tr><td>删除项目</td><td>DELETE</td><td>/api/work/projects/:id</td></tr>
+              <tr><td>项目健康</td><td>GET</td><td>/api/work/projects/:id/health</td></tr>
+            </table>
+            
+            <h3>Agent 管理</h3>
+            <table class="api-table">
+              <tr><th>操作</th><th>方法</th><th>端点</th></tr>
+              <tr><td>Agent 列表</td><td>GET</td><td>/api/work/agents</td></tr>
+              <tr><td>Agent 详情</td><td>GET</td><td>/api/work/agents/:id</td></tr>
+              <tr><td>分配任务</td><td>POST</td><td>/api/work/agents/:id/assign</td></tr>
+              <tr><td>可用 Agent</td><td>GET</td><td>/api/work/agents/available</td></tr>
+            </table>
+            
+            <h3>评审流程</h3>
+            <table class="api-table">
+              <tr><th>操作</th><th>方法</th><th>端点</th></tr>
+              <tr><td>评审小组</td><td>GET</td><td>/api/work/reviews/groups</td></tr>
+              <tr><td>创建评审</td><td>POST</td><td>/api/work/reviews</td></tr>
+              <tr><td>提交意见</td><td>POST</td><td>/api/work/reviews/:id/submit</td></tr>
+            </table>
+          </div>
+
+          <!-- 状态说明 -->
+          <div class="guide-section">
+            <h2>📊 状态说明</h2>
+            <h3>项目健康状态</h3>
+            <p><span class="status-badge status-good">good</span> 健康 - 无逾期任务</p>
+            <p><span class="status-badge status-warning">warning</span> 警告 - 1-3个逾期任务</p>
+            <p><span class="status-badge status-critical">critical</span> 严重 - 超过3个逾期任务</p>
+            
+            <h3>任务状态流转</h3>
+            <div class="code-block">pending → doing → completed
+         ↘ cancelled</div>
+          </div>
+
+          <!-- 下一步 -->
+          <div class="guide-section">
+            <h2>📚 下一步</h2>
+            <ul>
+              <li><a href="docs/QUICK-START-GUIDE.md">完整快速开始指南</a></li>
+              <li><a href="docs/2026-03-19-task-platform-v3-requirements.md">需求文档</a></li>
+              <li><a href="docs/2026-03-19-task-platform-v3-technical-design.md">技术设计</a></li>
+              <li><a href="docs/API-CATALOG.md">API 目录</a></li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'quick-start' });
+    
+    async function tryApi(path, targetId) {
+      const id = targetId || 'result-' + path.split('/').pop().replace(/[^a-z]/g, '');
+      const resultBox = document.getElementById(id) || createResultBox(id);
+      
+      resultBox.style.display = 'block';
+      resultBox.textContent = '加载中...';
+      
+      try {
+        const response = await fetch(path);
+        const data = await response.json();
+        resultBox.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        resultBox.textContent = '错误: ' + error.message;
+      }
+    }
+    
+    function createResultBox(id) {
+      const box = document.createElement('div');
+      box.id = id;
+      box.className = 'result-box';
+      event.target.parentNode.insertBefore(box, event.target.nextSibling);
+      return box;
+    }
+    
+    async function createProject() {
+      const resultBox = document.getElementById('result-create');
+      resultBox.style.display = 'block';
+      resultBox.textContent = '创建中...';
+      
+      try {
+        const response = await fetch('/api/work/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: '演示项目 - ' + new Date().toLocaleTimeString(),
+            description: '通过快速开始指南创建的演示项目',
+            priority: 'medium'
+          })
+        });
+        const data = await response.json();
+        resultBox.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        resultBox.textContent = '错误: ' + error.message;
+      }
+    }
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

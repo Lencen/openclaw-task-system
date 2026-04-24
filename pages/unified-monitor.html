@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>统一监控中心 - Morning 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content {
+      padding: 24px;
+    }
+    
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .last-update {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    /* 监控网格 */
+    .monitor-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    
+    @media (max-width: 1200px) {
+      .monitor-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .monitor-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* 监控卡片 */
+    .monitor-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.2);
+    }
+    
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+    
+    .card-title i {
+      font-size: 18px;
+      color: var(--primary);
+    }
+    
+    .card-body {
+      padding: 16px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .card-body.compact {
+      max-height: 250px;
+    }
+    
+    /* 统计数字 */
+    .stat-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .stat-item {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .stat-value.success { color: var(--success); }
+    .stat-value.warning { color: var(--warning); }
+    .stat-value.danger { color: var(--danger); }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    
+    /* 进度条 */
+    .progress-bar {
+      height: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+    
+    .progress-fill.success { background: var(--success); }
+    .progress-fill.warning { background: var(--warning); }
+    .progress-fill.danger { background: var(--danger); }
+    .progress-fill.primary { background: var(--primary); }
+    
+    /* 列表项 */
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    
+    .list-item:last-child {
+      border-bottom: none;
+    }
+    
+    .list-item:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .list-icon {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 18px;
+    }
+    
+    .list-icon.success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .list-icon.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .list-icon.danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .list-icon.primary { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .list-icon.gray { background: rgba(107, 114, 128, 0.15); color: var(--text-secondary); }
+    
+    .list-content {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .list-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .list-subtitle {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+    
+    .list-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    
+    .list-badge.success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .list-badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .list-badge.danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .list-badge.primary { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .list-badge.gray { background: rgba(107, 114, 128, 0.15); color: var(--text-secondary); }
+    
+    /* Agent 状态卡片 */
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    
+    .agent-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+    }
+    
+    .agent-avatar {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary);
+      border-radius: 50%;
+      font-size: 14px;
+      color: white;
+    }
+    
+    .agent-info {
+      flex: 1;
+    }
+    
+    .agent-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    
+    .agent-task {
+      font-size: 11px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .agent-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    
+    .agent-status.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .agent-status.busy { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+    .agent-status.offline { background: var(--text-secondary); }
+    
+    /* 服务状态 */
+    .service-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .service-row:last-child {
+      border-bottom: none;
+    }
+    
+    .service-name {
+      flex: 1;
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+    
+    .service-status {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+    
+    .service-status.online { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .service-status.offline { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    
+    /* 时间线 */
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+    
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    
+    .timeline-item {
+      position: relative;
+      padding: 12px 0;
+    }
+    
+    .timeline-dot {
+      position: absolute;
+      left: -20px;
+      top: 16px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      background: var(--bg-secondary);
+    }
+    
+    .timeline-time {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    
+    .timeline-content {
+      font-size: 13px;
+      margin-top: 4px;
+      color: var(--text-primary);
+    }
+    
+    /* 刷新按钮 */
+    .refresh-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+    
+    .refresh-btn:hover {
+      opacity: 0.9;
+    }
+    
+    .refresh-btn.loading i {
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 32px;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+    
+    /* 链接样式 */
+    .card-link {
+      font-size: 12px;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    
+    .card-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <span>统一监控中心</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="refreshAll()">
+            <i class="ri-refresh-line"></i>
+          </button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <div class="page-content">
+          <!-- 页面标题 -->
+          <div class="page-header">
+            <div>
+              <h1 class="page-title"><i class="ri-dashboard-3-line"></i> 统一监控中心</h1>
+              <div class="last-update" id="lastUpdate">最后更新: --</div>
+            </div>
+            <button class="refresh-btn" onclick="refreshAll()">
+              <i class="ri-refresh-line"></i>
+              刷新
+            </button>
+          </div>
+          
+          <!-- 监控网格 -->
+          <div class="monitor-grid">
+            <!-- 系统概览 -->
+            <div class="monitor-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="ri-server-line"></i>
+                  系统概览
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="stat-row">
+                  <div class="stat-item">
+                    <div class="stat-value success" id="statOnline">-</div>
+                    <div class="stat-label">在线服务</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value" id="statTasks">-</div>
+                    <div class="stat-label">执行中任务</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value warning" id="statAlerts">-</div>
+                    <div class="stat-label">告警数</div>
+                  </div>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill success" id="healthProgress" style="width: 100%"></div>
+                </div>
+                <div style="font-size: 12px; color: var(--text-secondary); text-align: center;">
+                  系统健康度: <span id="healthPercent">100%</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 项目进展 -->
+            <div class="monitor-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="ri-folder-chart-line"></i>
+                  项目进展
+                </div>
+                <a href="projects-new.html" class="card-link">查看全部</a>
+              </div>
+              <div class="card-body compact" id="projectsBody">
+                <div class="empty-state">
+                  <i class="ri-loader-4-line"></i>
+                  <div>加载中...</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Agent 状态 -->
+            <div class="monitor-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="ri-robot-line"></i>
+                  Agent 状态
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="agent-grid" id="agentGrid">
+                  <!-- 动态填充 -->
+                </div>
+              </div>
+            </div>
+            
+            <!-- 正在执行的任务 -->
+            <div class="monitor-card" style="grid-column: span 2;">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="ri-play-circle-line"></i>
+                  正在执行的任务
+                </div>
+              </div>
+              <div class="card-body" id="runningTasksBody">
+                <div class="empty-state">
+                  <i class="ri-loader-4-line"></i>
+                  <div>加载中...</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 服务状态 -->
+            <div class="monitor-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="ri-service-line"></i>
+                  服务状态
+                </div>
+                <a href="service-monitor-v2.html" class="card-link">详情</a>
+              </div>
+              <div class="card-body compact" id="servicesBody">
+                <div class="empty-state">
+                  <i class="ri-loader-4-line"></i>
+                  <div>加载中...</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 最近活动 -->
+            <div class="monitor-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="ri-history-line"></i>
+                  最近活动
+                </div>
+              </div>
+              <div class="card-body" id="activityBody">
+                <div class="empty-state">
+                  <i class="ri-loader-4-line"></i>
+                  <div>加载中...</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 待处理问题 -->
+            <div class="monitor-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <i class="ri-error-warning-line"></i>
+                  待处理问题
+                </div>
+              </div>
+              <div class="card-body" id="issuesBody">
+                <div class="empty-state">
+                  <i class="ri-checkbox-circle-line" style="color: var(--success);"></i>
+                  <div>没有待处理问题</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  
+  <script>
+    const API_BASE = window.location.origin;
+    
+    // ========== 初始化 ==========
+    document.addEventListener('DOMContentLoaded', () => {
+      Sidebar.init({ activePage: 'unified-monitor' });
+      refreshAll();
+      startAutoRefresh();
+    });
+    
+    // ========== 刷新所有数据 ==========
+    async function refreshAll() {
+      const btn = document.querySelector('.refresh-btn');
+      btn.classList.add('loading');
+      
+      try {
+        await Promise.all([
+          loadSystemOverview(),
+          loadProjects(),
+          loadAgents(),
+          loadRunningTasks(),
+          loadServices(),
+          loadActivity(),
+          loadIssues()
+        ]);
+        
+        document.getElementById('lastUpdate').textContent = 
+          `最后更新: ${new Date().toLocaleTimeString('zh-CN', { hour12: false })}`;
+      } catch (e) {
+        console.error('刷新失败:', e);
+      }
+      
+      btn.classList.remove('loading');
+    }
+    
+    // ========== 系统概览 ==========
+    async function loadSystemOverview() {
+      try {
+        const [servicesRes, tasksRes] = await Promise.all([
+          fetch(`${API_BASE}/api/pm2/status`),
+          fetch(`${API_BASE}/api/tasks?status=doing`)
+        ]);
+        
+        const servicesData = await servicesRes.json();
+        const tasksData = await tasksRes.json();
+        
+        const services = servicesData.data || [];
+        const tasks = tasksData.data?.tasks || [];
+        
+        const online = services.filter(s => s.status === 'online').length;
+        const total = services.length;
+        const health = total > 0 ? Math.round((online / total) * 100) : 100;
+        
+        document.getElementById('statOnline').textContent = `${online}/${total}`;
+        document.getElementById('statTasks').textContent = tasks.length;
+        
+        // 计算告警数
+        const alerts = services.filter(s => s.restartCount > 3).length;
+        document.getElementById('statAlerts').textContent = alerts;
+        
+        // 更新健康度
+        document.getElementById('healthPercent').textContent = `${health}%`;
+        document.getElementById('healthProgress').style.width = `${health}%`;
+        document.getElementById('healthProgress').className = 
+          `progress-fill ${health >= 90 ? 'success' : health >= 70 ? 'warning' : 'danger'}`;
+          
+      } catch (e) {
+        console.error('加载系统概览失败:', e);
+      }
+    }
+    
+    // ========== 项目进展 ==========
+    async function loadProjects() {
+      try {
+        const res = await fetch(`${API_BASE}/api/devops/projects`);
+        const data = await res.json();
+        const projects = (data.data || []).slice(0, 5);
+        
+        const container = document.getElementById('projectsBody');
+        
+        if (projects.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="ri-folder-open-line"></i>
+              <div>暂无项目</div>
+            </div>
+          `;
+          return;
+        }
+        
+        container.innerHTML = projects.map(p => {
+          const statusClass = p.status === 'completed' ? 'success' : 
+                             p.status === 'doing' ? 'primary' : 
+                             p.status === 'planning' ? 'warning' : 'gray';
+          const statusText = {
+            'completed': '已完成',
+            'doing': '进行中',
+            'planning': '规划中',
+            'approved': '已批准'
+          }[p.status] || p.status;
+          
+          return `
+            <div class="list-item">
+              <div class="list-icon ${statusClass}">
+                <i class="ri-folder-line"></i>
+              </div>
+              <div class="list-content">
+                <div class="list-title">${p.name}</div>
+                <div class="list-subtitle">${p.tasks?.length || 0} 个任务</div>
+              </div>
+              <span class="list-badge ${statusClass}">${statusText}</span>
+            </div>
+          `;
+        }).join('');
+        
+      } catch (e) {
+        console.error('加载项目失败:', e);
+      }
+    }
+    
+    // ========== Agent 状态 ==========
+    async function loadAgents() {
+      try {
+        const res = await fetch(`${API_BASE}/api/agents/list`);
+        const data = await res.json();
+        const agents = data.data || [];
+        
+        const container = document.getElementById('agentGrid');
+        
+        if (agents.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state" style="grid-column: span 2;">
+              <i class="ri-robot-line"></i>
+              <div>暂无 Agent 数据</div>
+            </div>
+          `;
+          return;
+        }
+        
+        container.innerHTML = agents.map(agent => {
+          const name = agent.id ? agent.id.replace('agent-', '') : agent.name || 'Unknown';
+          const status = agent.status || 'offline';
+          
+          return `
+            <div class="agent-item">
+              <div class="agent-avatar">${name.charAt(0).toUpperCase()}</div>
+              <div class="agent-info">
+                <div class="agent-name">${name}</div>
+                <div class="agent-task">${agent.currentTask || '空闲'}</div>
+              </div>
+              <div class="agent-status ${status === 'online' ? 'online' : status === 'busy' ? 'busy' : 'offline'}"></div>
+            </div>
+          `;
+        }).join('');
+        
+      } catch (e) {
+        console.error('加载 Agent 状态失败:', e);
+        document.getElementById('agentGrid').innerHTML = `
+          <div class="empty-state" style="grid-column: span 2;">
+            <i class="ri-error-warning-line"></i>
+            <div>加载失败</div>
+          </div>
+        `;
+      }
+    }
+    
+    // ========== 正在执行的任务 ==========
+    async function loadRunningTasks() {
+      try {
+        const res = await fetch(`${API_BASE}/api/tasks?status=doing&limit=10`);
+        const data = await res.json();
+        const tasks = data.data?.tasks || [];
+        
+        const container = document.getElementById('runningTasksBody');
+        
+        if (tasks.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="ri-checkbox-circle-line" style="color: var(--success);"></i>
+              <div>当前没有执行中的任务</div>
+            </div>
+          `;
+          return;
+        }
+        
+        container.innerHTML = tasks.map(task => {
+          const completed = task.breakdown?.filter(s => s.status === 'completed').length || 0;
+          const total = task.breakdown?.length || 0;
+          const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+          
+          return `
+            <div class="list-item">
+              <div class="list-icon primary">
+                <i class="ri-task-line"></i>
+              </div>
+              <div class="list-content">
+                <div class="list-title">${task.title}</div>
+                <div class="list-subtitle">
+                  Agent: ${task.assignedAgent || '未分配'} | 进度: ${completed}/${total}
+                </div>
+                <div class="progress-bar" style="margin-top: 6px;">
+                  <div class="progress-fill primary" style="width: ${progress}%"></div>
+                </div>
+              </div>
+              <span class="list-badge primary">${progress}%</span>
+            </div>
+          `;
+        }).join('');
+        
+      } catch (e) {
+        console.error('加载任务失败:', e);
+      }
+    }
+    
+    // ========== 服务状态 ==========
+    async function loadServices() {
+      try {
+        const res = await fetch(`${API_BASE}/api/pm2/status`);
+        const data = await res.json();
+        const services = (data.data || []).slice(0, 8);
+        
+        const container = document.getElementById('servicesBody');
+        
+        container.innerHTML = services.map(s => `
+          <div class="service-row">
+            <span class="service-name">${s.name}</span>
+            <span class="service-status ${s.status === 'online' ? 'online' : 'offline'}">
+              ${s.status === 'online' ? '在线' : '离线'}
+            </span>
+          </div>
+        `).join('');
+        
+      } catch (e) {
+        console.error('加载服务失败:', e);
+      }
+    }
+    
+    // ========== 最近活动 ==========
+    async function loadActivity() {
+      try {
+        const res = await fetch(`${API_BASE}/api/tasks?limit=10`);
+        const data = await res.json();
+        const tasks = data.data?.tasks || [];
+        
+        const container = document.getElementById('activityBody');
+        
+        // 筛选最近有更新的任务
+        const recentTasks = tasks
+          .filter(t => t.updated_at || t.completed_at)
+          .sort((a, b) => new Date(b.updated_at || b.completed_at) - new Date(a.updated_at || a.completed_at))
+          .slice(0, 5);
+        
+        if (recentTasks.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="ri-history-line"></i>
+              <div>暂无活动记录</div>
+            </div>
+          `;
+          return;
+        }
+        
+        container.innerHTML = `
+          <div class="timeline">
+            ${recentTasks.map(task => {
+              const time = new Date(task.updated_at || task.completed_at).toLocaleTimeString('zh-CN', { hour12: false });
+              const iconClass = task.status === 'completed' ? 'success' : 'warning';
+              
+              return `
+                <div class="timeline-item">
+                  <div class="timeline-dot" style="border-color: var(--${iconClass});"></div>
+                  <div class="timeline-time">${time}</div>
+                  <div class="timeline-content">
+                    <strong>${task.title}</strong>
+                    <span style="color: var(--text-secondary);"> - ${task.status === 'completed' ? '已完成' : '更新中'}</span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+        
+      } catch (e) {
+        console.error('加载活动失败:', e);
+      }
+    }
+    
+    // ========== 待处理问题 ==========
+    async function loadIssues() {
+      try {
+        const res = await fetch(`${API_BASE}/api/tasks?status=failed`);
+        const data = await res.json();
+        const failedTasks = data.data?.tasks || [];
+        
+        const container = document.getElementById('issuesBody');
+        
+        if (failedTasks.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="ri-checkbox-circle-line" style="color: var(--success);"></i>
+              <div>没有待处理问题</div>
+            </div>
+          `;
+          return;
+        }
+        
+        container.innerHTML = failedTasks.slice(0, 5).map(task => `
+          <div class="list-item">
+            <div class="list-icon danger">
+              <i class="ri-error-warning-line"></i>
+            </div>
+            <div class="list-content">
+              <div class="list-title">${task.title}</div>
+              <div class="list-subtitle">${task.error_message || '执行失败'}</div>
+            </div>
+            <span class="list-badge danger">失败</span>
+          </div>
+        `).join('');
+        
+      } catch (e) {
+        console.error('加载问题失败:', e);
+      }
+    }
+    
+    // ========== 自动刷新 ==========
+    let refreshInterval = null;
+    
+    function startAutoRefresh() {
+      if (refreshInterval) clearInterval(refreshInterval);
+      refreshInterval = setInterval(refreshAll, 30000); // 30秒刷新一次
+    }
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

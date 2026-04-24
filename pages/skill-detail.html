@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>技能详情 - 任务系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content {
+      padding: 24px;
+    }
+    
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .skill-detail {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    
+    .detail-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .skill-title {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .skill-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    
+    .skill-meta {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .meta-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+    
+    .meta-tag.category {
+      background: var(--bg-tertiary);
+      color: var(--primary);
+    }
+    
+    .meta-tag.id {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-family: monospace;
+    }
+    
+    .detail-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      background: var(--bg-tertiary);
+    }
+    
+    .tab-btn {
+      padding: 12px 20px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-secondary);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+    
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 500;
+    }
+    
+    .tab-content {
+      padding: 24px;
+    }
+    
+    .tab-pane {
+      display: none;
+    }
+    
+    .tab-pane.active {
+      display: block;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    
+    .info-card {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    
+    .info-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    
+    .info-value {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .markdown-body {
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    
+    .markdown-body h1 {
+      font-size: 24px;
+      margin: 24px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .markdown-body h2 {
+      font-size: 20px;
+      margin: 20px 0 12px;
+    }
+    
+    .markdown-body h3 {
+      font-size: 16px;
+      margin: 16px 0 8px;
+    }
+    
+    .markdown-body p {
+      margin: 8px 0;
+    }
+    
+    .markdown-body ul, .markdown-body ol {
+      margin: 8px 0;
+      padding-left: 24px;
+    }
+    
+    .markdown-body li {
+      margin: 4px 0;
+    }
+    
+    .markdown-body code {
+      background: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    
+    .markdown-body pre {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    
+    .markdown-body pre code {
+      background: none;
+      padding: 0;
+    }
+    
+    .markdown-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+    }
+    
+    .markdown-body th, .markdown-body td {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    
+    .markdown-body th {
+      background: var(--bg-tertiary);
+    }
+    
+    .files-list {
+      list-style: none;
+    }
+    
+    .files-list li {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .files-list li:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .file-name {
+      flex: 1;
+      font-size: 14px;
+    }
+    
+    .file-size {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary);
+      opacity: 0.9;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: var(--text-secondary);
+    }
+    
+    .loading i {
+      font-size: 32px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="skills-new.html">技能列表</a>
+            <span>/</span>
+            <span id="skill-breadcrumb">技能详情</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <a href="skills-new.html" class="header-btn" title="返回列表">
+            <i class="ri-arrow-left-line"></i>
+          </a>
+        </div>
+      </header>
+      
+      <div class="content">
+        <div class="page-content">
+          <div class="skill-detail" id="skill-detail">
+            <div class="loading">
+              <i class="ri-loader-line"></i>
+              <p>加载中...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script>
+    // 获取 URL 参数
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+    
+    // 加载技能详情
+    async function loadSkillDetail() {
+      const skillId = getQueryParam('id');
+      if (!skillId) {
+        document.getElementById('skill-detail').innerHTML = '<div class="loading"><p>未指定技能 ID</p></div>';
+        return;
+      }
+      
+      try {
+        const res = await fetch(`/api/skills/${skillId}`);
+        const data = await res.json();
+        
+        if (!data.success) {
+          throw new Error(data.error);
+        }
+        
+        renderSkillDetail(data.skill);
+      } catch (error) {
+        document.getElementById('skill-detail').innerHTML = `
+          <div class="loading">
+            <i class="ri-error-warning-line" style="font-size:32px;color:var(--danger);"></i>
+            <p>加载失败: ${error.message}</p>
+          </div>
+        `;
+      }
+    }
+    
+    // 渲染技能详情
+    function renderSkillDetail(skill) {
+      const container = document.getElementById('skill-detail');
+      
+      // 更新面包屑
+      document.getElementById('skill-breadcrumb').textContent = skill.name || skill.id;
+      
+      // 解析 Markdown
+      const htmlContent = marked.parse(skill.content || '');
+      
+      // 提取文件列表
+      const files = extractFiles(skill.content);
+      
+      container.innerHTML = `
+        <div class="detail-header">
+          <div class="skill-title">
+            <div class="skill-icon"><i class="ri-lightbulb-line"></i></div>
+            <div>
+              <h1>${skill.name || skill.id}</h1>
+              <div class="skill-meta">
+                <span class="meta-tag category"><i class="ri-folder-line"></i> ${skill.category || '其他'}</span>
+                <span class="meta-tag id">${skill.id}</span>
+              </div>
+            </div>
+          </div>
+          <p style="margin-top:16px;color:var(--text-secondary);">${skill.description || ''}</p>
+        </div>
+        
+        <div class="detail-tabs">
+          <button class="tab-btn active" data-tab="overview">概述</button>
+          <button class="tab-btn" data-tab="content">完整内容</button>
+          <button class="tab-btn" data-tab="files">相关文件</button>
+        </div>
+        
+        <div class="tab-content">
+          <div class="tab-pane active" id="tab-overview">
+            <div class="info-grid">
+              <div class="info-card">
+                <div class="info-label">技能 ID</div>
+                <div class="info-value">${skill.id}</div>
+              </div>
+              <div class="info-card">
+                <div class="info-label">中文名称</div>
+                <div class="info-value">${skill.name || '-'}</div>
+              </div>
+              <div class="info-card">
+                <div class="info-label">分类</div>
+                <div class="info-value">${skill.category || '其他'}</div>
+              </div>
+              <div class="info-card">
+                <div class="info-label">描述</div>
+                <div class="info-value">${skill.description || '-'}</div>
+              </div>
+            </div>
+            
+            <div style="margin-top:24px;">
+              <h3 style="margin-bottom:12px;">技能说明</h3>
+              <div class="markdown-body">${htmlContent}</div>
+            </div>
+          </div>
+          
+          <div class="tab-pane" id="tab-content">
+            <div class="markdown-body">${htmlContent}</div>
+          </div>
+          
+          <div class="tab-pane" id="tab-files">
+            <ul class="files-list">
+              <li>
+                <i class="ri-file-text-line" style="color:var(--text-secondary);"></i>
+                <span class="file-name">SKILL.md</span>
+                <span class="file-size">${(skill.content?.length || 0)} 字符</span>
+              </li>
+              ${files.map(f => `
+                <li>
+                  <i class="ri-file-line" style="color:var(--text-secondary);"></i>
+                  <span class="file-name">${f}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        </div>
+      `;
+      
+      // Tab 切换
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabId = btn.dataset.tab;
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById('tab-' + tabId).classList.add('active');
+        });
+      });
+      
+      // 高亮代码
+      if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    }
+    
+    // 从内容提取文件列表
+    function extractFiles(content) {
+      const files = [];
+      const lines = content?.split('\n') || [];
+      
+      lines.forEach(line => {
+        const match = line.match(/\[([^\]]+)\]\(([^)]+\.(js|json|sh|py|md))\)/);
+        if (match) {
+          files.push(match[2]);
+        }
+      });
+      
+      return [...new Set(files)];
+    }
+    
+    // 初始化
+    loadSkillDetail();
+  </script>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'skills' });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

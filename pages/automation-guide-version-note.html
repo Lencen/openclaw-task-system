@@ -1,0 +1,41 @@
+<!-- 版本说明：2026-03-27 v2.1 更新 -->
+<div class="version-note" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 24px 0;">
+  <h3 style="color: var(--primary); margin-bottom: 16px;">📋 版本更新说明</h3>
+  
+  <div style="margin-bottom: 20px;">
+    <h4 style="color: var(--text-primary);">v2.1 (2026-03-27)</h4>
+    <ul style="color: var(--text-secondary); line-height: 1.8;">
+      <li><strong>架构调整</strong>：Auto Executor 更名为 Auto Assigner</li>
+      <li><strong>职责变更</strong>：Auto Assigner 只负责检测任务和写入分配记录</li>
+      <li><strong>新增执行器</strong>：Main Agent 作为任务调度器，负责启动所有 Subagent</li>
+    </ul>
+  </div>
+  
+  <div style="background: rgba(59, 130, 246, 0.1); border-radius: 8px; padding: 16px;">
+    <h4 style="color: var(--warning); margin-bottom: 12px;">⚠️ 架构说明</h4>
+    <p style="color: var(--text-secondary); line-height: 1.8;">
+      当前架构下，只有 <strong>Main Agent</strong> 会话有 Gateway 环境，因此由 Main Agent 统一启动所有 Subagent。
+    </p>
+    <p style="color: var(--text-secondary); line-height: 1.8;">
+      这是一种<strong>集中式任务调度</strong>模式：任务虽然分配给不同 Agent，但都由 Main Agent 启动执行。
+    </p>
+    <table style="width: 100%; margin-top: 16px; font-size: 13px;">
+      <tr style="background: var(--bg-secondary);">
+        <th style="padding: 8px; text-align: left;">角色</th>
+        <th style="padding: 8px; text-align: left;">职责</th>
+      </tr>
+      <tr>
+        <td style="padding: 8px;">Auto Assigner</td>
+        <td style="padding: 8px;">检测待分配任务，写入分配记录</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px;">Main Agent</td>
+        <td style="padding: 8px;">启动所有 Subagent（集中调度）</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px;">Subagent (coder/deep/...)</td>
+        <td style="padding: 8px;">执行分配给自己的任务</td>
+      </tr>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>今日工作台 - 任务系统</title>
+  <style>
+    /* ========== 设计系统 ========== */
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #141414;
+      --bg-tertiary: #1f1f1f;
+      --bg-card: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --text-tertiary: #666666;
+      --border: #2a2a2a;
+      --primary: #6366f1;
+      --primary-light: #818cf8;
+      --success: #22c55e;
+      --success-bg: rgba(34, 197, 94, 0.15);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.15);
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.15);
+      --info: #3b82f6;
+      --info-bg: rgba(59, 130, 246, 0.15);
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    
+    /* ========== 主容器 ========== */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+    
+    /* ========== 页面头部 ========== */
+    .page-header {
+      margin-bottom: 24px;
+    }
+    
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .page-title .date {
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+    
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--text-tertiary);
+    }
+    
+    /* ========== 日期切换器 ========== */
+    .date-switcher {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    
+    .date-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    
+    .date-btn:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .date-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    /* ========== 统计行 ========== */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    
+    .stat-item {
+      flex: 1;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    .stat-item.completed .stat-value { color: var(--success); }
+    .stat-item.progress .stat-value { color: var(--info); }
+    .stat-item.pending .stat-value { color: var(--warning); }
+    
+    /* ========== 任务列表 ========== */
+    .task-section {
+      margin-bottom: 24px;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .section-count {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      background: var(--bg-tertiary);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    /* ========== 任务卡片 ========== */
+    .task-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .task-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .task-card.completed {
+      opacity: 0.6;
+    }
+    
+    .task-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    
+    .task-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+      flex: 1;
+      line-height: 1.4;
+    }
+    
+    .task-card.completed .task-title {
+      text-decoration: line-through;
+      color: var(--text-secondary);
+    }
+    
+    .task-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      margin-right: 12px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .task-checkbox:hover {
+      border-color: var(--primary);
+    }
+    
+    .task-checkbox.checked {
+      background: var(--success);
+      border-color: var(--success);
+    }
+    
+    .task-checkbox.checked::after {
+      content: '✓';
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .task-content {
+      display: flex;
+      gap: 12px;
+      flex: 1;
+    }
+    
+    .task-main {
+      flex: 1;
+    }
+    
+    /* ========== 状态标签 ========== */
+    .task-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-left: 12px;
+      flex-shrink: 0;
+    }
+    
+    .task-status.completed {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+    
+    .task-status.in-progress {
+      background: var(--info-bg);
+      color: var(--info);
+    }
+    
+    .task-status.pending {
+      background: var(--warning-bg);
+      color: var(--warning);
+    }
+    
+    .task-status.blocked {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+    
+    /* ========== 进度指示器 ========== */
+    .task-progress {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-left: 12px;
+    }
+    
+    .task-progress i {
+      font-size: 14px;
+    }
+    
+    /* ========== 标签组 ========== */
+    .task-tags {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .task-tag {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+    
+    .task-tag.project {
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--primary-light);
+    }
+    
+    .task-tag.priority-high {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+    
+    .task-tag.priority-medium {
+      background: var(--warning-bg);
+      color: var(--warning);
+    }
+    
+    .task-tag.priority-low {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+    
+    /* ========== 时间信息 ========== */
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    .task-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .task-meta-item i {
+      font-size: 14px;
+    }
+    
+    /* ========== 空状态 ========== */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-tertiary);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    .empty-state p {
+      font-size: 14px;
+    }
+    
+    /* ========== 添加任务按钮 ========== */
+    .add-task-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text-tertiary);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+    
+    .add-task-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(99, 102, 241, 0.05);
+    }
+    
+    /* ========== 响应式 ========== */
+    @media (max-width: 600px) {
+      .container {
+        padding: 16px;
+      }
+      
+      .page-title {
+        font-size: 22px;
+      }
+      
+      .date-switcher {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 8px;
+      }
+      
+      .date-btn {
+        white-space: nowrap;
+        padding: 8px 14px;
+      }
+      
+      .stats-bar {
+        flex-wrap: wrap;
+      }
+      
+      .stat-item {
+        flex: 1 1 33%;
+      }
+      
+      .task-card-header {
+        flex-wrap: wrap;
+      }
+      
+      .task-status {
+        margin-left: 0;
+        margin-top: 8px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="css/sidebar.css">
+          <link rel="stylesheet" href="css/frame.css">
+  <script src="js/field-tips.js"></script></head>
+<body>
+  <div id="sidebar-container"></div>
+  <div class="container">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <h1 class="page-title">
+        Today
+        <span class="date" id="currentDate"></span>
+      </h1>
+      <p class="page-subtitle" id="greeting"></p>
+    </div>
+    
+    <!-- 日期切换器 -->
+    <div class="date-switcher">
+      <button class="date-btn active" data-range="today">Today</button>
+      <button class="date-btn" data-range="tomorrow">Tomorrow</button>
+      <button class="date-btn" data-range="week">This Week</button>
+      <button class="date-btn" data-range="overdue">Overdue</button>
+      <button class="date-btn" data-range="all">All Tasks</button>
+    </div>
+    
+    <!-- 统计栏 -->
+    <div class="stats-bar">
+      <div class="stat-item completed">
+        <div class="stat-value" id="completedCount">0</div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div class="stat-item progress">
+        <div class="stat-value" id="progressCount">0</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+      <div class="stat-item pending">
+        <div class="stat-value" id="pendingCount">0</div>
+        <div class="stat-label">Pending</div>
+      </div>
+    </div>
+    
+    <!-- 进行中的任务 -->
+    <div class="task-section">
+      <div class="section-header">
+        <span class="section-title">In Progress</span>
+        <span class="section-count" id="inProgressCount">0</span>
+      </div>
+      <div class="task-list" id="inProgressTasks">
+        <!-- 动态渲染 -->
+      </div>
+    </div>
+    
+    <!-- 待处理的任务 -->
+    <div class="task-section">
+      <div class="section-header">
+        <span class="section-title">Pending</span>
+        <span class="section-count" id="pendingTasksCount">0</span>
+      </div>
+      <div class="task-list" id="pendingTasks">
+        <!-- 动态渲染 -->
+      </div>
+    </div>
+    
+    <!-- 已完成的任务 -->
+    <div class="task-section">
+      <div class="section-header">
+        <span class="section-title">Completed</span>
+        <span class="section-count" id="completedTasksCount">0</span>
+      </div>
+      <div class="task-list" id="completedTasks">
+        <!-- 动态渲染 -->
+      </div>
+    </div>
+    
+    <!-- 添加任务按钮 -->
+    <button class="add-task-btn" onclick="addNewTask()">
+      <i class="ri-add-line"></i>
+      Add New Task
+    </button>
+  </div>
+
+  <script>
+    // 示例数据
+    let tasks = [
+      {
+        id: 1,
+        title: '完成任务追踪页面的前端开发',
+        status: 'in-progress',
+        progress: { current: 2, total: 3 },
+        tags: [
+          { label: '任务系统', type: 'project' },
+          { label: '高优先级', type: 'priority-high' }
+        ],
+        dueTime: '14:00',
+        assignee: 'Agent-Main'
+      },
+      {
+        id: 2,
+        title: 'WebSocket 进度推送功能集成测试',
+        status: 'pending',
+        progress: { current: 0, total: 1 },
+        tags: [
+          { label: '任务系统', type: 'project' },
+          { label: '中优先级', type: 'priority-medium' }
+        ],
+        dueTime: '16:00',
+        assignee: 'Agent-Coder'
+      },
+      {
+        id: 3,
+        title: 'Agent 身份认证模块文档更新',
+        status: 'completed',
+        progress: { current: 1, total: 1 },
+        tags: [
+          { label: '文档', type: 'default' }
+        ],
+        completedTime: '10:30',
+        assignee: 'Agent-Deep'
+      },
+      {
+        id: 4,
+        title: '任务执行历史 API 对接',
+        status: 'in-progress',
+        progress: { current: 1, total: 2 },
+        tags: [
+          { label: 'API', type: 'project' }
+        ],
+        dueTime: '18:00',
+        assignee: 'Agent-Fast'
+      },
+      {
+        id: 5,
+        title: '代码审查：TaskExecutionAPI',
+        status: 'pending',
+        progress: { current: 0, total: 1 },
+        tags: [
+          { label: '审查', type: 'default' },
+          { label: '高优先级', type: 'priority-high' }
+        ],
+        dueTime: 'Tomorrow',
+        assignee: 'Agent-Main'
+      },
+      {
+        id: 6,
+        title: '用户界面响应式适配优化',
+        status: 'completed',
+        progress: { current: 3, total: 3 },
+        tags: [
+          { label: 'UI/UX', type: 'project' }
+        ],
+        completedTime: '09:15',
+        assignee: 'Agent-Coder'
+      }
+    ];
+
+    // 初始化
+    function init() {
+      updateDateTime();
+      renderTasks();
+      updateStats();
+      setupDateSwitcher();
+    }
+
+    // 更新日期时间
+    function updateDateTime() {
+      const now = new Date();
+      const options = { weekday: 'long', month: 'short', day: 'numeric' };
+      document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+      
+      const hour = now.getHours();
+      let greeting = '';
+      if (hour < 12) greeting = 'Good morning! Here\'s your tasks for today.';
+      else if (hour < 18) greeting = 'Good afternoon! Keep up the good work.';
+      else greeting = 'Good evening! Here\'s what\'s left for today.';
+      
+      document.getElementById('greeting').textContent = greeting;
+    }
+
+    // 渲染任务列表
+    function renderTasks() {
+      const inProgressTasks = tasks.filter(t => t.status === 'in-progress');
+      const pendingTasks = tasks.filter(t => t.status === 'pending');
+      const completedTasks = tasks.filter(t => t.status === 'completed');
+      
+      renderTaskList('inProgressTasks', inProgressTasks);
+      renderTaskList('pendingTasks', pendingTasks);
+      renderTaskList('completedTasks', completedTasks, true);
+      
+      document.getElementById('inProgressCount').textContent = inProgressTasks.length;
+      document.getElementById('pendingTasksCount').textContent = pendingTasks.length;
+      document.getElementById('completedTasksCount').textContent = completedTasks.length;
+    }
+
+    // 渲染单个任务列表
+    function renderTaskList(containerId, taskList, isCompleted = false) {
+      const container = document.getElementById(containerId);
+      
+      if (taskList.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="ri-checkbox-blank-line"></i>
+            <p>No tasks ${isCompleted ? 'completed' : 'here'}</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = taskList.map(task => `
+        <div class="task-card ${task.status === 'completed' ? 'completed' : ''}" onclick="toggleTask(${task.id})">
+          <div class="task-card-header">
+            <div class="task-content">
+              <div class="task-checkbox ${task.status === 'completed' ? 'checked' : ''}" onclick="event.stopPropagation(); toggleTask(${task.id})"></div>
+              <div class="task-main">
+                <div style="display: flex; align-items: flex-start;">
+                  <span class="task-title">${task.title}</span>
+                  <span class="task-status ${task.status}">${getStatusLabel(task.status)}</span>
+                  ${task.progress ? `<span class="task-progress"><i class="ri-checkbox-line"></i>${task.progress.current}/${task.progress.total}</span>` : ''}
+                </div>
+                ${task.tags.length > 0 ? `
+                  <div class="task-tags">
+                    ${task.tags.map(tag => `<span class="task-tag ${tag.type}">${tag.label}</span>`).join('')}
+                  </div>
+                ` : ''}
+                <div class="task-meta">
+                  ${task.status === 'completed' && task.completedTime ? `
+                    <span class="task-meta-item">
+                      <i class="ri-check-line"></i>
+                      Completed at ${task.completedTime}
+                    </span>
+                  ` : task.dueTime ? `
+                    <span class="task-meta-item">
+                      <i class="ri-time-line"></i>
+                      Due ${task.dueTime}
+                    </span>
+                  ` : ''}
+                  <span class="task-meta-item">
+                    <i class="ri-user-line"></i>
+                    ${task.assignee}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 获取状态标签
+    function getStatusLabel(status) {
+      const labels = {
+        'completed': 'Completed',
+        'in-progress': 'In Progress',
+        'pending': 'Pending',
+        'blocked': 'Blocked'
+      };
+      return labels[status] || status;
+    }
+
+    // 更新统计
+    function updateStats() {
+      const completed = tasks.filter(t => t.status === 'completed').length;
+      const inProgress = tasks.filter(t => t.status === 'in-progress').length;
+      const pending = tasks.filter(t => t.status === 'pending').length;
+      
+      document.getElementById('completedCount').textContent = completed;
+      document.getElementById('progressCount').textContent = inProgress;
+      document.getElementById('pendingCount').textContent = pending;
+    }
+
+    // 切换任务状态
+    function toggleTask(taskId) {
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        if (task.status === 'completed') {
+          task.status = 'pending';
+        } else {
+          task.status = 'completed';
+          task.completedTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+        renderTasks();
+        updateStats();
+      }
+    }
+
+    // 设置日期切换器
+    function setupDateSwitcher() {
+      const buttons = document.querySelectorAll('.date-btn');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          buttons.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          // 这里可以添加日期过滤逻辑
+          console.log('Selected range:', this.dataset.range);
+        });
+      });
+    }
+
+    // 添加新任务
+    function addNewTask() {
+      const title = prompt('Enter task title:');
+      if (title) {
+        const newTask = {
+          id: Date.now(),
+          title: title,
+          status: 'pending',
+          progress: { current: 0, total: 1 },
+          tags: [],
+          dueTime: 'Today',
+          assignee: 'Agent-Main'
+        };
+        tasks.unshift(newTask);
+        renderTasks();
+        updateStats();
+      }
+    }
+
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'dashboard' });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

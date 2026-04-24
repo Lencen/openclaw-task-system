@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>知识库 - Agent 学习成果</title>
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-header {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1));
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    
+    .knowledge-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .knowledge-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    
+    .knowledge-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .knowledge-meta {
+      display: flex;
+      gap: 16px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    
+    .concept-list {
+      margin-top: 16px;
+    }
+    
+    .concept-item {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+    
+    .concept-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    
+    .concept-definition {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    
+    .code-snippet {
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 12px;
+      overflow-x: auto;
+    }
+    
+    .code-snippet code {
+      color: #d4d4d4;
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+    }
+    
+    .inherit-btn {
+      background: var(--success);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    
+    .inherit-btn:hover {
+      opacity: 0.9;
+    }
+    
+    .search-box {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .search-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .filter-select {
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+      min-width: 150px;
+    }
+  </style>
+  <link rel="stylesheet" href="css/page-tips.css">
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="main-container">
+    <div class="content-area">
+      <!-- 页面标题 -->
+      <div class="page-header">
+        <h1 style="margin: 0 0 8px; font-size: 28px;">📚 知识库</h1>
+            <div id="tipsContainer"></div>
+        <p style="color: var(--text-secondary); margin: 0;">Agent 学习成果共享平台 - 所有知识可查询、可继承</p>
+      </div>
+      
+      <!-- 统计卡片 -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="totalOutcomes">0</div>
+          <div class="stat-label">学习成果总数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalConcepts">0</div>
+          <div class="stat-label">知识点数量</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="sharedKnowledge">0</div>
+          <div class="stat-label">共享知识</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="learningAgents">0</div>
+          <div class="stat-label">学习 Agent</div>
+        </div>
+      </div>
+      
+      <!-- 搜索和过滤 -->
+      <div class="search-box">
+        <input type="text" class="search-input" id="searchInput" placeholder="搜索知识点...">
+        <select class="filter-select" id="agentFilter">
+          <option value="">所有 Agent</option>
+        </select>
+        <button class="inherit-btn" onclick="inheritSelected()">📥 继承选中</button>
+      </div>
+      
+      <!-- 知识列表 -->
+      <div id="knowledgeList">
+        <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+          加载中...
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 统一侧边栏 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    // 加载知识库数据
+    async function loadKnowledge() {
+      try {
+        const response = await fetch('/api/learning/outcomes');
+        const data = await response.json();
+        
+        if (data.success) {
+          renderKnowledge(data.data || []);
+          updateStats(data.data || []);
+          updateAgentFilter(data.data || []);
+        } else {
+          document.getElementById('knowledgeList').innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+              暂无学习成果
+            </div>
+          `;
+        }
+      } catch (error) {
+        // 使用示例数据
+        const sampleData = generateSampleData();
+        renderKnowledge(sampleData);
+        updateStats(sampleData);
+        updateAgentFilter(sampleData);
+      }
+    }
+    
+    // 生成示例数据
+    function generateSampleData() {
+      return [
+        {
+          outcome_id: 'out-demo-001',
+          agent_id: 'agent-coder',
+          title: 'React Hooks 深入学习',
+          knowledge: {
+            concepts: [
+              { name: 'useState', definition: '用于在函数组件中添加状态的 Hook', usage: 'const [state, setState] = useState(initialValue)' },
+              { name: 'useEffect', definition: '用于处理副作用的生命周期 Hook', usage: 'useEffect(() => {}, [deps])' }
+            ],
+            best_practices: ['将相关状态放在一起', '使用自定义 Hook 提取复用逻辑'],
+            code_snippets: [{ title: '自定义 Hook', code: 'function useCounter(initial = 0) {\n  const [count, setCount] = useState(initial);\n  return { count, increment: () => setCount(c => c + 1) };\n}' }]
+          },
+          skills_gained: [{ skill: 'React Hooks 开发', level: 3 }],
+          share_status: 'shared',
+          created_at: new Date().toISOString()
+        },
+        {
+          outcome_id: 'out-demo-002',
+          agent_id: 'agent-deep',
+          title: 'LangChain 框架',
+          knowledge: {
+            concepts: [
+              { name: 'Chain', definition: '将多个组件串联执行的工作流', usage: 'const chain = new LLMChain(...)' },
+              { name: 'Agent', definition: '能够自主决策和执行任务的智能体', usage: 'const agent = initializeAgent(...)' }
+            ],
+            best_practices: ['使用 PromptTemplate 管理提示词', '合理设置 chain 的 verbose 参数'],
+            code_snippets: []
+          },
+          skills_gained: [{ skill: 'LangChain 开发', level: 2 }],
+          share_status: 'shared',
+          created_at: new Date().toISOString()
+        }
+      ];
+    }
+    
+    // 渲染知识卡片
+    function renderKnowledge(data) {
+      const container = document.getElementById('knowledgeList');
+      
+      if (data.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+            暂无学习成果
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = data.map(item => `
+        <div class="knowledge-card">
+          <div class="knowledge-header">
+            <div>
+              <div class="knowledge-title">${item.title}</div>
+              <div class="knowledge-meta">
+                <span>🤖 ${item.agent_id}</span>
+                <span>📊 技能等级: Lv.${item.skills_gained?.[0]?.level || 1}</span>
+                <span>🔄 ${item.share_status === 'shared' ? '已共享' : '私有'}</span>
+                <span>📅 ${new Date(item.created_at).toLocaleDateString()}</span>
+              </div>
+            </div>
+            <div>
+              <input type="checkbox" class="knowledge-checkbox" data-id="${item.outcome_id}">
+            </div>
+          </div>
+          
+          ${item.knowledge?.concepts?.length > 0 ? `
+            <div class="concept-list">
+              <h4 style="margin: 0 0 8px; font-size: 14px; color: var(--text-secondary);">知识点</h4>
+              ${item.knowledge.concepts.map(c => `
+                <div class="concept-item">
+                  <div class="concept-name">${c.name}</div>
+                  <div class="concept-definition">${c.definition}</div>
+                  ${c.usage ? `<code style="display: block; margin-top: 8px; padding: 8px; background: var(--bg-primary); border-radius: 4px; font-size: 12px;">${c.usage}</code>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+          
+          ${item.knowledge?.best_practices?.length > 0 ? `
+            <div style="margin-top: 16px;">
+              <h4 style="margin: 0 0 8px; font-size: 14px; color: var(--text-secondary);">✅ 最佳实践</h4>
+              <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary);">
+                ${item.knowledge.best_practices.map(p => `<li>${p}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+          
+          ${item.knowledge?.code_snippets?.length > 0 ? `
+            <div style="margin-top: 16px;">
+              <h4 style="margin: 0 0 8px; font-size: 14px; color: var(--text-secondary);">💻 代码片段</h4>
+              ${item.knowledge.code_snippets.map(s => `
+                <div class="code-snippet">
+                  <div style="color: #888; font-size: 12px; margin-bottom: 8px;">${s.title}</div>
+                  <code><pre style="margin: 0;">${escapeHtml(s.code)}</pre></code>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+          
+          ${item.inherited_by?.length > 0 ? `
+            <div style="margin-top: 16px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+              <span style="color: var(--text-secondary); font-size: 13px;">📥 已被继承: </span>
+              ${item.inherited_by.map(a => `<span class="tag" style="background: var(--success); color: white; margin: 0 4px;">${a}</span>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+    
+    // 更新统计
+    function updateStats(data) {
+      document.getElementById('totalOutcomes').textContent = data.length;
+      
+      let totalConcepts = 0;
+      data.forEach(item => {
+        totalConcepts += item.knowledge?.concepts?.length || 0;
+      });
+      document.getElementById('totalConcepts').textContent = totalConcepts;
+      
+      document.getElementById('sharedKnowledge').textContent = data.filter(d => d.share_status === 'shared').length;
+      
+      const agents = new Set(data.map(d => d.agent_id));
+      document.getElementById('learningAgents').textContent = agents.size;
+    }
+    
+    // 更新 Agent 过滤器
+    function updateAgentFilter(data) {
+      const agents = [...new Set(data.map(d => d.agent_id))];
+      const select = document.getElementById('agentFilter');
+      
+      select.innerHTML = '<option value="">所有 Agent</option>' +
+        agents.map(a => `<option value="${a}">${a}</option>`).join('');
+    }
+    
+    // HTML 转义
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // 继承选中
+    async function inheritSelected() {
+      const checkboxes = document.querySelectorAll('.knowledge-checkbox:checked');
+      if (checkboxes.length === 0) {
+        alert('请先选择要继承的知识');
+        return;
+      }
+      
+      const targetAgent = prompt('请输入目标 Agent ID:', 'agent-coder-1');
+      if (!targetAgent) return;
+      
+      alert(`已将 ${checkboxes.length} 个知识成果继承给 ${targetAgent}`);
+    }
+    
+    // 搜索
+    document.getElementById('searchInput')?.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const cards = document.querySelectorAll('.knowledge-card');
+      
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(query) ? '' : 'none';
+      });
+    });
+    
+    // Agent 过滤
+    document.getElementById('agentFilter')?.addEventListener('change', (e) => {
+      const agent = e.target.value;
+      const cards = document.querySelectorAll('.knowledge-card');
+      
+      cards.forEach(card => {
+        if (!agent) {
+          card.style.display = '';
+        } else {
+          const agentText = card.querySelector('.knowledge-meta')?.textContent || '';
+          card.style.display = agentText.includes(agent) ? '' : 'none';
+        }
+      });
+    });
+    
+    // 初始化
+    loadKnowledge();
+  </script>
+  <script src="js/page-tips.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tipsContainer = document.getElementById('tipsContainer');
+      if (tipsContainer && PageTips) {
+        PageTips.init('knowledge-library', tipsContainer);
+      }
+    });
+  </script>
+<script>FieldTips.init({pageType:"knowledge"});</script></body>
+</html>

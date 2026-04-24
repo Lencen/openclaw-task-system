@@ -1,0 +1,70 @@
+{
+  "models": {
+    "deepseek-chat": {
+      "model": "deepseek-ai/deepseek-chat",
+      "provider": "nvidia",
+      "base_url": "https://integrate.api.nvidia.com",
+      "api_key_env": "NVIDIA_API_KEY"
+    },
+    "deepseek-v3.2": {
+      "model": "deepseek-ai/deepseek-v3.2",
+      "provider": "nvidia",
+      "base_url": "https://integrate.api.nvidia.com",
+      "api_key_env": "NVIDIA_API_KEY"
+    },
+    "llama-3.1-8b": {
+      "model": "meta/llama-3.1-8b-instruct",
+      "provider": "nvidia",
+      "base_url": "https://integrate.api.nvidia.com",
+      "api_key_env": "NVIDIA_API_KEY"
+    },
+    "llama-3.1-70b": {
+      "model": "meta/llama-3.1-70b-instruct",
+      "provider": "nvidia",
+      "base_url": "https://integrate.api.nvidia.com",
+      "api_key_env": "NVIDIA_API_KEY"
+    },
+    "llama-3.3-70b": {
+      "model": "meta/llama-3.3-70b-instruct",
+      "provider": "nvidia",
+      "base_url": "https://integrate.api.nvidia.com",
+      "api_key_env": "NVIDIA_API_KEY"
+    },
+    "qwen-plus": {
+      "model": "qwen/qwen-plus",
+      "provider": "aliyun",
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "api_key_env": "DASHSCOPE_API_KEY"
+    },
+    "qwen-max": {
+      "model": "qwen/qwen-max",
+      "provider": "aliyun",
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "api_key_env": "DASHSCOPE_API_KEY"
+    },
+    "moonshot-v1-8k": {
+      "model": "moonshotai/Kimi-K2-5",
+      "provider": "moonshot",
+      "base_url": "https://api.moonshot.cn/v1",
+      "api_key_env": "MOONSHOT_API_KEY"
+    },
+    "claude-3-opus": {
+      "model": "anthropic/claude-3-opus-20240229",
+      "provider": "anthropic",
+      "base_url": "https://api.anthropic.com/v1",
+      "api_key_env": "ANTHROPIC_API_KEY"
+    },
+    "claude-3-5-sonnet": {
+      "model": "anthropic/claude-3-5-sonnet-20240620",
+      "provider": "anthropic",
+      "base_url": "https://api.anthropic.com/v1",
+      "api_key_env": "ANTHROPIC_API_KEY"
+    },
+    "gpt-4o": {
+      "model": "openai/gpt-4o",
+      "provider": "openai",
+      "base_url": "https://api.openai.com/v1",
+      "api_key_env": "OPENAI_API_KEY"
+    }
+  }
+}

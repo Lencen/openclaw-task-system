@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenClaw 远程部署 - 任务系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content {
+      max-width: 900px;
+    }
+    
+    /* 标题区域 */
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .page-icon {
+      font-size: 28px;
+    }
+    
+    .page-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    
+    /* 部署申请卡片 */
+    .deploy-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    /* 表单样式 */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .form-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    
+    .form-input {
+      padding: 10px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+    
+    .form-help {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    
+    /* 进度卡片 */
+    .progress-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    
+    .progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    
+    .progress-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .status-badge.pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+    
+    .status-badge.running {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+    }
+    
+    .status-badge.completed {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .status-badge.failed {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+    
+    .progress-bar-container {
+      background: var(--bg-tertiary);
+      border-radius: 10px;
+      height: 8px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+      border-radius: 10px;
+      transition: width 0.3s ease;
+    }
+    
+    .progress-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    /* 历史记录 */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .history-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      transition: all 0.2s;
+    }
+    
+    .history-item:hover {
+      border-color: var(--primary);
+    }
+    
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    
+    .history-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .history-ip {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    
+    .history-meta {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      display: flex;
+      gap: 12px;
+    }
+    
+    .history-status {
+      display: inline-flex;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .history-status.completed {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .history-status.failed {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+    
+    .history-status.pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+    
+    /* 按钮 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: rgba(59, 130, 246, 0.9);
+    }
+    
+    .btn-primary:disabled {
+      background: var(--bg-tertiary);
+      color: var(--text-tertiary);
+      cursor: not-allowed;
+    }
+    
+    /* 安全提示 */
+    .security-tip {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid var(--warning);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    
+    .security-tip i {
+      font-size: 18px;
+      color: var(--warning);
+      flex-shrink: 0;
+    }
+    
+    .security-tip p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+    
+    /* 进度日志 */
+    .log-container {
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      padding: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 12px;
+      margin-top: 12px;
+    }
+    
+    .log-entry {
+      margin-bottom: 6px;
+      padding-left: 8px;
+      border-left: 2px solid var(--text-tertiary);
+    }
+    
+    .log-entry.success {
+      border-left-color: var(--success);
+      color: #4ade80;
+    }
+    
+    .log-entry.error {
+      border-left-color: var(--danger);
+      color: #f87171;
+    }
+    
+    .log-entry.pending {
+      border-left-color: var(--warning);
+      color: #fbbf24;
+    }
+    
+    .log-time {
+      color: var(--text-tertiary);
+      margin-right: 8px;
+    }
+    
+    /* 队列提示 */
+    .queue-info {
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    
+    .queue-info strong {
+      color: var(--text-primary);
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <!-- 统一侧边栏容器 -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容区 -->
+    <main class="main">
+      <!-- 顶部栏 -->
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <span>OpenClaw 远程部署</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" id="refreshBtn" title="刷新">🔄</button>
+        </div>
+      </header>
+      
+      <!-- 内容区 -->
+      <div class="content">
+        <div class="page-content">
+          <!-- 标题 -->
+          <div class="page-title">
+            <span class="page-icon">🚀</span>
+            <div>
+              <h1>OpenClaw 远程部署</h1>
+              <div class="page-desc">远程安装 OpenClaw 到目标服务器</div>
+            </div>
+          </div>
+          
+          <!-- 队列说明 -->
+          <div class="queue-info">
+            <strong>📋 队列说明</strong>
+            <p>每天每个 IP 有 <strong>5</strong> 个部署名额，按提交顺序排队处理。当前队列中有 <span id="queueCount">0</span> 个任务等待。</p>
+          </div>
+          
+          <!-- 部署申请表单 -->
+          <div class="deploy-card">
+            <div class="card-title">
+              <span>📋</span> 部署申请
+            </div>
+            
+            <form id="deployForm">
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label" for="targetIp">目标服务器 IP</label>
+                <input type="text" class="form-input" id="targetIp" name="targetIp" placeholder="例如：192.168.1.100" required>
+                <div class="form-help">请输入目标服务器的 IP 地址</div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="sshUser">SSH 账号</label>
+                  <input type="text" class="form-input" id="sshUser" name="sshUser" placeholder="例如：root" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="sshPort">SSH 端口</label>
+                  <input type="number" class="form-input" id="sshPort" name="sshPort" value="22" min="1" max="65535" required>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="sshPassword">SSH 密码</label>
+                <input type="password" class="form-input" id="sshPassword" name="sshPassword" placeholder="请输入 SSH 密码" required>
+                <div class="form-help">密码将使用 AES-256 加密存储</div>
+              </div>
+              
+              <div style="margin-top: 20px; display: flex; gap: 12px; align-items: center;">
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                  <i class="ri-upload-cloud-2-line"></i> 提交部署
+                </button>
+                <div class="form-help">
+                  <i class="ri-info-line"></i>
+                  提交后将在队列中等待处理
+                </div>
+              </div>
+            </form>
+            
+            <!-- 安全提示 -->
+            <div class="security-tip">
+              <i class="ri-shield-warning-line"></i>
+              <p><strong>🔒 安全提示</strong>：部署完成后，请务必修改服务器密码，确保系统安全。</p>
+            </div>
+          </div>
+          
+          <!-- 实时进度 -->
+          <div class="progress-card">
+            <div class="progress-header">
+              <span class="progress-title">
+                <i class="ri-terminal-box-line"></i> 实时进度
+              </span>
+              <span class="status-badge pending" id="deployStatus">
+                <i class="ri-hourglass-line"></i>
+                <span id="statusText">等待中</span>
+              </span>
+            </div>
+            
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+            
+            <div class="progress-text">
+              <span id="progressText">0%</span>
+              <span>|</span>
+              <span id="currentJob">无任务</span>
+            </div>
+            
+            <div class="log-container" id="logContainer">
+              <div class="log-entry pending">
+                <span class="log-time">--:--:--</span>
+                <span>等待部署任务...</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 历史记录 -->
+          <div class="deploy-card">
+            <div class="card-title">
+              <span>📜</span> 历史记录
+              <button class="btn" style="padding: 6px 12px; font-size: 12px; background: var(--bg-tertiary);" onclick="loadHistory()">
+                <i class="ri-refresh-line"></i> 刷新
+              </button>
+            </div>
+            
+            <div class="history-list" id="historyList">
+              <!-- 历史记录将动态插入这里 -->
+              <div style="text-align: center; padding: 20px; color: var(--text-tertiary);">
+                <i class="ri-file-text-line" style="font-size: 32px; margin-bottom: 8px; opacity: 0.5;"></i>
+                <p>暂无历史记录</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'deploy' });
+  </script>
+  
+  <!-- 页面脚本 -->
+  <script>
+    // ========== 页面变量 ==========
+    let sseSource = null;
+    let currentTaskId = null;
+    let historyRefreshTimer = null;
+    let retryCount = 0;
+    
+    // ========== 配置 ==========
+    const CONFIG = {
+      pollingInterval: 3000, // 轮询间隔（毫秒）
+      maxRetryCount: 3,       // 最大重试次数
+     QuotaLimit: 5           // 每日配额
+    };
+    
+    // ========== 工具函数 ==========
+    
+    // 获取客户端 IP
+    async function getClientIP() {
+      try {
+        const response = await fetch('/api/deploy/client-ip');
+        const data = await response.json();
+        return data.ip;
+      } catch (error) {
+        console.warn('获取 IP 失败:', error);
+        return '未知';
+      }
+    }
+    
+    // 格式化时间
+    function formatTime(timestamp) {
+      if (!timestamp) return '--:--:--';
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString('zh-CN', { hour12: false });
+    }
+    
+    // 验证 IP 地址格式
+    function validateIP(ip) {
+      const regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+      return regex.test(ip);
+    }
+    
+    // 验证端口范围
+    function validatePort(port) {
+      return port >= 1 && port <= 65535;
+    }
+    
+    // ========== 核心功能 ==========
+    
+    // 初始化页面
+    async function initPage() {
+      const clientIP = await getClientIP();
+      console.log('客户端 IP:', clientIP);
+      
+      // 加载配额信息
+      loadQuotaInfo();
+      
+      // 加载历史记录
+      loadHistory();
+      
+      // 检查是否有等待中的任务
+      checkPendingTask();
+      
+      // 设置定时刷新
+      historyRefreshTimer = setInterval(() => {
+        loadHistory();
+        checkPendingTask();
+      }, CONFIG.pollingInterval);
+    }
+    
+    // 加载配额信息
+    async function loadQuotaInfo() {
+      try {
+        const response = await fetch('/api/deploy/quota');
+        const data = await response.json();
+        document.getElementById('queueCount').textContent = data.waitingCount || 0;
+      } catch (error) {
+        console.error('加载配额失败:', error);
+      }
+    }
+    
+    // 检查等待中的任务
+    async function checkPendingTask() {
+      try {
+        const response = await fetch('/api/deploy/pending');
+        const data = await response.json();
+        
+        if (data.taskId) {
+          currentTaskId = data.taskId;
+          startProgressTracking(data.taskId);
+        }
+      } catch (error) {
+        console.error('检查任务失败:', error);
+      }
+    }
+    
+    // 开始进度跟踪
+    function startProgressTracking(taskId) {
+      // 清除旧的 SSE 连接
+      if (sseSource) {
+        sseSource.close();
+      }
+      
+      // 使用 SSE 或轮询
+      const useSSE = false; // 暂时使用轮询
+      
+      if (useSSE && window.EventSource) {
+        startSSE(taskId);
+      } else {
+        startPolling(taskId);
+      }
+    }
+    
+    // SSE 进度跟踪
+    function startSSE(taskId) {
+      sseSource = new EventSource(`/api/deploy/sse/${taskId}`);
+      
+      sseSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        updateProgress(data);
+      };
+      
+      sseSource.onerror = function(error) {
+        console.error('SSE 连接错误:', error);
+        sseSource.close();
+        startPolling(taskId); // 回退到轮询
+      };
+    }
+    
+    // 轮询进度跟踪
+    function startPolling(taskId) {
+      fetchProgress(taskId);
+      
+      // 只有任务还未完成才继续轮询
+      function fetchProgress() {
+        fetch(`/api/deploy/status/${taskId}`)
+          .then(res => res.json())
+          .then(data => {
+            updateProgress(data);
+            
+            // 如果任务还在进行，继续轮询
+            if (data.status === 'pending' || data.status === 'running') {
+              setTimeout(fetchProgress, CONFIG.pollingInterval);
+            }
+          })
+          .catch(error => {
+            console.error('获取进度失败:', error);
+            retryCount++;
+            if (retryCount < CONFIG.maxRetryCount) {
+              setTimeout(fetchProgress, CONFIG.pollingInterval);
+            }
+          });
+      }
+    }
+    
+    // 更新进度显示
+    function updateProgress(data) {
+      const statusEl = document.getElementById('deployStatus');
+      const statusTextEl = document.getElementById('statusText');
+      const progressBar = document.getElementById('progressBar');
+      const progressText = document.getElementById('progressText');
+      const currentJob = document.getElementById('currentJob');
+      const logContainer = document.getElementById('logContainer');
+      
+      // 更新状态标签
+      statusEl.className = `status-badge ${data.status}`;
+      statusEl.innerHTML = getStatusIcon(data.status) + ' <span>' + getStatusText(data.status) + '</span>';
+      
+      // 更新进度条
+      const progress = data.progress || 0;
+      progressBar.style.width = `${progress}%`;
+      progressText.textContent = `${progress}%`;
+      
+      // 更新当前任务
+      currentJob.textContent = data.jobName || '无任务';
+      
+      // 添加日志
+      if (data.logs && Array.isArray(data.logs)) {
+        data.logs.forEach(log => {
+          addLogEntry(log);
+        });
+      }
+    }
+    
+    // 获取状态图标
+    function getStatusIcon(status) {
+      const icons = {
+        pending: '<i class="ri-hourglass-line"></i>',
+        running: '<i class="ri-loader-4-line"></i>',
+        completed: '<i class="ri-check-double-line"></i>',
+        failed: '<i class="ri-error-warning-line"></i>'
+      };
+      return icons[status] || '';
+    }
+    
+    // 获取状态文本
+    function getStatusText(status) {
+      const texts = {
+        pending: '等待中',
+        running: '部署中',
+        completed: '已完成',
+        failed: '部署失败'
+      };
+      return texts[status] || status;
+    }
+    
+    // 添加日志条目
+    function addLogEntry(log) {
+      const logContainer = document.getElementById('logContainer');
+      
+      // 检查是否已存在相同消息
+      const existing = Array.from(logContainer.children)
+        .find(el => el.dataset.message === log.message);
+      
+      if (existing) return;
+      
+      const logEntry = document.createElement('div');
+      logEntry.className = `log-entry ${log.level || 'pending'}`;
+      logEntry.dataset.message = log.message;
+      logEntry.innerHTML = `
+        <span class="log-time">${formatTime(log.timestamp)}</span>
+        <span>${log.message}</span>
+      `;
+      
+      logContainer.appendChild(logEntry);
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+    
+    // 加载历史记录
+    async function loadHistory() {
+      const historyList = document.getElementById('historyList');
+      
+      try {
+        const response = await fetch('/api/deploy/history');
+        const data = await response.json();
+        
+        if (data.history && data.history.length > 0) {
+          historyList.innerHTML = data.history.map(item => createHistoryItem(item)).join('');
+        } else {
+          historyList.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: var(--text-tertiary);">
+              <i class="ri-file-text-line" style="font-size: 32px; margin-bottom: 8px; opacity: 0.5;"></i>
+              <p>暂无历史记录</p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('加载历史记录失败:', error);
+      }
+    }
+    
+    // 创建历史记录项
+    function createHistoryItem(item) {
+      const statusBadge = `
+        <span class="history-status ${item.status}">
+          ${getStatusIcon(item.status)} ${getStatusText(item.status)}
+        </span>
+      `;
+      
+      return `
+        <div class="history-item">
+          <div class="history-header">
+            <div class="history-info">
+              <span class="history-ip">${item.targetIp}</span>
+              <div class="history-meta">
+                <span>${item.sshUser}@${item.sshPort}</span>
+                <span>•</span>
+                <span>${formatTime(item.createdAt)}</span>
+              </div>
+            </div>
+            ${statusBadge}
+          </div>
+        </div>
+      `;
+    }
+    
+    // ========== 事件处理 ==========
+    
+    // 表单提交
+    document.getElementById('deployForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submitBtn');
+      const targetIp = document.getElementById('targetIp').value;
+      const sshUser = document.getElementById('sshUser').value;
+      const sshPort = parseInt(document.getElementById('sshPort').value);
+      const sshPassword = document.getElementById('sshPassword').value;
+      
+      // 验证输入
+      if (!validateIP(targetIp)) {
+        alert('❌ 请输入有效的 IP 地址格式');
+        return;
+      }
+      
+      if (!validatePort(sshPort)) {
+        alert('❌ SSH 端口必须在 1-65535 范围内');
+        return;
+      }
+      
+      if (sshPassword.length < 1) {
+        alert('❌ 请输入 SSH 密码');
+        return;
+      }
+      
+      // 禁用按钮
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="ri-loader-4-line"></i> 提交中...';
+      
+      try {
+        const response = await fetch('/api/deploy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetIp, sshUser, sshPort, sshPassword })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          // 提交成功
+          currentTaskId = data.taskId;
+          document.getElementById('deployForm').reset();
+          
+          // 开始进度跟踪
+          startProgressTracking(data.taskId);
+          
+          // 加载配额信息
+          loadQuotaInfo();
+          
+          // 显示成功提示
+          alert('✅ 部署申请已提交！\n\n任务 ID: ' + data.taskId + '\n请在下方查看进度');
+        } else {
+          // 提交失败
+          alert('❌ 提交失败：' + (data.message || '未知错误'));
+        }
+      } catch (error) {
+        console.error('提交失败:', error);
+        alert('❌ 提交失败：网络错误');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="ri-upload-cloud-2-line"></i> 提交部署';
+      }
+    });
+    
+    // 刷新按钮
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+      loadQuotaInfo();
+      loadHistory();
+      checkPendingTask();
+      this.blur();
+    });
+    
+    // 页面加载时初始化
+    window.addEventListener('load', initPage);
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

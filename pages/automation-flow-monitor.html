@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自动化流程监控 - 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-content { padding: 24px; }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+    .page-title i { color: var(--primary); }
+    .page-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
+    
+    /* 顶部统计 */
+    .top-stats { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .top-stat { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 16px 24px; display: flex; align-items: center; gap: 12px; min-width: 180px; }
+    .top-stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .top-stat-icon.blue { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .top-stat-icon.green { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .top-stat-icon.yellow { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .top-stat-icon.purple { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+    .top-stat-icon.cyan { background: rgba(6, 182, 212, 0.15); color: #06b6d4; }
+    .top-stat-info { }
+    .top-stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+    .top-stat-label { font-size: 12px; color: var(--text-secondary); }
+    
+    /* 流程区域 */
+    .flow-container { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 24px; overflow: hidden; }
+    .flow-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .flow-title { font-size: 15px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+    .flow-controls { display: flex; gap: 8px; }
+    .flow-btn { padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+    .flow-btn:hover { background: var(--primary); border-color: var(--primary); }
+    .flow-btn.active { background: var(--primary); border-color: var(--primary); }
+    
+    .flow-body { padding: 32px 24px; overflow-x: auto; }
+    
+    /* 流程图 - 横向布局 */
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 0; min-width: 1200px; padding: 20px 0; }
+    
+    /* 流程节点 */
+    .flow-node { display: flex; flex-direction: column; align-items: center; position: relative; }
+    .node-container { display: flex; flex-direction: column; align-items: center; }
+    
+    .node-box { 
+      background: var(--bg-tertiary); 
+      border: 2px solid var(--border); 
+      border-radius: 16px; 
+      padding: 16px 20px; 
+      text-align: center; 
+      min-width: 140px;
+      position: relative;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .node-box:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    
+    .node-box.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.15); }
+    .node-box.success { border-color: var(--success); background: rgba(16, 185, 129, 0.15); }
+    .node-box.warning { border-color: var(--warning); background: rgba(245, 158, 11, 0.15); }
+    .node-box.error { border-color: var(--danger); background: rgba(239, 68, 68, 0.15); }
+    
+    .node-icon { font-size: 28px; margin-bottom: 8px; }
+    .node-name { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .node-agent { font-size: 11px; color: var(--primary); margin-bottom: 8px; }
+    
+    /* 节点计数器 */
+    .node-counter { 
+      display: flex; 
+      gap: 12px; 
+      justify-content: center; 
+      margin-top: 8px; 
+      padding-top: 8px; 
+      border-top: 1px solid var(--border); 
+    }
+    .counter-item { display: flex; flex-direction: column; align-items: center; }
+    .counter-value { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+    .counter-value.highlight { color: var(--primary); }
+    .counter-label { font-size: 9px; color: var(--text-secondary); }
+    
+    /* 连接线 */
+    .flow-arrow { display: flex; align-items: center; padding: 0 4px; }
+    .arrow-line { 
+      width: 48px; 
+      height: 3px; 
+      background: var(--border); 
+      position: relative; 
+    }
+    .arrow-line::after { 
+      content: ''; 
+      position: absolute; 
+      right: -6px; 
+      top: -4px; 
+      border: 6px solid transparent; 
+      border-left-color: var(--border); 
+    }
+    
+    .arrow-line.active { background: var(--primary); }
+    .arrow-line.active::after { border-left-color: var(--primary); }
+    .arrow-line.success { background: var(--success); }
+    .arrow-line.success::after { border-left-color: var(--success); }
+    
+    /* 数据流动画 */
+    .data-flow { 
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--primary);
+      border-radius: 50%;
+      animation: flowRight 1.5s infinite;
+      box-shadow: 0 0 12px var(--primary);
+    }
+    
+    @keyframes flowRight {
+      0% { left: 0; opacity: 0; }
+      20% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { left: calc(100% - 8px); opacity: 0; }
+    }
+    
+    /* 实时日志 */
+    .log-container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+    .log-panel { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .log-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .log-title { font-size: 13px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+    .log-badge { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 500; background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .log-body { padding: 12px; max-height: 300px; overflow-y: auto; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 11px; }
+    
+    .log-item { display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .log-item:last-child { border-bottom: none; }
+    .log-time { color: var(--text-secondary); min-width: 60px; }
+    .log-type { min-width: 40px; font-weight: 600; }
+    .log-type.task { color: var(--primary); }
+    .log-type.agent { color: #8b5cf6; }
+    .log-type.issue { color: var(--warning); }
+    .log-type.success { color: var(--success); }
+    .log-type.error { color: var(--danger); }
+    .log-msg { color: var(--text-primary); flex: 1; }
+    
+    /* Agent 状态面板 */
+    .agent-panel { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .agent-header { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .agent-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .agent-body { padding: 12px; }
+    
+    .agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+    .agent-card { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .agent-card.online { border-color: var(--success); }
+    .agent-card.busy { border-color: var(--warning); }
+    .agent-card.offline { border-color: var(--text-tertiary); }
+    
+    .agent-info { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .agent-avatar { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .agent-avatar.online { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .agent-avatar.busy { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .agent-avatar.offline { background: var(--bg-secondary); color: var(--text-tertiary); }
+    .agent-name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .agent-role { font-size: 10px; color: var(--text-secondary); }
+    
+    .agent-stats { display: flex; gap: 8px; }
+    .agent-stat { flex: 1; text-align: center; padding: 6px; background: var(--bg-secondary); border-radius: 6px; }
+    .agent-stat-value { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .agent-stat-label { font-size: 9px; color: var(--text-secondary); }
+    
+    /* 节点详情弹窗 */
+    .node-detail-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      min-width: 400px;
+      max-width: 600px;
+      z-index: 1000;
+      display: none;
+    }
+    .node-detail-popup.show { display: block; }
+    .popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .popup-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+    .popup-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--bg-tertiary); color: var(--text-primary); cursor: pointer; }
+    .popup-close:hover { background: var(--danger); color: white; }
+    
+    .task-list { max-height: 400px; overflow-y: auto; }
+    .task-item { padding: 12px; background: var(--bg-tertiary); border-radius: 8px; margin-bottom: 8px; }
+    .task-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .task-item-title { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .task-item-status { font-size: 10px; padding: 2px 8px; border-radius: 4px; }
+    .task-item-desc { font-size: 11px; color: var(--text-secondary); }
+    
+    .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
+    .overlay.show { display: block; }
+    
+    /* 告警条 */
+    .alert-bar { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+    .alert-bar.warning { background: rgba(245, 158, 11, 0.15); border-color: var(--warning); }
+    .alert-bar.info { background: rgba(59, 130, 246, 0.15); border-color: var(--primary); }
+    .alert-bar i { font-size: 20px; }
+    .alert-bar.error i { color: var(--danger); }
+    .alert-bar.warning i { color: var(--warning); }
+    .alert-bar.info i { color: var(--primary); }
+    .alert-bar span { flex: 1; font-size: 13px; color: var(--text-primary); }
+    
+    /* 自动刷新指示器 */
+    .refresh-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+    .refresh-indicator i { font-size: 14px; }
+    .refresh-indicator.active i { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    
+    @media (max-width: 1200px) {
+      .log-container { grid-template-columns: 1fr; }
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb"><span>监控</span> / <span>自动化流程监控</span></div>
+        </div>
+        <div class="header-right">
+          <div class="refresh-indicator active" id="refreshIndicator">
+            <i class="ri-refresh-line"></i>
+            <span>实时刷新中</span>
+          </div>
+        </div>
+      </header>
+      
+      <div class="page-content">
+        <div class="page-title">
+          <i class="ri-flow-chart"></i>
+          自动化流程监控
+        </div>
+        <div class="page-subtitle">实时监控任务在自动化流程中的流转状态，查看每个节点的任务数量和 Agent 执行情况</div>
+        
+        <!-- 告警区域 -->
+        <div id="alertsContainer"></div>
+        
+        <!-- 顶部统计 -->
+        <div class="top-stats">
+          <div class="top-stat">
+            <div class="top-stat-icon blue"><i class="ri-task-line"></i></div>
+            <div class="top-stat-info">
+              <div class="top-stat-value" id="statTotal">161</div>
+              <div class="top-stat-label">总任务</div>
+            </div>
+          </div>
+          <div class="top-stat">
+            <div class="top-stat-icon yellow"><i class="ri-loader-4-line"></i></div>
+            <div class="top-stat-info">
+              <div class="top-stat-value" id="statPending">11</div>
+              <div class="top-stat-label">待处理</div>
+            </div>
+          </div>
+          <div class="top-stat">
+            <div class="top-stat-icon cyan"><i class="ri-play-circle-line"></i></div>
+            <div class="top-stat-info">
+              <div class="top-stat-value" id="statDoing">9</div>
+              <div class="top-stat-label">执行中</div>
+            </div>
+          </div>
+          <div class="top-stat">
+            <div class="top-stat-icon purple"><i class="ri-robot-line"></i></div>
+            <div class="top-stat-info">
+              <div class="top-stat-value" id="statAgents">0</div>
+              <div class="top-stat-label">运行中 Agent</div>
+            </div>
+          </div>
+          <div class="top-stat">
+            <div class="top-stat-icon green"><i class="ri-checkbox-circle-line"></i></div>
+            <div class="top-stat-info">
+              <div class="top-stat-value" id="statCompleted">141</div>
+              <div class="top-stat-label">已完成</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 流程图 -->
+        <div class="flow-container">
+          <div class="flow-header">
+            <div class="flow-title">
+              <i class="ri-git-branch-line"></i>
+              任务自动化流程
+            </div>
+            <div class="flow-controls">
+              <button class="flow-btn" onclick="refreshData()">
+                <i class="ri-refresh-line"></i> 刷新
+              </button>
+              <button class="flow-btn active" id="autoRefreshBtn" onclick="toggleAutoRefresh()">
+                <i class="ri-pulse-line"></i> 自动刷新
+              </button>
+            </div>
+          </div>
+          <div class="flow-body">
+            <div class="flow-diagram" id="flowDiagram">
+              <!-- 节点 1: 任务创建 -->
+              <div class="flow-node" data-node="create">
+                <div class="node-container">
+                  <div class="node-box" onclick="showNodeDetail('create')">
+                    <div class="node-icon">📝</div>
+                    <div class="node-name">任务创建</div>
+                    <div class="node-agent">Intent Detector</div>
+                    <div class="node-counter">
+                      <div class="counter-item">
+                        <div class="counter-value" id="nodeCreate-pending">0</div>
+                        <div class="counter-label">待处理</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flow-arrow">
+                <div class="arrow-line" id="arrow-create-analyze">
+                  <div class="data-flow" id="flow-create-analyze" style="display:none;"></div>
+                </div>
+              </div>
+              
+              <!-- 节点 2: 任务分析 -->
+              <div class="flow-node" data-node="analyze">
+                <div class="node-container">
+                  <div class="node-box" onclick="showNodeDetail('analyze')">
+                    <div class="node-icon">🔍</div>
+                    <div class="node-name">任务分析</div>
+                    <div class="node-agent">main / deep</div>
+                    <div class="node-counter">
+                      <div class="counter-item">
+                        <div class="counter-value" id="nodeAnalyze-tasks">0</div>
+                        <div class="counter-label">分析中</div>
+                      </div>
+                      <div class="counter-item">
+                        <div class="counter-value" id="nodeAnalyze-agents">0</div>
+                        <div class="counter-label">Agent</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flow-arrow">
+                <div class="arrow-line" id="arrow-analyze-assign">
+                  <div class="data-flow" id="flow-analyze-assign" style="display:none;"></div>
+                </div>
+              </div>
+              
+              <!-- 节点 3: 任务分配 -->
+              <div class="flow-node" data-node="assign">
+                <div class="node-container">
+                  <div class="node-box" onclick="showNodeDetail('assign')">
+                    <div class="node-icon">🎯</div>
+                    <div class="node-name">任务分配</div>
+                    <div class="node-agent">Auto Executor</div>
+                    <div class="node-counter">
+                      <div class="counter-item">
+                        <div class="counter-value" id="nodeAssign-tasks">0</div>
+                        <div class="counter-label">待分配</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flow-arrow">
+                <div class="arrow-line" id="arrow-assign-execute">
+                  <div class="data-flow" id="flow-assign-execute" style="display:none;"></div>
+                </div>
+              </div>
+              
+              <!-- 节点 4: 任务执行 -->
+              <div class="flow-node" data-node="execute">
+                <div class="node-container">
+                  <div class="node-box active" onclick="showNodeDetail('execute')">
+                    <div class="node-icon">⚙️</div>
+                    <div class="node-name">任务执行</div>
+                    <div class="node-agent">coder / fast / office</div>
+                    <div class="node-counter">
+                      <div class="counter-item">
+                        <div class="counter-value highlight" id="nodeExecute-tasks">0</div>
+                        <div class="counter-label">执行中</div>
+                      </div>
+                      <div class="counter-item">
+                        <div class="counter-value highlight" id="nodeExecute-agents">0</div>
+                        <div class="counter-label">Agent</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flow-arrow">
+                <div class="arrow-line" id="arrow-execute-verify">
+                  <div class="data-flow" id="flow-execute-verify" style="display:none;"></div>
+                </div>
+              </div>
+              
+              <!-- 节点 5: 任务验收 -->
+              <div class="flow-node" data-node="verify">
+                <div class="node-container">
+                  <div class="node-box" onclick="showNodeDetail('verify')">
+                    <div class="node-icon">✅</div>
+                    <div class="node-name">任务验收</div>
+                    <div class="node-agent">Auto Validator</div>
+                    <div class="node-counter">
+                      <div class="counter-item">
+                        <div class="counter-value" id="nodeVerify-tasks">0</div>
+                        <div class="counter-label">待验收</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flow-arrow">
+                <div class="arrow-line success" id="arrow-verify-complete">
+                  <div class="data-flow" id="flow-verify-complete" style="display:none;"></div>
+                </div>
+              </div>
+              
+              <!-- 节点 6: 完成 -->
+              <div class="flow-node" data-node="complete">
+                <div class="node-container">
+                  <div class="node-box success" onclick="showNodeDetail('complete')">
+                    <div class="node-icon">🎉</div>
+                    <div class="node-name">完成</div>
+                    <div class="node-agent">-</div>
+                    <div class="node-counter">
+                      <div class="counter-item">
+                        <div class="counter-value" id="nodeComplete-tasks">0</div>
+                        <div class="counter-label">已完成</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 日志和 Agent 面板 -->
+        <div class="log-container">
+          <!-- 实时日志 -->
+          <div class="log-panel">
+            <div class="log-header">
+              <div class="log-title">
+                <i class="ri-file-list-3-line"></i>
+                实时日志
+                <span class="log-badge" id="logCount">0</span>
+              </div>
+            </div>
+            <div class="log-body" id="logBody">
+              <div class="log-item">
+                <span class="log-time">--:--:--</span>
+                <span class="log-type">info</span>
+                <span class="log-msg">等待数据...</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Agent 状态 -->
+          <div class="agent-panel">
+            <div class="agent-header">
+              <div class="log-title">
+                <i class="ri-robot-line"></i>
+                Agent 状态
+                <span class="log-badge" id="agentCount">7 在线</span>
+              </div>
+            </div>
+            <div class="agent-body">
+              <div class="agent-grid" id="agentGrid">
+                <!-- Agent 卡片将由 JS 动态生成 -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 节点详情弹窗 -->
+  <div class="overlay" id="overlay" onclick="closePopup()"></div>
+  <div class="node-detail-popup" id="nodeDetailPopup">
+    <div class="popup-header">
+      <div class="popup-title" id="popupTitle">节点详情</div>
+      <button class="popup-close" onclick="closePopup()"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="task-list" id="popupTaskList">
+      <!-- 任务列表将由 JS 动态生成 -->
+    </div>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    // 全局状态
+    let autoRefresh = true;
+    let refreshInterval = null;
+    let previousData = null;
+    let logs = [];
+    
+    // Agent 配置
+    const AGENTS = [
+      { id: 'main', name: 'Main', role: '总控 Agent', icon: '🤖' },
+      { id: 'coder', name: 'Coder', role: '编码 Agent', icon: '💻' },
+      { id: 'deep', name: 'Deep', role: '深度分析', icon: '🧠' },
+      { id: 'fast', name: 'Fast', role: '快速响应', icon: '⚡' },
+      { id: 'chat', name: 'Chat', role: '对话 Agent', icon: '💬' },
+      { id: 'test', name: 'Test', role: '测试 Agent', icon: '🧪' },
+      { id: 'office', name: 'Office', role: '办公 Agent', icon: '📊' }
+    ];
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      Sidebar.init({ activePage: 'automation-flow-monitor' });
+      refreshData();
+      startAutoRefresh();
+    });
+    
+    // 自动刷新
+    function startAutoRefresh() {
+      if (refreshInterval) clearInterval(refreshInterval);
+      refreshInterval = setInterval(() => {
+        if (autoRefresh) refreshData();
+      }, 3000);
+    }
+    
+    function toggleAutoRefresh() {
+      autoRefresh = !autoRefresh;
+      const btn = document.getElementById('autoRefreshBtn');
+      const indicator = document.getElementById('refreshIndicator');
+      
+      if (autoRefresh) {
+        btn.classList.add('active');
+        indicator.classList.add('active');
+        indicator.querySelector('span').textContent = '实时刷新中';
+      } else {
+        btn.classList.remove('active');
+        indicator.classList.remove('active');
+        indicator.querySelector('span').textContent = '已暂停';
+      }
+    }
+    
+    // 刷新数据
+    async function refreshData() {
+      try {
+        const response = await fetch('/api/automation/status');
+        const data = await response.json();
+        
+        if (data.success) {
+          updateUI(data);
+          checkForNewEvents(data);
+        }
+      } catch (err) {
+        console.error('刷新数据失败:', err);
+        addLog('error', '数据刷新失败: ' + err.message);
+      }
+    }
+    
+    // 更新 UI
+    function updateUI(data) {
+      // 更新顶部统计
+      document.getElementById('statTotal').textContent = data.tasks.total;
+      document.getElementById('statPending').textContent = data.tasks.pending;
+      document.getElementById('statDoing').textContent = data.tasks.doing;
+      document.getElementById('statCompleted').textContent = data.tasks.completed;
+      
+      // 更新节点计数
+      document.getElementById('nodeCreate-pending').textContent = data.tasks.pending;
+      document.getElementById('nodeExecute-tasks').textContent = data.tasks.doing;
+      document.getElementById('nodeComplete-tasks').textContent = data.tasks.completed;
+      document.getElementById('nodeAssign-tasks').textContent = data.pendingAssignments || 0;
+      
+      // 更新告警
+      updateAlerts(data.alerts || []);
+      
+      // 更新 Agent 状态
+      updateAgentStatus(data.agents || []);
+      
+      // 更新运行中的 Agent 数量
+      const runningAgents = data.agents ? data.agents.filter(a => a.status === 'busy').length : 0;
+      document.getElementById('statAgents').textContent = runningAgents;
+      document.getElementById('nodeExecute-agents').textContent = runningAgents;
+      
+      // 存储当前数据用于比较
+      previousData = data;
+    }
+    
+    // 检查新事件
+    function checkForNewEvents(data) {
+      if (!previousData) return;
+      
+      // 检查新任务
+      if (data.tasks.total > previousData.tasks.total) {
+        addLog('task', `新任务创建，总数: ${data.tasks.total}`);
+        triggerFlowAnimation('create', 'analyze');
+      }
+      
+      // 检查任务完成
+      if (data.tasks.completed > previousData.tasks.completed) {
+        addLog('success', `任务完成，已完成: ${data.tasks.completed}`);
+        triggerFlowAnimation('verify', 'complete');
+      }
+      
+      // 检查问题
+      if (data.issues && data.issues.open > 0) {
+        addLog('issue', `待处理问题: ${data.issues.open}`);
+      }
+    }
+    
+    // 触发流动画
+    function triggerFlowAnimation(from, to) {
+      const flowEl = document.getElementById(`flow-${from}-${to}`);
+      const arrowEl = document.getElementById(`arrow-${from}-${to}`);
+      
+      if (flowEl && arrowEl) {
+        flowEl.style.display = 'block';
+        arrowEl.classList.add('active');
+        
+        setTimeout(() => {
+          flowEl.style.display = 'none';
+        }, 1500);
+      }
+    }
+    
+    // 更新告警
+    function updateAlerts(alerts) {
+      const container = document.getElementById('alertsContainer');
+      
+      if (alerts.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      
+      container.innerHTML = alerts.map(alert => `
+        <div class="alert-bar ${alert.type}">
+          <i class="ri-alert-${alert.type === 'error' ? 'fill' : 'line'}"></i>
+          <span>${alert.message}</span>
+          <button class="flow-btn" onclick="handleAlert('${alert.id}')">处理</button>
+        </div>
+      `).join('');
+    }
+    
+    // 更新 Agent 状态
+    function updateAgentStatus(agents) {
+      const grid = document.getElementById('agentGrid');
+      
+      // 如果没有传入 agents 数据，使用默认值
+      const agentData = agents.length > 0 ? agents : AGENTS.map(a => ({
+        ...a,
+        status: 'online',
+        tasks: 0,
+        completed: 0
+      }));
+      
+      grid.innerHTML = agentData.map(agent => `
+        <div class="agent-card ${agent.status || 'online'}">
+          <div class="agent-info">
+            <div class="agent-avatar ${agent.status || 'online'}">
+              ${agent.icon || '🤖'}
+            </div>
+            <div>
+              <div class="agent-name">${agent.name}</div>
+              <div class="agent-role">${agent.role}</div>
+            </div>
+          </div>
+          <div class="agent-stats">
+            <div class="agent-stat">
+              <div class="agent-stat-value">${agent.tasks || 0}</div>
+              <div class="agent-stat-label">执行中</div>
+            </div>
+            <div class="agent-stat">
+              <div class="agent-stat-value">${agent.completed || 0}</div>
+              <div class="agent-stat-label">已完成</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('agentCount').textContent = 
+        `${agentData.filter(a => a.status !== 'offline').length} 在线`;
+    }
+    
+    // 添加日志
+    function addLog(type, message) {
+      const now = new Date();
+      const time = now.toTimeString().split(' ')[0];
+      
+      logs.unshift({ time, type, message });
+      if (logs.length > 50) logs.pop();
+      
+      const logBody = document.getElementById('logBody');
+      logBody.innerHTML = logs.map(log => `
+        <div class="log-item">
+          <span class="log-time">${log.time}</span>
+          <span class="log-type ${log.type}">${log.type}</span>
+          <span class="log-msg">${log.message}</span>
+        </div>
+      `).join('');
+      
+      document.getElementById('logCount').textContent = logs.length;
+    }
+    
+    // 显示节点详情
+    async function showNodeDetail(node) {
+      const popup = document.getElementById('nodeDetailPopup');
+      const overlay = document.getElementById('overlay');
+      const title = document.getElementById('popupTitle');
+      const taskList = document.getElementById('popupTaskList');
+      
+      // 设置标题
+      const nodeNames = {
+        create: '任务创建',
+        analyze: '任务分析',
+        assign: '任务分配',
+        execute: '任务执行',
+        verify: '任务验收',
+        complete: '已完成'
+      };
+      title.textContent = nodeNames[node] + ' - 节点详情';
+      
+      // 获取任务数据
+      try {
+        let status = '';
+        let url = '/api/tasks-v2?limit=10';
+        
+        switch(node) {
+          case 'create':
+          case 'analyze':
+          case 'assign':
+            status = 'pending';
+            break;
+          case 'execute':
+            status = 'doing';
+            break;
+          case 'verify':
+            status = 'completed';
+            break;
+          case 'complete':
+            status = 'completed';
+            break;
+        }
+        
+        if (status) {
+          url = `/api/tasks-v2?status=${status}&limit=20`;
+        }
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success && data.data && data.data.tasks) {
+          taskList.innerHTML = data.data.tasks.map(task => `
+            <div class="task-item">
+              <div class="task-item-header">
+                <span class="task-item-title">${task.title}</span>
+                <span class="task-item-status" style="background: ${getStatusColor(task.status)}; color: white;">
+                  ${task.status}
+                </span>
+              </div>
+              <div class="task-item-desc">${task.description || '无描述'}</div>
+            </div>
+          `).join('');
+        } else {
+          taskList.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px;">暂无任务</div>';
+        }
+      } catch (err) {
+        taskList.innerHTML = `<div style="color:var(--danger);">加载失败: ${err.message}</div>`;
+      }
+      
+      popup.classList.add('show');
+      overlay.classList.add('show');
+    }
+    
+    function getStatusColor(status) {
+      const colors = {
+        pending: '#6b7280',
+        doing: '#3b82f6',
+        completed: '#10b981',
+        failed: '#ef4444'
+      };
+      return colors[status] || '#6b7280';
+    }
+    
+    function closePopup() {
+      document.getElementById('nodeDetailPopup').classList.remove('show');
+      document.getElementById('overlay').classList.remove('show');
+    }
+    
+    // 处理告警
+    function handleAlert(alertId) {
+      console.log('处理告警:', alertId);
+      // TODO: 实现告警处理逻辑
+    }
+  </script>
+<script>FieldTips.init({pageType:"automation"});</script></body>
+</html>

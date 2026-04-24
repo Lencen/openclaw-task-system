@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>任务管理 - 任务系统</title>
+  <style>
+    /* ========== 设计系统（与仪表盘一致） ========== */
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --border: #334155;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    /* ========== 布局框架 ========== */
+    /* 已移除，使用 frame.css */
+    
+    /* ========== 侧边栏 ========== */
+    .sidebar {
+      width: 200px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    
+    .sidebar-header {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      gap: 8px;
+    }
+    
+    .sidebar-logo { font-size: 18px; }
+    
+    .sidebar-nav {
+      flex: 1;
+      padding: 8px;
+      overflow-y: auto;
+    }
+    
+    .nav-section {
+      margin-bottom: 16px;
+    }
+    
+    .nav-section-title {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      padding: 8px 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    
+    .nav-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .nav-item.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+    }
+    
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    
+    .nav-badge {
+      margin-left: auto;
+      background: var(--danger);
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+    
+    /* ========== 主内容区 ========== */
+    /* 已移除，使用 frame.css */
+    
+    /* ========== 顶部栏 ========== */
+    /* 已移除，使用 frame.css */
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .page-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .header-tabs {
+      display: flex;
+      gap: 4px;
+      margin-left: 24px;
+    }
+    
+    .header-tab {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      background: transparent;
+    }
+    
+    .header-tab:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .header-tab.active {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+    
+    /* ========== 工具栏 ========== */
+    .toolbar {
+      height: 44px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+    }
+    
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .filter-label {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    .filter-select {
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .search-input {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 12px;
+      width: 200px;
+    }
+    
+    .search-input::placeholder {
+      color: var(--text-tertiary);
+    }
+    
+    /* ========== 内容区 ========== */
+    /* 已移除，使用 frame.css */
+    
+    /* ========== Kanban 布局 ========== */
+    .kanban {
+      display: flex;
+      gap: 16px;
+      height: 100%;
+    }
+    
+    .kanban-column {
+      flex: 1;
+      min-width: 280px;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .column-header {
+      padding: 12px 16px;
+      background: var(--bg-tertiary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    
+    .column-title {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .column-count {
+      background: var(--border);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    
+    .column-body {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    /* ========== 任务卡片 ========== */
+    .task-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .task-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+    
+    .task-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    
+    .task-card-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+    
+    .task-priority {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+    
+    .task-priority.high {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+    
+    .task-priority.medium {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+    
+    .task-priority.low {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .task-card-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .task-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .task-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .task-progress {
+      flex: 1;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      max-width: 60px;
+    }
+    
+    .task-progress-bar {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+    
+    /* ========== 添加卡片按钮 ========== */
+    .add-card-btn {
+      padding: 10px;
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-tertiary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    
+    .add-card-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(59, 130, 246, 0.05);
+    }
+    
+    /* ========== 响应式 ========== */
+    @media (max-width: 1200px) {
+      .kanban-column { min-width: 240px; }
+    }
+    
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .kanban { flex-direction: column; }
+      .kanban-column { min-width: 100%; }
+    }
+    
+    /* ========== 加载状态样式 ========== */
+    .loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    
+    .loading-spinner {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    
+    .spinner-circle {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--primary);
+      animation: spinner-pulse 1.4s infinite ease-in-out both;
+    }
+    
+    .spinner-circle:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+    
+    .spinner-circle:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+    
+    .loading-text {
+      color: var(--text-primary);
+      font-size: 14px;
+      text-align: center;
+      margin: 0;
+    }
+    
+    @keyframes spinner-pulse {
+      0%, 80%, 100% {
+        transform: scale(0.6);
+      }
+      40% {
+        transform: scale(1);
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="css/page-tips.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <script src="js/field-tips.js"></script></head>
+          <link rel="stylesheet" href="css/frame.css">
+<body>
+  <div class="layout">
+    <!-- 侧边栏（与仪表盘一致） -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容区 -->
+    <main class="main">
+      <!-- 顶部栏 -->
+      <header class="header">
+        <div class="header-left">
+          <h1 class="page-title">📋 任务管理</h1>
+          <div class="header-tabs">
+            <button class="header-tab active">看板</button>
+            <button class="header-tab">列表</button>
+            <button class="header-tab">日历</button>
+            <button class="header-tab">四象限</button>
+          </div>
+          <div id="tipsContainer"></div>
+        </div>
+        <div class="header-right">
+          <button class="btn btn-secondary">导入</button>
+          <button class="btn btn-primary">+ 新建任务</button>
+        </div>
+      </header>
+      
+      <!-- 工具栏 -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="filter-group">
+            <span class="filter-label">状态:</span>
+            <select class="filter-select">
+              <option>全部</option>
+              <option>待办</option>
+              <option>进行中</option>
+              <option>已完成</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">优先级:</span>
+            <select class="filter-select">
+              <option>全部</option>
+              <option>高</option>
+              <option>中</option>
+              <option>低</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">负责人:</span>
+            <select class="filter-select">
+              <option>全部</option>
+              <option>coder</option>
+              <option>coder-1</option>
+              <option>coder-2</option>
+            </select>
+          </div>
+          <input type="text" class="search-input" placeholder="搜索任务...">
+        </div>
+        <div class="toolbar-right">
+          <span style="font-size: 12px; color: var(--text-tertiary);">共 21 条任务</span>
+        </div>
+      </div>
+      
+      <!-- 内容区 - Kanban -->
+      <div class="content">
+        <div class="kanban">
+          <!-- 待办列 -->
+          <div class="kanban-column">
+            <div class="column-header">
+              <span class="column-title">
+                📋 待办
+                <span class="column-count" id="pending-count">0</span>
+              </span>
+            </div>
+            <div class="column-body" id="pending-column"></div>
+          </div>
+          
+              <!-- 进行中列 -->
+              <div class="kanban-column">
+                <div class="column-header">
+                  <span class="column-title">
+                    🔄 进行中
+                    <span class="column-count" id="doing-count">0</span>
+                  </span>
+                </div>
+                <div class="column-body" id="doing-column"></div>
+          </div>
+          
+          <!-- 反思中列 (v7.0) -->
+          <div class="kanban-column">
+            <div class="column-header">
+              <span class="column-title">
+                💭 反思中
+                <span class="column-count" id="reflection-pending-count">0</span>
+              </span>
+            </div>
+            <div class="column-body" id="reflection-pending-column"></div>
+          </div>
+          
+          <!-- 已完成列 -->
+          <div class="kanban-column">
+            <div class="column-header">
+              <span class="column-title">
+                ✅ 已完成
+                <span class="column-count" id="completed-count">0</span>
+              </span>
+            </div>
+            <div class="column-body" id="completed-column"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script>
+    // 显示加载状态
+    function showLoading() {
+      const loadingContainer = document.createElement('div');
+      loadingContainer.id = 'loading-container';
+      loadingContainer.className = 'loading-container';
+      loadingContainer.innerHTML = `
+        <div class="loading-spinner">
+          <div class="spinner-circle"></div>
+          <div class="spinner-circle"></div>
+          <div class="spinner-circle"></div>
+        </div>
+        <p class="loading-text">正在加载任务数据...</p>
+      `;
+      document.body.appendChild(loadingContainer);
+    }
+
+    // 隐藏加载状态
+    function hideLoading() {
+      const loadingContainer = document.getElementById('loading-container');
+      if (loadingContainer) {
+        loadingContainer.remove();
+      }
+    }
+
+    // 渲染任务卡片
+    function createTaskCard(task) {
+      const priorityClass = {
+        'P0': 'high', 'P1': 'high', 'P2': 'medium', 'P3': 'low'
+      }[task.priority] || 'medium';
+      
+      // v7.0: 增加 reflection_pending 状态
+      const statusIcon = {
+        'pending': '📅',
+        'doing': '🔄',
+        'reflection_pending': '💭',
+        'completed': '✅', 'done': '✅'
+      }[task.status] || '📅';
+      
+      const card = document.createElement('div');
+      card.className = 'task-card';
+      // v7.0: reflection_pending 状态半透明
+      if (task.status === 'completed' || task.status === 'done' || task.status === 'reflection_pending') {
+        card.style.opacity = '0.7';
+      }
+      
+      let footerContent = '';
+      if (task.status === 'doing') {
+        footerContent = `
+                  <div class="task-meta">
+                    <span class="task-meta-item">👤 ${task.assigned_agent || 'unassigned'}</span>
+                    <div class="task-progress">
+                      <div class="task-progress-bar" style="width: ${Math.floor(Math.random() * 100)}%;"></div>
+                    </div>
+                  </div>
+                  <span>${Math.floor(Math.random() * 100)}%</span>
+        `;
+      } else {
+        footerContent = `
+                  <div class="task-meta">
+                    <span class="task-meta-item">👤 ${task.assigned_agent || 'unassigned'}</span>
+                    <span class="task-meta-item">${statusIcon} ${task.status === 'completed' || task.status === 'done' ? '完成' : '待办'}</span>
+                  </div>
+        `;
+      }
+      
+      card.innerHTML = `
+        <div class="task-card-header">
+          <span class="task-card-title">${task.title}</span>
+          <span class="task-priority ${priorityClass}">${priorityClass === 'high' ? '高' : priorityClass === 'medium' ? '中' : '低'}</span>
+        </div>
+        <div class="task-card-desc">${task.description || '暂无描述'}</div>
+        <div class="task-card-footer">
+          ${footerContent}
+        </div>
+      `;
+      
+      // 已移除：在 tasks-v2.html 中使用 onclick 事件，避免冲突
+      
+      return card;
+    }
+
+    // 加载并渲染任务数据
+    async function loadTasks() {
+      // 显示加载状态
+      showLoading();
+      
+      try {
+        // 设置超时机制，防止加载状态一直显示
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('请求超时')), 10000); // 10秒超时
+        });
+        
+        const responsePromise = fetch('/api/tasks?showCompleted=true');
+        
+        // 使用Promise.race来处理超时
+        const response = await Promise.race([responsePromise, timeoutPromise]);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        
+        // 隐藏加载状态
+        hideLoading();
+        
+        // 兼容多种格式: { data: [...] }, { tasks: [...] }, { data: { tasks: [...] } }
+        let tasks = [];
+        if (Array.isArray(result.data)) {
+          tasks = result.data;
+        } else if (Array.isArray(result.tasks)) {
+          tasks = result.tasks;
+        } else if (result.data && Array.isArray(result.data.tasks)) {
+          tasks = result.data.tasks;
+        }
+        
+        // 清空各列 (v7.0: 增加 reflection-pending 列)
+        document.getElementById('pending-column').innerHTML = '';
+        document.getElementById('doing-column').innerHTML = '';
+        document.getElementById('reflection-pending-column').innerHTML = '';
+        document.getElementById('completed-column').innerHTML = '';
+        
+        // 按状态分类渲染
+        const pendingCount = tasks.filter(t => t.status === 'pending').length;
+        const doingCount = tasks.filter(t => t.status === 'doing').length;
+        const reflectionPendingCount = tasks.filter(t => t.status === 'reflection_pending').length;
+        const completedCount = tasks.filter(t => t.status === 'completed' || t.status === 'done').length;
+        
+        document.getElementById('pending-count').textContent = pendingCount;
+        document.getElementById('doing-count').textContent = doingCount;
+        document.getElementById('reflection-pending-count').textContent = reflectionPendingCount;
+        document.getElementById('completed-count').textContent = completedCount;
+        
+        tasks.forEach(task => {
+          const card = createTaskCard(task);
+          if (task.status === 'pending') {
+            document.getElementById('pending-column').appendChild(card);
+          } else if (task.status === 'doing') {
+            document.getElementById('doing-column').appendChild(card);
+          } else if (task.status === 'reflection_pending') {
+            document.getElementById('reflection-pending-column').appendChild(card);
+          } else if (task.status === 'completed' || task.status === 'done') {
+            document.getElementById('completed-column').appendChild(card);
+          }
+        });
+        
+      } catch (error) {
+        console.error('加载任务失败:', error);
+        // 清空各列并显示错误信息
+        ['pending', 'doing', 'reflection-pending', 'completed'].forEach(status => {
+          const column = document.getElementById(`${status}-column`);
+          column.innerHTML = `<div style="color: var(--text-tertiary); padding: 10px;">加载失败: ${error.message}</div>`;
+        });
+        document.getElementById('pending-count').textContent = '0';
+        document.getElementById('doing-count').textContent = '0';
+        document.getElementById('completed-count').textContent = '0';
+        
+        // 隐藏加载状态
+        hideLoading();
+      }
+    }
+
+    // 页面加载时获取任务数据
+    document.addEventListener('DOMContentLoaded', function() {
+      loadTasks();
+      Sidebar.init({ activePage: 'tasks' });
+    });
+
+    // Tab 切换
+    document.querySelectorAll('.header-tab').forEach((tab, index) => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.header-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        // 根据点击的标签执行不同的操作
+        switch(index) {
+          case 0: // 看板视图
+            // 当前就是看板视图，无需额外操作
+            break;
+          case 1: // 列表视图
+            window.location.href = 'tasks-v2.html';
+            break;
+          case 2: // 日历视图
+            window.location.href = 'calendar-new.html';
+            break;
+          case 3: // 四象限视图
+            window.location.href = 'quadrant-v2.html';
+            break;
+        }
+      });
+    });
+
+    // 任务卡片点击跳转到详情页
+    // 注意：任务卡片的点击事件已经在 renderTaskCard 函数中绑定
+    // 这里不需要再添加点击事件，避免覆盖正确的任务ID
+    
+    // 添加其他功能按钮的事件监听
+    document.querySelectorAll('.view-mode-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script src="js/page-tips.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tipsContainer = document.getElementById('tipsContainer');
+      if (tipsContainer && PageTips) {
+        PageTips.init('tasks-kanban', tipsContainer);
+      }
+    });
+  </script>
+<script>FieldTips.init({pageType:"task"});</script></body>
+</html>

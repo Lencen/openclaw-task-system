@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务管理 - Morning 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+      
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content {
+      padding: 24px;
+    }
+    
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    /* 统计卡片 */
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 120px;
+    }
+    
+    .stat-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    
+    .stat-icon.blue { background: rgba(59, 130, 246, 0.15); }
+    .stat-icon.orange { background: rgba(245, 158, 11, 0.15); }
+    .stat-icon.green { background: rgba(16, 185, 129, 0.15); }
+    .stat-icon.purple { background: rgba(139, 92, 246, 0.15); }
+    
+    .stat-content h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .stat-content p {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    
+    /* 工具栏 */
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+    
+    .search-box input {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px 10px 36px;
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+    
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .search-box i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+    }
+    
+    .filter-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-secondary);
+      padding: 4px;
+      border-radius: 8px;
+    }
+    
+    .filter-tab {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .filter-tab:hover {
+      color: var(--text-primary);
+    }
+    
+    .filter-tab.active {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    /* 任务表格 */
+    .task-table-container {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    
+    .task-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .task-table th {
+      background: var(--bg-tertiary);
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .task-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    
+    .task-table tr:hover {
+      background: rgba(59, 130, 246, 0.05);
+    }
+    
+    .task-title {
+      color: var(--text-primary);
+      font-weight: 500;
+      cursor: pointer;
+    }
+    
+    .task-title:hover {
+      color: var(--primary);
+    }
+    
+    .task-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+    
+    /* 状态标签 */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    
+    .status-badge.pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+    }
+    
+    .status-badge.doing {
+      background: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+    }
+    
+    .status-badge.completed {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+    }
+    
+    .status-badge.paused {
+      background: rgba(139, 92, 246, 0.15);
+      color: #8b5cf6;
+    }
+    
+    /* 优先级标签 */
+    .priority-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    
+    .priority-badge.P0 {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+    
+    .priority-badge.P1 {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+    }
+    
+    .priority-badge.P2 {
+      background: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+    }
+    
+    .priority-badge.P3 {
+      background: rgba(100, 116, 139, 0.15);
+      color: #94a3b8;
+    }
+    
+    /* 进度条 */
+    .progress-bar {
+      width: 80px;
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    
+    /* 分页 */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .page-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .page-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .page-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .page-info {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin: 0 12px;
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-tertiary);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    .empty-state p {
+      font-size: 14px;
+    }
+    
+    /* 响应式 */
+    @media (max-width: 900px) {
+      .stats-row {
+        flex-wrap: wrap;
+      }
+      
+      .stat-card {
+        flex: 1;
+        min-width: 100px;
+      }
+      
+      .toolbar {
+        flex-direction: column;
+      }
+      
+      .search-box {
+        width: 100%;
+      }
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <span>任务管理</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadTasks()">
+            <i class="ri-refresh-line"></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-content">
+          <!-- 页面标题 -->
+          <div class="page-header">
+            <h1 class="page-title">任务列表 <i class="ri-question-circle-line tips-icon" onclick="FieldTips.show()" title="查看字段说明"></i></h1>
+            <button class="btn btn-primary" onclick="createNewTask()">
+              <i class="ri-add-line"></i> 新建任务
+            </button>
+          </div>
+
+          <!-- 统计卡片 -->
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-icon blue"><i class="ri-list-check"></i></div>
+              <div class="stat-content"><h3 id="statTotal">--</h3><p>任务总数</p></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon orange"><i class="ri-fire-line"></i></div>
+              <div class="stat-content"><h3 id="statP0">--</h3><p>P0 优先</p></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon purple"><i class="ri-flag-line"></i></div>
+              <div class="stat-content"><h3 id="statP1">--</h3><p>P1 优先</p></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green"><i class="ri-play-line"></i></div>
+              <div class="stat-content"><h3 id="statDoing">--</h3><p>进行中</p></div>
+            </div>
+          </div>
+
+          <!-- 工具栏 -->
+          <div class="toolbar">
+            <div class="search-box">
+              <i class="ri-search-line"></i>
+              <input type="text" id="searchInput" placeholder="搜索任务..." oninput="applyFilters()">
+            </div>
+            
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-status="all" onclick="filterByStatus('all')">全部</button>
+              <button class="filter-tab" data-status="pending" onclick="filterByStatus('pending')">待处理</button>
+              <button class="filter-tab" data-status="doing" onclick="filterByStatus('doing')">进行中</button>
+              <button class="filter-tab" data-status="completed" onclick="filterByStatus('completed')">已完成</button>
+            </div>
+          </div>
+
+          <!-- 任务表格 -->
+          <div class="task-table-container">
+            <table class="task-table">
+              <thead>
+                <tr>
+                  <th style="width: 40%">任务</th>
+                  <th style="width: 10%">优先级</th>
+                  <th style="width: 12%">状态</th>
+                  <th style="width: 15%">负责人</th>
+                  <th style="width: 13%">进度</th>
+                  <th style="width: 10%">操作</th>
+                </tr>
+              </thead>
+              <tbody id="taskTableBody">
+                <tr>
+                  <td colspan="6">
+                    <div class="empty-state">
+                      <i class="ri-loader-4-line"></i>
+                      <p>加载中...</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <!-- 分页 -->
+            <div class="pagination" id="pagination" style="display: none;">
+              <button class="page-btn" onclick="prevPage()"><i class="ri-arrow-left-s-line"></i></button>
+              <span class="page-info" id="pageInfo">第 1 页</span>
+              <button class="page-btn" onclick="nextPage()"><i class="ri-arrow-right-s-line"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let allTasks = [];
+    let currentStatus = 'all';
+    let currentPage = 1;
+    const pageSize = 20;
+
+    // 统一的点击事件处理函数
+    function handleTaskClick(event) {
+      const taskRow = event.target.closest('tr');
+      if (!taskRow) return;
+      
+      const taskId = taskRow.dataset.taskId;
+      if (taskId) {
+        window.location.href = `task-detail.html?id=${encodeURIComponent(taskId)}`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      Sidebar.init({ activePage: 'tasks' });
+      loadTasks();
+    });
+
+    async function loadTasks() {
+      try {
+        const res = await fetch(`${API_BASE}/api/tasks?showCompleted=true`);
+        const data = await res.json();
+        
+        if (data.data && data.data.tasks) {
+          allTasks = data.data.tasks;
+        } else if (data.tasks) {
+          allTasks = data.tasks;
+        } else {
+          throw new Error('API 返回格式错误');
+        }
+        
+        // 过滤已删除和归档的任务
+        allTasks = allTasks.filter(t => t.status !== 'deleted' && t.status !== 'archived');
+        
+        updateStats();
+        applyFilters();
+      } catch (e) {
+        console.error('加载任务失败:', e);
+        document.getElementById('taskTableBody').innerHTML = `
+          <tr><td colspan="6">
+            <div class="empty-state">
+              <i class="ri-error-warning-line"></i>
+              <p>加载失败: ${e.message}</p>
+            </div>
+          </td></tr>
+        `;
+      }
+    }
+
+    function updateStats() {
+      const activeTasks = allTasks.filter(t => t.status !== 'completed');
+      document.getElementById('statTotal').textContent = activeTasks.length;
+      document.getElementById('statP0').textContent = activeTasks.filter(t => t.priority === 'P0').length;
+      document.getElementById('statP1').textContent = activeTasks.filter(t => t.priority === 'P1').length;
+      document.getElementById('statDoing').textContent = allTasks.filter(t => t.status === 'doing').length;
+    }
+
+    function applyFilters() {
+      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+      
+      let filtered = [...allTasks];
+      
+      // 状态筛选
+      if (currentStatus !== 'all') {
+        filtered = filtered.filter(t => t.status === currentStatus);
+      }
+      
+      // 搜索筛选
+      if (searchQuery) {
+        filtered = filtered.filter(t => 
+          t.title.toLowerCase().includes(searchQuery) ||
+          (t.description && t.description.toLowerCase().includes(searchQuery))
+        );
+      }
+      
+      renderTasks(filtered);
+    }
+
+    function filterByStatus(status) {
+      currentStatus = status;
+      currentPage = 1;
+      
+      // 更新标签状态
+      document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.status === status);
+      });
+      
+      applyFilters();
+    }
+
+    function renderTasks(tasks) {
+      const tbody = document.getElementById('taskTableBody');
+      
+      if (tasks.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="6">
+            <div class="empty-state">
+              <i class="ri-inbox-line"></i>
+              <p>暂无任务</p>
+            </div>
+          </td></tr>
+        `;
+        document.getElementById('pagination').style.display = 'none';
+        // 解绑旧的点击事件
+        if (tbody.onclick) {
+          tbody.onclick = null;
+        }
+        return;
+      }
+      
+      // 分页
+      const start = (currentPage - 1) * pageSize;
+      const pageTasks = tasks.slice(start, start + pageSize);
+      const totalPages = Math.ceil(tasks.length / pageSize);
+      
+      const html = pageTasks.map(task => {
+        const progress = task.total_steps > 0 
+          ? Math.round((task.completed_steps / task.total_steps) * 100) 
+          : 0;
+        
+        const statusClass = task.status || 'pending';
+        const statusText = {
+          'pending': '待处理',
+          'doing': '进行中',
+          'completed': '已完成',
+          'paused': '已暂停'
+        }[statusClass] || statusClass;
+        
+        return `
+          <tr>
+            <td>
+              <div class="task-title" onclick="window.location.href='task-detail.html?id=${encodeURIComponent(task.id)}'">${escapeHtml(task.title)}</div>
+              <div class="task-meta">${formatDate(task.created_at)}</div>
+            </td>
+            <td><span class="priority-badge ${task.priority || 'P2'}">${task.priority || 'P2'}</span></td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>${task.assignedAgent || '--'}</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${progress}%"></div>
+                </div>
+                <span style="font-size: 11px; color: var(--text-tertiary);">${progress}%</span>
+              </div>
+            </td>
+            <td>
+              <button class="btn btn-secondary" style="padding: 6px 10px;" onclick="window.location.href='task-detail.html?id=${encodeURIComponent(task.id)}'">
+                <i class="ri-eye-line"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+      tbody.innerHTML = html;
+      
+      // 分页控制
+      const pagination = document.getElementById('pagination');
+      if (totalPages > 1) {
+        pagination.style.display = 'flex';
+        document.getElementById('pageInfo').textContent = `第 ${currentPage} / ${totalPages} 页`;
+      } else {
+        pagination.style.display = 'none';
+      }
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        applyFilters();
+      }
+    }
+
+    function nextPage() {
+      currentPage++;
+      applyFilters();
+    }
+
+    function viewTask(id) {
+      window.location.href = `task-detail.html?id=${encodeURIComponent(id)}`;
+    }
+
+    function createNewTask() {
+      window.location.href = 'task-edit.html';
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '--';
+      return dateStr.split('T')[0];
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+
+  <script src="js/sidebar.js"></script>
+<script>FieldTips.init({pageType:"task"});</script></body>
+</html>

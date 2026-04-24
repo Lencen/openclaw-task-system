@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>技能库 - 任务系统</title>
+  
+  <!-- 统一框架样式 (必须在最前面) -->
+  <link rel="stylesheet" href="css/frame.css">
+  
+  <!-- 侧边栏组件 -->
+  <link rel="stylesheet" href="css/sidebar.css">
+  <script src="js/sidebar.js"></script>
+  
+  <!-- 页面专用样式 (在框架之后) -->
+  <style>
+    /* 页面专用样式 - 只写页面特定的样式 */
+    .page-content {
+      padding: 24px;
+    }
+    
+    .page-header {
+      margin-bottom: 24px;
+    }
+    
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    
+    /* 统计卡片 */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .stat-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    
+    /* 工具栏 */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .search-input {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      width: 280px;
+    }
+    
+    .filter-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .filter-tab {
+      padding: 6px 12px;
+      border-radius: 4px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 13px;
+    }
+    
+    .filter-tab.active {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    /* 技能卡片网格 */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    
+    /* 技能卡片 */
+    .skill-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .skill-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    
+    .skill-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    
+    .skill-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .skill-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    
+    .skill-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .skill-id {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    
+    .skill-status {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    
+    .skill-status.workspace {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .skill-status.system {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+    
+    .skill-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    /* 弹窗样式 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal-content {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 80vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+    }
+    
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    .modal-close:hover {
+      color: var(--text-primary);
+    }
+    
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+    }
+    
+    /* 详情样式 */
+    .detail-section {
+      margin-bottom: 20px;
+    }
+    
+    .detail-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .detail-label {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    .detail-value {
+      font-size: 14px;
+    }
+    
+    .skill-content {
+      background: var(--bg-tertiary);
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    /* 按钮样式 */
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .btn:hover {
+      opacity: 0.9;
+    }
+  </style>
+  <link rel="stylesheet" href="css/page-tips.css">
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <!-- 顶部栏 -->
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <span>技能库</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="refreshSkills()">🔄</button>
+          <button class="header-btn" title="添加技能">➕</button>
+        </div>
+      </header>
+      
+      <!-- 内容区 -->
+      <div class="content page-content">
+        <div class="page-header">
+          <h1 class="page-title">🧠 技能库</h1>
+            <div id="tipsContainer"></div>
+          <p class="page-subtitle">管理所有Agent技能和能力</p>
+        </div>
+        
+        <!-- 统计卡片 -->
+        <div class="stats-bar">
+          <div class="stat-item">
+            <div class="stat-icon">🧠</div>
+            <div>
+              <div class="stat-value" id="totalCount">150+</div>
+              <div class="stat-label">总技能</div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">💻</div>
+            <div>
+              <div class="stat-value" id="workspaceCount">120</div>
+              <div class="stat-label">Workspace</div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">⚙️</div>
+            <div>
+              <div class="stat-value" id="systemCount">30</div>
+              <div class="stat-label">System</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 工具栏 -->
+        <div class="toolbar">
+          <input type="text" class="search-input" placeholder="搜索技能..." id="searchInput">
+          <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterSkills('all')">全部</button>
+            <button class="filter-tab" onclick="filterSkills('workspace')">Workspace</button>
+            <button class="filter-tab" onclick="filterSkills('system')">System</button>
+          </div>
+        </div>
+        
+        <!-- 技能列表 -->
+        <div class="skills-grid" id="skillsGrid">
+          <!-- 技能卡片将通过JS动态生成 -->
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script>
+    // 页面级脚本 - 页面专用逻辑
+    // 查看技能详情
+    function viewSkill(skillId) {
+      if (skillId) {
+        window.location.href = `skill-detail.html?id=${encodeURIComponent(skillId)}`;
+      }
+    }
+    
+    // 刷新技能列表
+    function refreshSkills() {
+      loadSkills();
+    }
+    
+    function filterSkills(type) {
+      console.log('过滤:', type);
+      // 实现过滤逻辑
+    }
+    
+    // 加载技能列表
+    async function loadSkills() {
+      const skillsGrid = document.getElementById('skillsGrid');
+      
+      try {
+        // 调用 API 获取技能列表
+        const res = await fetch('/api/resources/skills');
+        const data = await res.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || '获取技能列表失败');
+        }
+        
+        if (!data.data || data.data.length === 0) {
+          skillsGrid.innerHTML = `
+            <div class="empty-state">
+              <i class="ri-error-warning-line"></i>
+              <p>暂无技能数据</p>
+            </div>
+          `;
+          return;
+        }
+        
+        // 渲染技能卡片
+        const skills = data.data;
+        let html = '';
+        
+        skills.forEach(skill => {
+          const statusMap = {
+            'workspace': { text: '工作区', class: 'workspace' },
+            'system': { text: '系统', class: 'system' },
+            'evolution': { text: '进化', class: 'evolution' }
+          };
+          
+          const statusInfo = statusMap[skill.type] || { text: '其他', class: 'other' };
+          
+          html += `
+            <div class="skill-card" onclick="viewSkill('${skill.id}')">
+              <div class="skill-info">
+                <div class="skill-icon">${skill.icon || '🔧'}</div>
+                <div>
+                  <div class="skill-name">${skill.displayName || skill.name || skill.id}</div>
+                  <div class="skill-id">${skill.id}</div>
+                </div>
+              </div>
+              <div class="skill-status ${statusInfo.class}">${statusInfo.text}</div>
+              <div class="skill-desc">${skill.description || '暂无描述'}</div>
+            </div>
+          `;
+        });
+        
+        skillsGrid.innerHTML = html;
+      } catch (error) {
+        console.error('加载技能失败:', error);
+        skillsGrid.innerHTML = `
+          <div class="empty-state">
+            <i class="ri-error-warning-line" style="color:var(--danger);"></i>
+            <p>加载失败: ${error.message}</p>
+            <button class="btn-primary" onclick="location.reload()">重试</button>
+          </div>
+        `;
+      }
+    }
+    
+    // 查看技能详情
+    function viewSkill(skillId) {
+      if (skillId) {
+        window.location.href = `skill-detail.html?id=${encodeURIComponent(skillId)}`;
+      }
+    }
+    
+    // 加载技能
+    loadSkills();
+  </script>
+  
+  <script>
+    Sidebar.init({ activePage: 'skills' });
+  </script>
+  <script src="js/page-tips.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tipsContainer = document.getElementById('tipsContainer');
+      if (tipsContainer && PageTips) {
+        PageTips.init('skills-new', tipsContainer);
+      }
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

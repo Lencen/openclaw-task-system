@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>反思与改进 - 任务管理系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <!-- 图表库 -->
+  <script src="assets/js/chart.min.js"></script>
+  
+  <style>
+  <style>
+/* ========== 页面专用样式 ========== */
+
+/* Tab 切换 */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: var(--bg-secondary);
+  padding: 4px;
+  border-radius: 12px;
+  width: fit-content;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  background: var(--primary);
+  color: white;
+}
+
+/* 关键：Tab 内容显示/隐藏 */
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* 统计卡片 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.stat-card .value {
+  font-size: 2em;
+  font-weight: 600;
+}
+
+.stat-card .value.danger { color: var(--danger); }
+.stat-card .value.warning { color: var(--warning); }
+.stat-card .value.success { color: var(--success); }
+.stat-card .value.primary { color: var(--primary); }
+
+/* 图表区域 */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.chart-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.chart-card h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+}
+
+.chart-container {
+  height: 180px; max-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 反思卡片 */
+.reflection-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reflection-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.reflection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.reflection-title {
+  font-weight: 500;
+  flex: 1;
+  margin-right: 12px;
+}
+
+.reflection-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 16px;
+}
+
+.reflection-desc {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* 改进卡片 */
+.improvement-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.improvement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.improvement-type {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--primary);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.improvement-status {
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.improvement-status.applied {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--success);
+}
+
+.improvement-status.pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--warning);
+}
+
+.improvement-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.improvement-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 16px;
+}
+
+/* 状态徽章 */
+.status-badge {
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.status-badge.pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+.status-badge.applied { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+.status-badge.applying { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+
+/* 改进类型徽章 */
+.improvement-badge {
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.improvement-badge.skill { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+.improvement-badge.process { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+.improvement-badge.config { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+.improvement-badge.code { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+.improvement-badge.rule { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+
+/* 筛选栏 */
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-bar select {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+
+/* 区块标题 */
+.section-title {
+  font-size: 18px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+  </style>
+  <link rel="stylesheet" href="css/page-tips.css">
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <h1 class="header-title">🔮 反思与改进</h1>
+        </div>
+          <div id="tipsContainer"></div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadAll()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <!-- Tab 切换 -->
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="return switchTab('overview', event)">📊 总览</button>
+          <button class="tab-btn" onclick="return switchTab('list', event)">📋 反思列表</button>
+          <button class="tab-btn" onclick="return switchTab('improvements', event)">🚀 改进记录</button>
+        </div>
+        
+        <!-- Tab 1: 总览 -->
+        <div id="tab-overview" class="tab-content active">
+          <!-- 统计卡片 -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="value primary" id="totalReflections">-</div>
+              <div class="label">反思总数</div>
+            </div>
+            <div class="stat-card">
+              <div class="value success" id="successRate">-</div>
+              <div class="label">改进成功率</div>
+            </div>
+            <div class="stat-card">
+              <div class="value warning" id="pendingCount">-</div>
+              <div class="label">待改进</div>
+            </div>
+            <div class="stat-card">
+              <div class="value danger" id="复盘数">-</div>
+              <div class="label">项目复盘</div>
+            </div>
+          </div>
+          
+          <!-- 图表区域 -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <h3>🤔 改进类型分布</h3>
+              <div class="chart-container">
+                <canvas id="improvementTypeChart"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <h3>📈 改进效果趋势</h3>
+              <div class="chart-container">
+                <canvas id="effectTrendChart"></canvas>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 近期反思列表 -->
+          <div class="section">
+            <h2 class="section-title">💬 最近反思</h2>
+            <div class="reflection-list" id="recentReflections">
+              <!-- 动态填充 -->
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tab 2: 反思列表 -->
+        <div id="tab-list" class="tab-content">
+          <!-- 筛选栏 -->
+          <div class="filter-bar">
+            <select class="filter-select" id="filterType" onchange="filterReflections()">
+              <option value="">全部类型</option>
+              <option value="skill">技能改进</option>
+              <option value="process">流程改进</option>
+              <option value="config">配置优化</option>
+              <option value="code">代码优化</option>
+              <option value="rule">规则调整</option>
+            </select>
+            <select class="filter-select" id="filterStatus" onchange="filterReflections()">
+              <option value="">全部状态</option>
+              <option value="pending">待改进</option>
+              <option value="applying">进行中</option>
+              <option value="completed">已完成</option>
+              <option value="verified">已验证</option>
+            </select>
+            <select class="filter-select" id="filterTime" onchange="filterReflections()">
+              <option value="">全部时间</option>
+              <option value="7">近7天</option>
+              <option value="30">近30天</option>
+              <option value="90">近3个月</option>
+            </select>
+          </div>
+          
+          <!-- 反思卡片列表 -->
+          <div class="reflection-list" id="reflectionList">
+            <div class="empty-state">加载中...</div>
+          </div>
+        </div>
+        
+        <!-- Tab 3: 改进记录 -->
+        <div id="tab-improvements" class="tab-content">
+          <!-- 改进执行记录 -->
+          <div class="section">
+            <h2 class="section-title">✅ 改进执行记录</h2>
+            <div class="improvement-list" id="improvementList">
+              <div class="empty-state">暂无改进记录</div>
+            </div>
+          </div>
+          
+          <!-- 效果验证结果 -->
+          <div class="section">
+            <h2 class="section-title">🎯 效果验证结果</h2>
+            <div class="effect-list" id="effectList">
+              <div class="empty-state">暂无验证结果</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tab 4: 日历视图 -->
+        <div id="tab-calendar" class="tab-content">
+          <div class="calendar-view">
+            <div class="calendar-sidebar">
+              <!-- 日历 -->
+              <div class="calendar-container">
+                <div class="calendar-header">
+                  <div class="calendar-nav">
+                    <button class="calendar-nav-btn" onclick="prevMonth()"><i class="ri-arrow-left-s-line"></i></button>
+                    <span class="calendar-month-year" id="calendarMonthYear"></span>
+                    <button class="calendar-nav-btn" onclick="nextMonth()"><i class="ri-arrow-right-s-line"></i></button>
+                  </div>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+                <div style="display: flex; gap: 12px; margin-top: 12px; font-size: 12px;">
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <div style="width: 6px; height: 6px; background: #3b82f6; border-radius: 50%;"></div>
+                    <span style="color: var(--text-secondary);">任务</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <div style="width: 6px; height: 6px; background: #10b981; border-radius: 50%;"></div>
+                    <span style="color: var(--text-secondary);">总结</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <div style="width: 6px; height: 6px; background: #f59e0b; border-radius: 50%;"></div>
+                    <span style="color: var(--text-secondary);">进化</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <div style="width: 6px; height: 6px; background: #8b5cf6; border-radius: 50%;"></div>
+                    <span style="color: var(--text-secondary);">反思</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="calendar-content" id="calendarDetail">
+              <div class="empty-state" id="calendarEmpty">
+                <i class="ri-calendar-line" style="font-size: 48px; margin-bottom: 16px;"></i>
+                <p>请选择日期查看每日反思汇总</p>
+              </div>
+              <div id="calendarDailyContent" style="display: none;">
+                <div class="section">
+                  <h2 class="section-title">📝 完成的工作记录</h2>
+                  <div class="drawer-content" id="dailyTasks"></div>
+                </div>
+                <div class="section">
+                  <h2 class="section-title">💡 反思改进总结</h2>
+                  <div class="drawer-content" id="dailyReflections"></div>
+                </div>
+                <div class="section">
+                  <h2 class="section-title">📄 每日总结</h2>
+                  <div class="drawer-content" id="dailySummary"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 侧边 drawers -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <div class="drawer" id="taskDrawer">
+    <div class="drawer-header">
+      <span class="drawer-title" id="drawerTitle">任务列表</span>
+      <button class="close-btn" onclick="closeDrawer()">&times;</button>
+    </div>
+    <div class="drawer-content" id="drawerContent"></div>
+  </div>
+  
+  <!-- 详情模态框 -->
+  <div id="detailModal" class="modal-overlay" onclick="event.target === this && closeModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">详情</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="detailModalBody"></div>
+    </div>
+  </div>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script>
+    // 全局函数 - 必须在 DOM 加载前定义
+    function switchTab(tabId, evt) {
+      // 阻止默认行为
+      if (evt && evt.preventDefault) evt.preventDefault();
+      
+      // 获取点击的按钮
+      const clickedBtn = evt ? evt.target : event.target;
+      
+      // 切换 tab 按钮状态
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      clickedBtn.classList.add('active');
+      
+      // 切换 tab 内容
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      const targetContent = document.getElementById('tab-' + tabId);
+      if (targetContent) {
+        targetContent.classList.add('active');
+      }
+      
+      // 如果是日历 tab，渲染日历
+      if (tabId === 'calendar' && typeof renderCalendar === 'function') {
+        renderCalendar();
+      }
+      
+      return false;
+    }
+    
+    Sidebar.init({ activePage: 'reflection-improvement' });
+  </script>
+  
+  <!-- 页面逻辑 -->
+  <script>
+    const API_BASE = '/api';
+    let allReflections = [];
+    let allImprovements = [];
+    let currentDate = new Date();
+    let selectedDate = null;
+    
+    // 加载全部数据
+    async function loadAll() {
+      await Promise.all([
+        loadReflections(),
+        loadImprovements(),
+        loadCalendarData()
+      ]);
+      renderOverview();
+      renderReflections(allReflections);  // 添加这行
+      renderImprovements();
+    }
+    
+    // 加载反思数据
+    async function loadReflections() {
+      try {
+        const res = await fetch(`${API_BASE}/reflections/all?limit=100`);
+        const data = await res.json();
+        
+        if (data.success) {
+          allReflections = data.reflections || [];
+        }
+      } catch (e) {
+        console.error('加载反思失败:', e);
+        allReflections = [];
+      }
+    }
+    
+    // 加载改进记录
+    async function loadImprovements() {
+      try {
+        const res = await fetch(`${API_BASE}/improvements/all`);
+        const data = await res.json();
+        
+        if (data.success) {
+          allImprovements = data.improvements || [];
+        }
+      } catch (e) {
+        console.error('加载改进记录失败:', e);
+        allImprovements = [];
+      }
+    }
+    
+    // 加载日历数据
+    async function loadCalendarData() {
+      try {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1;
+        const res = await fetch(`${API_BASE}/calendar/month/${year}/${month}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          window.tasksByDate = data.byDate || {};
+        }
+      } catch (e) {
+        console.error('加载日历数据失败:', e);
+        window.tasksByDate = {};
+      }
+      
+      // 加载每日总结
+      try {
+        const res = await fetch(`${API_BASE}/memory/daily-summaries`);
+        const data = await res.json();
+        window.dailySummaries = (data.code === 200 && data.data) ? data.data.summaries : {};
+      } catch (e) {
+        console.error('加载总结失败:', e);
+        window.dailySummaries = {};
+      }
+      
+      // 加载每日进化/反思
+      try {
+        const res = await fetch(`${API_BASE}/self-evolution/daily`);
+        const data = await res.json();
+        window.dailyEvolutions = (data.code === 200 && data.data) ? data.data : {};
+      } catch (e) {
+        console.error('加载进化数据失败:', e);
+        window.dailyEvolutions = {};
+      }
+    }
+    
+    // 渲染总览
+    function renderOverview() {
+      if (allReflections.length === 0) {
+        document.getElementById('totalReflections').textContent = '0';
+        document.getElementById('successRate').textContent = '暂无数据';
+        document.getElementById('pendingCount').textContent = '0';
+        // 显示空数据提示
+        document.getElementById('recentReflections').innerHTML = '<div class="empty-tip">暂无反思数据。任务完成后会自动触发反思机制。</div>';
+        return;
+      }
+      
+      const total = allReflections.length;
+      const applied = allReflections.filter(r => r.applied || r.status === 'completed' || r.status === 'verified').length;
+      const pending = total - applied;
+      const successRate = total > 0 ? ((applied / total) * 100).toFixed(1) : '0';
+      
+      document.getElementById('totalReflections').textContent = total;
+      document.getElementById('successRate').textContent = successRate + '%';
+      document.getElementById('pendingCount').textContent = pending;
+      
+      // 渲染近期反思
+      const recent = allReflections.slice(-5).reverse();
+      document.getElementById('recentReflections').innerHTML = recent.map(r => `
+        <div class="reflection-card" onclick="showReflectionDetail('${r.id}')">
+          <div class="reflection-header">
+            <div class="reflection-title">${escapeHtml(r.task_title || '未知任务')}</div>
+            <span class="status-badge ${getBadgeClass(r.applied || r.status)}">${getBadgeText(r.applied || r.status)}</span>
+          </div>
+          <div class="reflection-meta">
+            <span class="improvement-badge ${getImprovementBadgeClass(r.improvement_type || 'skill')}">${getImprovementTypeText(r.improvement_type || 'skill')}</span>
+            <span>评分: ${r.score || 0}分</span>
+            <span>${formatTime(r.timestamp || r.created_at)}</span>
+          </div>
+        </div>
+      `).join('');
+      
+      // 渲染图表
+      renderImprovementTypeChart();
+      renderEffectTrendChart();
+    }
+    
+    // 获取状态标签样式
+    function getBadgeClass(status) {
+      if (status === true || status === 'verified') return 'verified';
+      if (status === 'completed' || status === 'applying') return 'completed';
+      if (status === 'pending') return 'pending';
+      return 'pending';
+    }
+    
+    // 获取状态标签文本
+    function getBadgeText(status) {
+      if (status === true || status === 'verified') return '✅ 已验证';
+      if (status === 'completed' || status === 'applying') return '🚀 进行中';
+      if (status === 'pending') return '⏳ 待改进';
+      return '⏳ 待改进';
+    }
+    
+    // 获取改进类型标签
+    function getImprovementBadgeClass(type) {
+      const map = {
+        skill: 'skill',
+        process: 'process',
+        config: 'config',
+        code: 'code',
+        rule: 'rule'
+      };
+      return map[type] || 'skill';
+    }
+    
+    // 获取改进类型文本
+    function getImprovementTypeText(type) {
+      const map = {
+        skill: '技能改进',
+        process: '流程改进',
+        config: '配置优化',
+        code: '代码优化',
+        rule: '规则调整'
+      };
+      return map[type] || '未知类型';
+    }
+    
+    // 渲染反思列表（过滤后）- 支持多种数据格式
+    function renderReflections(reflections) {
+      if (reflections.length === 0) {
+        document.getElementById('reflectionList').innerHTML = '<div class="empty-state">暂无反思记录</div>';
+        return;
+      }
+      
+      document.getElementById('reflectionList').innerHTML = reflections.map(r => {
+        // 支持多种数据格式
+        const title = r.task_title || r.issue_title || 
+                      (r.type === 'batch_fix' ? `批量修复 (${r.totalFixed || 0} 个问题)` : '未知任务');
+        const score = r.score || 0;
+        const time = formatTime(r.timestamp || r.created_at);
+        const type = r.improvement_type || r.type || 'skill';
+        const applied = r.applied || (r.status === 'completed');
+        const description = r.improvement_description || r.lesson || 
+                           (r.lessons ? r.lessons.slice(0, 2).join('; ') : '') ||
+                           r.reflection || '';
+        
+        return `
+          <div class="reflection-card" onclick="showReflectionDetail('${r.id || r.file_name}')">
+            <div class="reflection-header">
+              <div class="reflection-title">${escapeHtml(title)}</div>
+              <div style="display: flex; gap: 8px;">
+                <span class="improvement-badge ${getImprovementBadgeClass(type)}">${getImprovementTypeText(type)}</span>
+                <span class="status-badge ${getBadgeClass(applied)}">${getBadgeText(applied)}</span>
+              </div>
+            </div>
+            <div class="reflection-meta">
+              <span class="reflection-meta-item">⏱️ ${time}</span>
+              ${score > 0 ? `<span class="reflection-meta-item">📊 评分: ${score}分</span>` : ''}
+            </div>
+            ${description ? `
+            <div class="reflection-desc">${escapeHtml(description.substring(0, 120))}${description.length > 120 ? '...' : ''}</div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+    
+    // 筛选反思
+    function filterReflections() {
+      const type = document.getElementById('filterType').value;
+      const status = document.getElementById('filterStatus').value;
+      const days = parseInt(document.getElementById('filterTime').value) || 0;
+      
+      let filtered = allReflections;
+      
+      if (type) {
+        filtered = filtered.filter(r => (r.improvement_type || 'skill') === type);
+      }
+      
+      if (status) {
+        if (status === 'pending') {
+          filtered = filtered.filter(r => !
+r.applied);
+        } else if (status === 'applied') {
+          filtered = filtered.filter(r => r.applied);
+        }
+      }
+      
+      if (days > 0) {
+        const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+        filtered = filtered.filter(r => {
+          const ts = new Date(r.timestamp || r.created_at).getTime();
+          return ts >= cutoff;
+        });
+      }
+      
+      renderReflections(filtered);
+    }
+    
+    // 渲染改进记录
+    function renderImprovements() {
+      const list = document.getElementById('improvementList');
+      if (!list) return;
+      
+      if (allImprovements.length === 0) {
+        list.innerHTML = '<div class="empty-state">暂无改进记录</div>';
+        return;
+      }
+      
+      list.innerHTML = allImprovements.map(imp => `
+        <div class="improvement-card">
+          <div class="improvement-header">
+            <span class="improvement-type">${imp.type || 'skill'}</span>
+            <span class="improvement-status ${imp.applied ? 'applied' : 'pending'}">${imp.applied ? '已应用' : '待应用'}</span>
+          </div>
+          <div class="improvement-desc">${escapeHtml(imp.lesson || imp.context || '')}</div>
+          <div class="improvement-meta">
+            <span>⏱️ ${formatTime(imp.timestamp)}</span>
+            ${imp.score ? `<span>📊 ${imp.score}分</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // 渲染总览
+    function renderOverview() {
+      const total = allReflections.length;
+      const applied = allReflections.filter(r => r.applied).length;
+      const pending = total - applied;
+      const avgScore = total > 0 
+        ? (allReflections.reduce((sum, r) => sum + (r.score || 0), 0) / total).toFixed(1)
+        : 0;
+      
+      document.getElementById('totalReflections').textContent = total;
+      document.getElementById('successRate').textContent = total > 0 ? `${((applied / total) * 100).toFixed(0)}%` : '0%';
+      document.getElementById('pendingCount').textContent = pending;
+      
+      // 渲染最近反思（前 5 条）
+      const recentContainer = document.getElementById('recentReflections');
+      if (recentContainer && allReflections.length > 0) {
+        const recent = allReflections.slice(0, 5);
+        recentContainer.innerHTML = recent.map(r => {
+          const title = r.task_title || r.issue_title || 
+                        (r.type === 'batch_fix' ? `批量修复 (${r.totalFixed || 0} 个问题)` : '未知任务');
+          const time = formatTime(r.timestamp || r.created_at);
+          const type = r.improvement_type || r.type || 'skill';
+          const applied = r.applied || (r.status === 'completed');
+          const description = r.improvement_description || r.lesson || r.reflection || '';
+          
+          return `
+            <div class="recent-item" style="display: flex; align-items: center; padding: 12px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 8px; cursor: pointer;" onclick="showReflectionDetail('${r.id || r.file_name}')">
+              <div style="flex: 1;">
+                <div style="font-weight: 500; margin-bottom: 4px;">${escapeHtml(title)}</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">⏱️ ${time} · ${getImprovementTypeText(type)}</div>
+              </div>
+              <span class="status-badge ${getBadgeClass(applied)}" style="font-size: 11px;">${getBadgeText(applied)}</span>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      // 渲染改进类型分布
+      renderTypeChart();
+      
+      // 渲染趋势图
+      renderTrendChart();
+    }
+    
+    // 渲染类型分布图
+    function renderTypeChart() {
+      const canvas = document.getElementById('improvementTypeChart');
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      const typeCount = {};
+      allReflections.forEach(r => {
+        const type = r.improvement_type || r.type || 'skill';
+        typeCount[type] = (typeCount[type] || 0) + 1;
+      });
+      
+      const labels = Object.keys(typeCount).map(getImprovementTypeText);
+      const data = Object.values(typeCount);
+      
+      if (window.typeChart) window.typeChart.destroy();
+      
+      if (data.length === 0) {
+        canvas.parentElement.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);">暂无数据</div>';
+        return;
+      }
+      
+      window.typeChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+    
+    // 渲染趋势图
+    function renderTrendChart() {
+      const canvas = document.getElementById('effectTrendChart');
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      
+      // 按日期分组
+      const byDate = {};
+      allReflections.forEach(r => {
+        const date = (r.timestamp || r.created_at || '').substring(0, 10);
+        if (date) {
+          if (!byDate[date]) byDate[date] = { count: 0, applied: 0 };
+          byDate[date].count++;
+          if (r.applied) byDate[date].applied++;
+        }
+      });
+      
+      const dates = Object.keys(byDate).sort().slice(-7);
+      const counts = dates.map(d => byDate[d].count);
+      const appliedCounts = dates.map(d => byDate[d].applied);
+      
+      if (window.trendChart) window.trendChart.destroy();
+      
+      if (dates.length === 0) {
+        canvas.parentElement.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);">暂无数据</div>';
+        return;
+      }
+      
+      window.trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates.map(d => d.substring(5)),
+          datasets: [
+            {
+              label: '反思数',
+              data: counts,
+              borderColor: '#3b82f6',
+              tension: 0.3
+            },
+            {
+              label: '已应用',
+              data: appliedCounts,
+              borderColor: '#10b981',
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+    
+    // 显示反思详情
+    function showReflectionDetail(id) {
+      const r = allReflections.find(item => (item.id || item.file_name) === id);
+      if (!r) return;
+      
+      const title = r.task_title || r.issue_title || 
+                    (r.type === 'batch_fix' ? `批量修复 (${r.totalFixed || 0} 个问题)` : '未知任务');
+      
+      let content = `<h3>${escapeHtml(title)}</h3>`;
+      content += `<p><strong>时间:</strong> ${formatTime(r.timestamp || r.created_at)}</p>`;
+      if (r.score) content += `<p><strong>评分:</strong> ${r.score}分</p>`;
+      if (r.lesson || r.lessons) {
+        content += `<p><strong>教训:</strong> ${escapeHtml(r.lesson || (r.lessons || []).join('; '))}</p>`;
+      }
+      if (r.improvement_description || r.improvements) {
+        content += `<p><strong>改进:</strong> ${escapeHtml(r.improvement_description || (r.improvements || []).join('; '))}</p>`;
+      }
+      if (r.context || r.reflection) {
+        content += `<p><strong>上下文:</strong> ${escapeHtml(r.context || r.reflection)}</p>`;
+      }
+      
+      document.getElementById('modalBody').innerHTML = content;
+      document.getElementById('issueModal').classList.add('show');
+    }
+    
+    // 时间格式化
+    function formatTime(timestamp) {
+      if (!timestamp) return '-';
+      const d = new Date(timestamp);
+      return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // HTML 转义
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    
+    // 初始化 - 页面加载完成后自动执行
+    loadAll();
+  </script>
+  <script src="js/page-tips.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tipsContainer = document.getElementById('tipsContainer');
+      if (tipsContainer && PageTips) {
+        PageTips.init('reflection-improvement', tipsContainer);
+      }
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

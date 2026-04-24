@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>业务监控 - 任务系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --border: #334155;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    /* 已移除，使用 frame.css */
+    
+    /* 侧边栏 */
+    .sidebar {
+      width: 200px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    
+    .sidebar-header {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      gap: 8px;
+    }
+    
+    .sidebar-nav { padding: 8px; }
+    
+    .nav-section { margin-bottom: 16px; }
+    
+    .nav-section-title {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      padding: 8px 12px;
+      text-transform: uppercase;
+    }
+    
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    
+    .nav-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .nav-item.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+    }
+    
+    /* 主内容 */
+    /* 已移除，使用 frame.css */
+    
+    /* 已移除，使用 frame.css */
+    
+    .header-title { font-weight: 600; font-size: 16px; }
+    
+    /* 已移除，使用 frame.css */
+    
+    /* 统计卡片 */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .stat-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    
+    .stat-label { font-size: 12px; color: var(--text-secondary); }
+    .stat-icon { font-size: 20px; }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .stat-status {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+      display: inline-block;
+    }
+    
+    .stat-status.online { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .stat-status.offline { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .stat-status.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    
+    /* 内容网格 */
+    .content-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      max-width: 1400px;
+    }
+    
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    
+    .card-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .card-title { font-weight: 600; font-size: 14px; }
+    
+    .card-body { padding: 16px; }
+    
+    /* 列表 */
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      background: var(--bg-tertiary);
+    }
+    
+    .list-item:last-child { margin-bottom: 0; }
+    
+    .list-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .list-content { flex: 1; }
+    .list-title { font-weight: 500; margin-bottom: 2px; }
+    .list-desc { font-size: 12px; color: var(--text-tertiary); }
+    
+    .list-status {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    
+    .list-status.running { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .list-status.idle { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .list-status.error { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .list-status.stopped { background: rgba(100, 116, 139, 0.15); color: var(--text-tertiary); }
+    
+    /* 状态徽章 */
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .status-badge.online { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .status-badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .status-badge.offline { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    
+    /* 问题列表 */
+    .issue-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      background: var(--bg-tertiary);
+      border-left: 3px solid;
+    }
+    
+    .issue-item.critical { border-left-color: var(--danger); }
+    .issue-item.high { border-left-color: var(--warning); }
+    .issue-item.medium { border-left-color: var(--primary); }
+    .issue-item.low { border-left-color: var(--text-tertiary); }
+    
+    .issue-icon { font-size: 20px; }
+    .issue-content { flex: 1; }
+    .issue-title { font-weight: 500; margin-bottom: 4px; }
+    .issue-desc { font-size: 12px; color: var(--text-secondary); }
+    .issue-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; }
+    
+    .severity-badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    
+    .severity-badge.critical { background: var(--danger); color: white; }
+    .severity-badge.high { background: var(--warning); color: black; }
+    .severity-badge.medium { background: var(--primary); color: white; }
+    .severity-badge.low { background: var(--bg-tertiary); color: var(--text-secondary); }
+    
+    /* 自动化流程图 */
+    .flow-card {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+    }
+    
+    .flow-step-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      background: var(--bg-secondary);
+    }
+    
+    .flow-step-icon.active { background: var(--success); }
+    .flow-step-icon.pending { background: var(--bg-tertiary); border: 2px dashed var(--border); }
+    
+    .flow-step-content { flex: 1; }
+    .flow-step-title { font-weight: 500; font-size: 13px; }
+    .flow-step-desc { font-size: 11px; color: var(--text-tertiary); }
+    
+    .flow-connector {
+      width: 2px;
+      height: 16px;
+      background: var(--border);
+      margin-left: 15px;
+    }
+    
+    /* 响应式 */
+    @media (max-width: 1200px) {
+      .content-grid { grid-template-columns: 1fr; }
+    }
+    
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      /* 已移除，使用 frame.css */
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    /* ========== 工作流可视化样式 ========== */
+    .workflow-flow {
+      background: var(--bg-tertiary);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    
+    /* 流程图线条 */
+    .flow-line {
+      stroke: var(--border);
+      stroke-width: 2;
+      fill: none;
+    }
+    
+    .flow-line-animated {
+      stroke: var(--primary);
+      stroke-width: 3;
+      stroke-dasharray: 8, 8;
+      animation: flowAnimation 1s linear infinite;
+      opacity: 0;
+    }
+    
+    .flow-line-animated.active {
+      opacity: 1;
+    }
+    
+    @keyframes flowAnimation {
+      from { stroke-dashoffset: 16; }
+      to { stroke-dashoffset: 0; }
+    }
+    
+    /* 节点 */
+    .node-box {
+      fill: var(--bg-secondary);
+      stroke: var(--border);
+      stroke-width: 1;
+    }
+    
+    .node-title {
+      fill: var(--text-secondary);
+      font-size: 11px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .node-count {
+      fill: var(--text-primary);
+      font-size: 16px;
+      font-weight: 700;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    /* 节点状态 */
+    .flow-node.active .node-box {
+      stroke: var(--success);
+      stroke-width: 2;
+    }
+    
+    .flow-node.warning .node-box {
+      stroke: var(--warning);
+      stroke-width: 2;
+    }
+    
+    .flow-node.danger .node-box {
+      stroke: var(--danger);
+      stroke-width: 2;
+    }
+    
+    .flow-node.empty .node-box {
+      opacity: 0.5;
+    }
+    
+    .flow-node.empty .node-count {
+      fill: var(--text-tertiary);
+    }
+    
+    /* 执行器表格 */
+    .executor-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    
+    .executor-table th {
+      text-align: left;
+      padding: 10px 12px;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .executor-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .executor-table tr:hover td {
+      background: var(--bg-tertiary);
+    }
+    
+    .executor-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    
+    .executor-status.online {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .executor-status.offline {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+    
+    .executor-status.busy {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+    
+    /* 任务流动日志 */
+    .flow-log {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    
+    .flow-log-item {
+      display: flex;
+      gap: 12px;
+      padding: 6px 0;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .flow-log-item:last-child {
+      border-bottom: none;
+    }
+    
+    .flow-log-time {
+      color: var(--text-tertiary);
+      white-space: nowrap;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .flow-log-msg {
+      color: var(--text-primary);
+    }
+    
+    .flow-log-msg.success { color: var(--success); }
+    .flow-log-msg.warning { color: var(--warning); }
+    .flow-log-msg.error { color: var(--danger); }
+  </style>
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <!-- 统一侧边栏容器 -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容 -->
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <a href="monitor-new.html">系统</a>
+            <span>/</span>
+            <span>业务监控</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadMonitorData()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <!-- 统计概览 -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <span class="stat-label">执行器</span>
+              <i class="stat-icon ri-flashlight-line"></i>
+            </div>
+            <div class="stat-value" id="executorCount">--</div>
+            <span class="stat-status online" id="executorStatus">-- 在线</span>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <span class="stat-label">监视器</span>
+              <i class="stat-icon ri-eye-line"></i>
+            </div>
+            <div class="stat-value" id="monitorCount">--</div>
+            <span class="stat-status online" id="monitorStatus">-- 运行</span>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <span class="stat-label">自动化流程</span>
+              <i class="stat-icon ri-refresh-line"></i>
+            </div>
+            <div class="stat-value" id="workflowCount">--</div>
+            <span class="stat-status online" id="workflowStatus">-- 执行中</span>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-header">
+              <span class="stat-label">待处理问题</span>
+              <i class="stat-icon ri-alert-line"></i>
+            </div>
+            <div class="stat-value" id="issueCount">--</div>
+            <span class="stat-status warning" id="issueStatus">-- 严重</span>
+          </div>
+        </div>
+        
+        <!-- 工作流可视化 - 新增核心功能 -->
+        <div class="card" style="margin-bottom: 24px;">
+          <div class="card-header">
+            <span class="card-title">🔄 自动化工作流实时监控</span>
+            <span id="flowUpdateTime" style="font-size: 12px; color: var(--text-tertiary);">最后更新: --:--:--</span>
+          </div>
+          <div class="card-body">
+            <!-- 流程图 -->
+            <div class="workflow-flow" id="workflowFlow">
+              <svg viewBox="0 0 900 200" style="width: 100%; height: 200px;">
+                <!-- 连接线 - 上排 -->
+                <line x1="95" y1="50" x2="175" y2="50" class="flow-line" />
+                <line x1="265" y1="50" x2="345" y2="50" class="flow-line" />
+                <line x1="435" y1="50" x2="515" y2="50" class="flow-line" />
+                <line x1="605" y1="50" x2="685" y2="50" class="flow-line" />
+                <!-- 连接线 - 下排 -->
+                <line x1="685" y1="50" x2="685" y2="150" class="flow-line" />
+                <line x1="685" y1="150" x2="605" y2="150" class="flow-line" />
+                <line x1="515" y1="150" x2="435" y2="150" class="flow-line" />
+                <line x1="345" y1="150" x2="265" y2="150" class="flow-line" />
+                
+                <!-- 流动动画线条 -->
+                <line x1="95" y1="50" x2="175" y2="50" class="flow-line-animated" id="flow1" />
+                <line x1="265" y1="50" x2="345" y2="50" class="flow-line-animated" id="flow2" />
+                
+                <!-- 节点 - 上排 -->
+                <g class="flow-node" id="node-entry" transform="translate(10, 20)">
+                  <rect width="80" height="60" rx="8" class="node-box" />
+                  <text x="40" y="25" text-anchor="middle" class="node-title">入口</text>
+                  <text x="40" y="45" text-anchor="middle" class="node-count" id="count-entry">--</text>
+                </g>
+                <g class="flow-node" id="node-analysis" transform="translate(180, 20)">
+                  <rect width="80" height="60" rx="8" class="node-box" />
+                  <text x="40" y="25" text-anchor="middle" class="node-title">分析</text>
+                  <text x="40" y="45" text-anchor="middle" class="node-count" id="count-analysis">--</text>
+                </g>
+                <g class="flow-node" id="node-breakdown" transform="translate(350, 20)">
+                  <rect width="80" height="60" rx="8" class="node-box" />
+                  <text x="40" y="25" text-anchor="middle" class="node-title">拆解</text>
+                  <text x="40" y="45" text-anchor="middle" class="node-count" id="count-breakdown">--</text>
+                </g>
+                <g class="flow-node" id="node-assign" transform="translate(520, 20)">
+                  <rect width="80" height="60" rx="8" class="node-box" />
+                  <text x="40" y="25" text-anchor="middle" class="node-title">分配</text>
+                  <text x="40" y="45" text-anchor="middle" class="node-count" id="count-assign">--</text>
+                </g>
+                <g class="flow-node" id="node-execute" transform="translate(690, 20)">
+                  <rect width="80" height="60" rx="8" class="node-box" />
+                  <text x="40" y="25" text-anchor="middle" class="node-title">执行</text>
+                  <text x="40" y="45" text-anchor="middle" class="node-count" id="count-execute">--</text>
+                </g>
+                
+                <!-- 节点 - 下排 -->
+                <g class="flow-node" id="node-confirm" transform="translate(520, 120)">
+                  <rect width="80" height="60" rx="8" class="node-box" />
+                  <text x="40" y="25" text-anchor="middle" class="node-title">确认</text>
+                  <text x="40" y="45" text-anchor="middle" class="node-count" id="count-confirm">--</text>
+                </g>
+                <g class="flow-node" id="node-complete" transform="translate(350, 120)">
+                  <rect width="80" height="60" rx="8" class="node-box" />
+                  <text x="40" y="25" text-anchor="middle" class="node-title">完成</text>
+                  <text x="40" y="45" text-anchor="middle" class="node-count" id="count-complete">--</text>
+                </g>
+                <g class="flow-node" id="node-archive" transform="translate(180, 120)">
+                  <rect width="80" height="60" rx="8" class="node-box" />
+                  <text x="40" y="25" text-anchor="middle" class="node-title">归档</text>
+                  <text x="40" y="45" text-anchor="middle" class="node-count" id="count-archive">--</text>
+                </g>
+              </svg>
+            </div>
+            
+            <!-- 执行器状态表格 -->
+            <div style="margin-top: 24px;">
+              <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <span>📊 执行器详情</span>
+                <span id="executorOnlineCount" style="font-size: 11px; padding: 2px 6px; background: rgba(16, 185, 129, 0.15); color: var(--success); border-radius: 4px;">-- 在线</span>
+              </div>
+              <table class="executor-table" id="executorTable">
+                <thead>
+                  <tr>
+                    <th>执行器</th>
+                    <th>状态</th>
+                    <th>当前任务</th>
+                    <th>完成率</th>
+                    <th>队列</th>
+                  </tr>
+                </thead>
+                <tbody id="executorTableBody">
+                  <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-tertiary);">加载中...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- 实时任务流动 -->
+            <div style="margin-top: 24px;">
+              <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <span>📈 实时任务流动</span>
+                <span style="font-size: 11px; color: var(--text-tertiary); cursor: pointer;" onclick="toggleFlowLog()">展开/折叠</span>
+              </div>
+              <div class="flow-log" id="flowLog" style="max-height: 120px; overflow-y: auto;">
+                <div class="flow-log-item">
+                  <span class="flow-log-time">--:--:--</span>
+                  <span class="flow-log-msg">等待数据...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 内容网格 -->
+        <div class="content-grid">
+          <!-- 执行器状态 -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">⚡ 执行器状态</span>
+              <span style="font-size: 12px; color: var(--primary); cursor: pointer;">管理</span>
+            </div>
+            <div class="card-body" id="executorList">
+              <div class="list-item">
+                <div class="list-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--success);">⚡</div>
+                <div class="list-content">
+                  <div class="list-title">auto-executor-v4</div>
+                  <div class="list-desc">任务自动执行器 · 运行 3h 25m</div>
+                </div>
+                <span class="list-status running">运行中</span>
+              </div>
+              <div class="list-item">
+                <div class="list-icon" style="background: rgba(59, 130, 246, 0.15); color: var(--primary);">📋</div>
+                <div class="list-content">
+                  <div class="list-title">task-assigner</div>
+                  <div class="list-desc">任务分配器 · 空闲 15m</div>
+                </div>
+                <span class="list-status idle">空闲</span>
+              </div>
+              <div class="list-item">
+                <div class="list-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--success);">🔄</div>
+                <div class="list-content">
+                  <div class="list-title">agent-queue-executor</div>
+                  <div class="list-desc">Agent队列执行器 · 处理中</div>
+                </div>
+                <span class="list-status running">运行中</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 监视器状态 -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">👁️ 监视器状态</span>
+              <span style="font-size: 12px; color: var(--primary); cursor: pointer;">配置</span>
+            </div>
+            <div class="card-body" id="monitorList">
+              <div class="list-item">
+                <div class="list-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--success);">📊</div>
+                <div class="list-content">
+                  <div class="list-title">health-monitor</div>
+                  <div class="list-desc">健康检查 · 每5分钟</div>
+                </div>
+                <span class="list-status running">运行中</span>
+              </div>
+              <div class="list-item">
+                <div class="list-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--success);">🔔</div>
+                <div class="list-content">
+                  <div class="list-title">task-monitor</div>
+                  <div class="list-desc">任务监控 · 每1分钟</div>
+                </div>
+                <span class="list-status running">运行中</span>
+              </div>
+              <div class="list-item">
+                <div class="list-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--success);">📈</div>
+                <div class="list-content">
+                  <div class="list-title">alert-monitor</div>
+                  <div class="list-desc">告警监控 · 实时</div>
+                </div>
+                <span class="list-status running">运行中</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 自动化流程 -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🔄 自动化流程</span>
+              <span style="font-size: 12px; color: var(--text-tertiary);">当前运行</span>
+            </div>
+            <div class="card-body">
+              <div class="flow-card">
+                <div style="font-size: 12px; color: var(--text-tertiary); margin-bottom: 12px;">任务 #task-089 执行流程</div>
+                <div class="flow-step">
+                  <div class="flow-step-icon active">✓</div>
+                  <div class="flow-step-content">
+                    <div class="flow-step-title">任务识别</div>
+                    <div class="flow-step-desc">已完成 · 0.5s</div>
+                  </div>
+                </div>
+                <div class="flow-connector"></div>
+                <div class="flow-step">
+                  <div class="flow-step-icon active">✓</div>
+                  <div class="flow-step-content">
+                    <div class="flow-step-title">任务拆解</div>
+                    <div class="flow-step-desc">已完成 · 2.3s</div>
+                  </div>
+                </div>
+                <div class="flow-connector"></div>
+                <div class="flow-step">
+                  <div class="flow-step-icon active">▶</div>
+                  <div class="flow-step-content">
+                    <div class="flow-step-title">任务执行</div>
+                    <div class="flow-step-desc">进行中 · 步骤 3/5</div>
+                  </div>
+                </div>
+                <div class="flow-connector"></div>
+                <div class="flow-step">
+                  <div class="flow-step-icon pending">4</div>
+                  <div class="flow-step-content">
+                    <div class="flow-step-title">自动测试</div>
+                    <div class="flow-step-desc">待执行</div>
+                  </div>
+                </div>
+                <div class="flow-connector"></div>
+                <div class="flow-step">
+                  <div class="flow-step-icon pending">5</div>
+                  <div class="flow-step-content">
+                    <div class="flow-step-title">自动验收</div>
+                    <div class="flow-step-desc">待执行</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 问题列表 -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">⚠️ 问题列表</span>
+              <span style="font-size: 12px; color: var(--danger);">3 待处理</span>
+            </div>
+            <div class="card-body" id="issueList">
+              <div class="issue-item critical">
+                <span class="issue-icon">🔴</span>
+                <div class="issue-content">
+                  <div class="issue-title">任务执行超时</div>
+                  <div class="issue-desc">任务 #task-078 已执行超过30分钟未完成</div>
+                  <div class="issue-meta">发生时间: 10分钟前 · 执行器: auto-executor-v4</div>
+                </div>
+                <span class="severity-badge critical">严重</span>
+              </div>
+              <div class="issue-item high">
+                <span class="issue-icon">🟠</span>
+                <div class="issue-content">
+                  <div class="issue-title">Agent离线</div>
+                  <div class="issue-desc">coder-2 Agent 已离线超过1小时</div>
+                  <div class="issue-meta">发生时间: 1小时前 · 建议: 重启Agent</div>
+                </div>
+                <span class="severity-badge high">高</span>
+              </div>
+              <div class="issue-item medium">
+                <span class="issue-icon">🟡</span>
+                <div class="issue-content">
+                  <div class="issue-title">任务队列堆积</div>
+                  <div class="issue-desc">待处理任务数量超过阈值 (15/10)</div>
+                  <div class="issue-meta">发生时间: 30分钟前 · 建议: 增加执行器</div>
+                </div>
+                <span class="severity-badge medium">中</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 辅助流程 -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🔧 辅助流程</span>
+              <span style="font-size: 12px; color: var(--text-tertiary);">支撑主流程运行</span>
+            </div>
+            <div class="card-body">
+              <!-- Agent 注册机制 -->
+              <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <span style="font-size: 13px; font-weight: 500;">📝 Agent 注册机制</span>
+                  <span id="agentRegStatus" class="status-badge online">运行中</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-size: 12px;">
+                  <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">已注册</div>
+                    <div id="registeredAgents" style="font-size: 18px; font-weight: 600; color: var(--primary);">26</div>
+                  </div>
+                  <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">在线</div>
+                    <div id="onlineAgents" style="font-size: 18px; font-weight: 600; color: var(--success);">0</div>
+                  </div>
+                  <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">待激活</div>
+                    <div id="pendingAgents" style="font-size: 18px; font-weight: 600; color: var(--warning);">26</div>
+                  </div>
+                  <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">离线</div>
+                    <div id="offlineAgents" style="font-size: 18px; font-weight: 600; color: var(--danger);">0</div>
+                  </div>
+                </div>
+                <div style="margin-top: 10px; padding: 10px; background: var(--bg-tertiary); border-radius: 6px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
+                    <span style="color: var(--text-tertiary);">注册流程</span>
+                    <span>自动发现 → 引导注册 → 心跳激活 → 参与任务</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                    <span style="color: var(--text-tertiary);">API 端点</span>
+                    <span style="font-family: monospace;">POST /api/agents/register</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 记忆系统 -->
+              <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <span style="font-size: 13px; font-weight: 500;">🧠 记忆系统</span>
+                  <span id="memoryStatus" class="status-badge online">运行中</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-size: 12px;">
+                  <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">错误记录</div>
+                    <div id="memoryErrors" style="font-size: 18px; font-weight: 600; color: var(--danger);">0</div>
+                  </div>
+                  <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">用户纠正</div>
+                    <div id="memoryCorrections" style="font-size: 18px; font-weight: 600; color: var(--warning);">0</div>
+                  </div>
+                  <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">最佳实践</div>
+                    <div id="memoryPractices" style="font-size: 18px; font-weight: 600; color: var(--success);">0</div>
+                  </div>
+                  <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">索引关键词</div>
+                    <div id="memoryKeywords" style="font-size: 18px; font-weight: 600; color: var(--primary);">0</div>
+                  </div>
+                </div>
+                <div style="margin-top: 10px; padding: 10px; background: var(--bg-tertiary); border-radius: 6px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
+                    <span style="color: var(--text-tertiary);">数据格式</span>
+                    <span>JSONL（每行一个 JSON 对象）</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
+                    <span style="color: var(--text-tertiary);">存储位置</span>
+                    <span style="font-family: monospace;">memory/{errors,corrections,practices}/*.jsonl</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                    <span style="color: var(--text-tertiary);">API 端点</span>
+                    <span style="font-family: monospace;">/api/memory/*</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 心跳监控 -->
+              <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <span style="font-size: 13px; font-weight: 500;">💓 心跳监控</span>
+                  <span id="heartbeatStatus" class="status-badge online">正常</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 12px;">
+                  <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">心跳间隔</div>
+                    <div style="font-size: 16px; font-weight: 600;">30s</div>
+                  </div>
+                  <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">超时阈值</div>
+                    <div style="font-size: 16px; font-weight: 600;">2min</div>
+                  </div>
+                  <div style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px;">
+                    <div style="color: var(--text-tertiary); margin-bottom: 4px;">最近心跳</div>
+                    <div id="lastHeartbeat" style="font-size: 14px; font-weight: 600;">--</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 自动发现机制 -->
+              <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <span style="font-size: 13px; font-weight: 500;">🔍 Agent 自动发现</span>
+                  <span id="discoveryStatus" class="status-badge online">已启用</span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
+                  <div style="margin-bottom: 8px;">
+                    <strong>发现源：</strong>扫描 <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px;">~/.openclaw/agents/</code> 目录
+                  </div>
+                  <div style="margin-bottom: 8px;">
+                    <strong>发现结果：</strong>生成 <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px;">agent-roles-registry.json</code>
+                  </div>
+                  <div>
+                    <strong>同步机制：</strong>自动同步到 <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px;">registered-agents.json</code>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 故障恢复机制 -->
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <span style="font-size: 13px; font-weight: 500;">🛡️ 故障恢复机制</span>
+                  <span id="recoveryStatus" class="status-badge online">已启用</span>
+                </div>
+                <div style="font-size: 12px;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                      <tr style="border-bottom: 1px solid var(--border);">
+                        <th style="text-align: left; padding: 8px 0; color: var(--text-tertiary);">故障类型</th>
+                        <th style="text-align: left; padding: 8px 0; color: var(--text-tertiary);">检测条件</th>
+                        <th style="text-align: left; padding: 8px 0; color: var(--text-tertiary);">恢复动作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recoveryTable">
+                      <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 8px 0;">Agent 离线</td>
+                        <td style="padding: 8px 0; color: var(--text-tertiary);">心跳超时 2min</td>
+                        <td style="padding: 8px 0;"><span style="color: var(--warning);">标记离线 + 告警</span></td>
+                      </tr>
+                      <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 8px 0;">任务超时</td>
+                        <td style="padding: 8px 0; color: var(--text-tertiary);">执行 > 30min</td>
+                        <td style="padding: 8px 0;"><span style="color: var(--danger);">重试 + 重新分配</span></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0;">服务异常</td>
+                        <td style="padding: 8px 0; color: var(--text-tertiary);">进程退出</td>
+                        <td style="padding: 8px 0;"><span style="color: var(--success);">PM2 自动重启</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    
+    // 加载监控数据
+    async function loadMonitorData() {
+      try {
+        // 尝试从API获取数据
+        const [executorsRes, monitorsRes, issuesRes, memoryRes] = await Promise.all([
+          fetch('/api/system/executors').catch(() => null),
+          fetch('/api/system/monitors').catch(() => null),
+          fetch('/api/system/issues').catch(() => null),
+          fetch('/api/memory/stats').catch(() => null)
+        ]);
+        
+        // 解析记忆系统数据
+        if (memoryRes) {
+          try {
+            const memoryData = await memoryRes.json();
+            if (memoryData.code === 200 && memoryData.data) {
+              const stats = memoryData.data.stats;
+              const keywords = memoryData.data.keywords || {};
+              document.getElementById('memoryErrors').textContent = stats.errors || 0;
+              document.getElementById('memoryCorrections').textContent = stats.corrections || 0;
+              document.getElementById('memoryPractices').textContent = stats.best_practices || 0;
+              document.getElementById('memoryKeywords').textContent = Object.keys(keywords).length;
+            }
+          } catch (e) {
+            console.log('记忆系统数据解析失败');
+          }
+        }
+        
+        // 使用模拟数据
+        const data = {
+          executors: {
+            total: 5,
+            online: 3,
+            list: [
+              { name: 'auto-executor-v4', status: 'running', uptime: '3h 25m' },
+              { name: 'task-assigner', status: 'idle', uptime: '15m' },
+              { name: 'agent-queue-executor', status: 'running', uptime: '1h 10m' }
+            ]
+          },
+          monitors: {
+            total: 4,
+            running: 4,
+            list: [
+              { name: 'health-monitor', interval: '5m' },
+              { name: 'task-monitor', interval: '1m' },
+              { name: 'alert-monitor', interval: '实时' }
+            ]
+          },
+          workflows: {
+            total: 12,
+            running: 2
+          },
+          issues: {
+            total: 3,
+            critical: 1,
+            high: 1,
+            medium: 1
+          }
+        };
+        
+        // 更新统计卡片
+        document.getElementById('executorCount').textContent = data.executors.total;
+        document.getElementById('executorStatus').textContent = `${data.executors.online} 在线`;
+        document.getElementById('executorStatus').className = 'stat-status ' + (data.executors.online > 0 ? 'online' : 'offline');
+        
+        document.getElementById('monitorCount').textContent = data.monitors.total;
+        document.getElementById('monitorStatus').textContent = `${data.monitors.running} 运行`;
+        document.getElementById('monitorStatus').className = 'stat-status ' + (data.monitors.running > 0 ? 'online' : 'offline');
+        
+        document.getElementById('workflowCount').textContent = data.workflows.total;
+        document.getElementById('workflowStatus').textContent = `${data.workflows.running} 执行中`;
+        
+        document.getElementById('issueCount').textContent = data.issues.total;
+        document.getElementById('issueStatus').textContent = `${data.issues.critical} 严重`;
+        document.getElementById('issueStatus').className = 'stat-status ' + (data.issues.critical > 0 ? 'warning' : 'online');
+        
+        // 更新时间
+        console.log('监控数据已更新:', new Date().toLocaleTimeString('zh-CN'));
+        
+      } catch (error) {
+        console.error('加载监控数据失败:', error);
+      }
+    }
+    
+    // ========== 工作流可视化功能 ==========
+    
+    // 节点状态映射
+    const nodeStatusMap = {
+      'pending': 'entry',
+      'analyzing': 'analysis', 
+      'breaking': 'breakdown',
+      'assigning': 'assign',
+      'doing': 'execute',
+      'confirming': 'confirm',
+      'completed': 'complete',
+      'archived': 'archive'
+    };
+    
+    // 加载工作流数据
+    async function loadWorkflowData() {
+      try {
+        // 获取任务数据
+        const tasksRes = await fetch('/api/tasks?showCompleted=true');
+        const tasksData = await tasksRes.json();
+        
+        const tasks = tasksData.tasks || [];
+        
+        // 统计各节点任务数
+        const counts = {
+          entry: tasks.filter(t => t.status === 'pending').length,
+          analysis: tasks.filter(t => t.status === 'analyzing' || t.status === 'pending').length,
+          breakdown: 0,
+          assign: 0,
+          execute: tasks.filter(t => t.status === 'doing').length,
+          confirm: 0,
+          complete: tasks.filter(t => t.status === 'completed').length,
+          archive: tasks.filter(t => t.status === 'completed').length
+        };
+        
+        // 更新节点数量
+        Object.keys(counts).forEach(key => {
+          const el = document.getElementById(`count-${key}`);
+          if (el) el.textContent = counts[key];
+          
+          // 更新节点状态
+          const node = document.getElementById(`node-${key}`);
+          if (node) {
+            node.classList.remove('active', 'warning', 'danger', 'empty');
+            if (counts[key] > 0) {
+              node.classList.add('active');
+            } else {
+              node.classList.add('empty');
+            }
+          }
+        });
+        
+        // 更新流动动画
+        const hasFlow = counts.execute > 0 || counts.entry > 0;
+        document.querySelectorAll('.flow-line-animated').forEach(el => {
+          el.classList.toggle('active', hasFlow);
+        });
+        
+        // 更新时间
+        document.getElementById('flowUpdateTime').textContent = 
+          `最后更新: ${new Date().toLocaleTimeString('zh-CN')}`;
+        
+        // 加载执行器状态
+        await loadExecutors();
+        
+      } catch (e) {
+        console.error('加载工作流数据失败:', e);
+      }
+    }
+    
+    // 加载执行器状态
+    async function loadExecutors() {
+      try {
+        // 尝试从 Agent 生命周期 API 获取
+        const res = await fetch('/api/agents/list');
+        const agents = await res.json();
+        
+        const tbody = document.getElementById('executorTableBody');
+        const onlineCount = agents.filter(a => a.status === 'online').length;
+        
+        document.getElementById('executorOnlineCount').textContent = `${onlineCount}/${agents.length} 在线`;
+        
+        if (agents.length === 0) {
+          // 使用模拟数据
+          loadMockExecutors();
+          return;
+        }
+        
+        tbody.innerHTML = agents.map(agent => {
+          const statusClass = agent.status === 'online' ? 'online' : 'offline';
+          const statusText = agent.status === 'online' ? '🟢 在线' : '🔴 离线';
+          const currentTask = agent.currentTask || '空闲';
+          const stats = agent.stats || {};
+          
+          return `
+            <tr>
+              <td>
+                <span style="margin-right: 8px;">${getExecutorIcon(agent.type)}</span>
+                ${agent.name || agent.id}
+              </td>
+              <td><span class="executor-status ${statusClass}">${statusText}</span></td>
+              <td>${currentTask}</td>
+              <td>${stats.tasksCompleted || 0}/${(stats.tasksCompleted || 0) + (stats.tasksFailed || 0)}</td>
+              <td>${agent.progress?.queue || 0}</td>
+            </tr>
+          `;
+        }).join('');
+        
+        // 更新辅助流程统计数据
+        updateAuxiliaryFlowData(agents);
+        
+      } catch (e) {
+        // 使用模拟数据
+        loadMockExecutors();
+      }
+    }
+    
+    // 更新辅助流程数据
+    function updateAuxiliaryFlowData(agents) {
+      // 更新 Agent 统计
+      document.getElementById('registeredAgents').textContent = agents.length;
+      document.getElementById('onlineAgents').textContent = agents.filter(a => a.status === 'online').length;
+      document.getElementById('pendingAgents').textContent = agents.filter(a => a.status === 'pending').length;
+      document.getElementById('offlineAgents').textContent = agents.filter(a => a.status === 'offline').length;
+      
+      // 找最近的心跳
+      const heartbeats = agents
+        .filter(a => a.lastHeartbeat)
+        .map(a => new Date(a.lastHeartbeat))
+        .sort((a, b) => b - a);
+      
+      if (heartbeats.length > 0) {
+        const last = heartbeats[0];
+        const ago = Math.floor((Date.now() - last) / 1000);
+        if (ago < 60) {
+          document.getElementById('lastHeartbeat').textContent = `${ago}s 前`;
+        } else if (ago < 3600) {
+          document.getElementById('lastHeartbeat').textContent = `${Math.floor(ago / 60)}min 前`;
+        } else {
+          document.getElementById('lastHeartbeat').textContent = `${Math.floor(ago / 3600)}h 前`;
+        }
+      } else {
+        document.getElementById('lastHeartbeat').textContent = '无心跳';
+      }
+      
+      // 更新状态徽章
+      const onlineCount = agents.filter(a => a.status === 'online').length;
+      if (onlineCount === 0) {
+        document.getElementById('agentRegStatus').className = 'status-badge warning';
+        document.getElementById('agentRegStatus').textContent = '待激活';
+        document.getElementById('heartbeatStatus').className = 'status-badge warning';
+        document.getElementById('heartbeatStatus').textContent = '无活跃';
+      } else if (onlineCount < agents.length * 0.5) {
+        document.getElementById('agentRegStatus').className = 'status-badge online';
+        document.getElementById('agentRegStatus').textContent = '部分在线';
+        document.getElementById('heartbeatStatus').className = 'status-badge online';
+        document.getElementById('heartbeatStatus').textContent = '部分活跃';
+      } else {
+        document.getElementById('agentRegStatus').className = 'status-badge online';
+        document.getElementById('agentRegStatus').textContent = '运行中';
+        document.getElementById('heartbeatStatus').className = 'status-badge online';
+        document.getElementById('heartbeatStatus').textContent = '正常';
+      }
+    }
+    
+    // 模拟执行器数据
+    function loadMockExecutors() {
+      const mockExecutors = [
+        { name: 'main-executor', status: 'online', task: '空闲', completed: 55, failed: 0 },
+        { name: 'coder-executor', status: 'online', task: '空闲', completed: 45, failed: 2 },
+        { name: 'deep-executor', status: 'online', task: '空闲', completed: 38, failed: 1 },
+        { name: 'fast-executor', status: 'online', task: '空闲', completed: 52, failed: 0 },
+        { name: 'chat-executor', status: 'online', task: '空闲', completed: 40, failed: 3 }
+      ];
+      
+      const tbody = document.getElementById('executorTableBody');
+      document.getElementById('executorOnlineCount').textContent = `5/5 在线`;
+      
+      tbody.innerHTML = mockExecutors.map(ex => {
+        const statusClass = ex.status === 'online' ? 'online' : 'offline';
+        const statusText = ex.status === 'online' ? '🟢 在线' : '🔴 离线';
+        const rate = ex.completed + ex.failed > 0 
+          ? Math.round(ex.completed / (ex.completed + ex.failed) * 100) + '%' 
+          : '--';
+        
+        return `
+          <tr>
+            <td><span style="margin-right: 8px;">⚡</span>${ex.name}</td>
+            <td><span class="executor-status ${statusClass}">${statusText}</span></td>
+            <td>${ex.task}</td>
+            <td>${rate}</td>
+            <td>0</td>
+          </tr>
+        `;
+      }).join('');
+    }
+    
+    // 执行器图标
+    function getExecutorIcon(type) {
+      const icons = {
+        'main': '🤖',
+        'coder': '💻',
+        'deep': '🧠',
+        'fast': '🏃',
+        'chat': '💬',
+        'test': '🧪'
+      };
+      return icons[type] || '⚡';
+    }
+    
+    // 流动日志展开/折叠
+    function toggleFlowLog() {
+      const log = document.getElementById('flowLog');
+      if (log.style.maxHeight === 'none') {
+        log.style.maxHeight = '120px';
+      } else {
+        log.style.maxHeight = 'none';
+      }
+    }
+    
+    // 更新流动日志
+    function updateFlowLog(tasks) {
+      const log = document.getElementById('flowLog');
+      const recentTasks = tasks.slice(0, 5);
+      
+      log.innerHTML = recentTasks.map(task => {
+        const time = new Date(task.updated_at || task.created_at).toLocaleTimeString('zh-CN');
+        const statusClass = task.status === 'completed' ? 'success' : task.status === 'failed' ? 'error' : '';
+        let msg = '';
+        
+        if (task.status === 'completed') {
+          msg = `任务 "${task.title}" 已完成`;
+        } else if (task.status === 'doing') {
+          msg = `任务 "${task.title}" 执行中`;
+        } else if (task.status === 'pending') {
+          msg = `任务 "${task.title}" 等待中`;
+        }
+        
+        return `
+          <div class="flow-log-item">
+            <span class="flow-log-time">${time}</span>
+            <span class="flow-log-msg ${statusClass}">${msg}</span>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      Sidebar.init({ activePage: 'business-monitor' });
+      loadMonitorData();
+      loadWorkflowData(); // 新增
+    });
+    
+    // 定时刷新
+    setInterval(loadMonitorData, 30000);
+    setInterval(loadWorkflowData, 5000); // 工作流 5 秒刷新
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

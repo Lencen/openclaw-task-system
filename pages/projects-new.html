@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>项目管理 - 任务系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-layout {
+      padding: 24px;
+      max-width: 1200px;
+    }
+    
+    /* 页面头部 */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .page-actions {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    /* 统计区域 */
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      flex: 1;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    
+    .stat-icon.blue { background: rgba(59, 130, 246, 0.15); }
+    .stat-icon.green { background: rgba(16, 185, 129, 0.15); }
+    .stat-icon.orange { background: rgba(245, 158, 11, 0.15); }
+    .stat-icon.purple { background: rgba(139, 92, 246, 0.15); }
+    
+    .stat-content h3 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    
+    .stat-content p {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    /* 搜索和筛选 */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .search-box {
+      position: relative;
+      width: 280px;
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+    }
+    
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .filter-tab {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .filter-tab:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .filter-tab.active {
+      background: var(--primary);
+      color: white;
+    }
+    
+    /* 项目网格 */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    
+    .project-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+    
+    .project-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    
+    .project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    
+    .project-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .project-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      background: linear-gradient(135deg, var(--primary), #6366f1);
+    }
+    
+    .project-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    
+    .project-meta {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    .status-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    
+    .status-badge.active { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .status-badge.developing { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .status-badge.paused { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .status-badge.completed { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+    .status-badge.planning { background: rgba(100, 116, 139, 0.15); color: #94a3b8; }
+    
+    .project-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .project-progress {
+      margin-bottom: 12px;
+    }
+    
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    
+    .progress-label { color: var(--text-tertiary); }
+    .progress-value { color: var(--text-secondary); }
+    
+    .progress-bar {
+      height: 4px;
+      background: var(--bg-tertiary);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+    
+    .project-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .project-stats {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    .project-env {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      background: var(--bg-tertiary);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-tertiary);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      display: block;
+    }
+    
+    /* 加载状态 */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-tertiary);
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <span>项目管理</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="btn btn-primary" onclick="createProject()">
+            <i class="ri-add-line"></i> 新建项目
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-layout">
+          <!-- 统计卡片 -->
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-icon blue"><i class="ri-folder-line"></i></div>
+              <div class="stat-content">
+                <h3 id="totalProjects">0</h3>
+                <p>全部项目</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green"><i class="ri-play-line"></i></div>
+              <div class="stat-content">
+                <h3 id="activeProjects">0</h3>
+                <p>进行中</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon orange"><i class="ri-pause-line"></i></div>
+              <div class="stat-content">
+                <h3 id="pausedProjects">0</h3>
+                <p>已暂停</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon purple"><i class="ri-check-line"></i></div>
+              <div class="stat-content">
+                <h3 id="completedProjects">0</h3>
+                <p>已完成</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 工具栏 -->
+          <div class="toolbar">
+            <div class="search-box">
+              <i class="ri-search-line search-icon"></i>
+              <input type="text" class="search-input" placeholder="搜索项目..." id="searchInput">
+            </div>
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all">全部</button>
+              <button class="filter-tab" data-filter="active">进行中</button>
+              <button class="filter-tab" data-filter="paused">已暂停</button>
+              <button class="filter-tab" data-filter="completed">已完成</button>
+            </div>
+          </div>
+
+          <!-- 项目列表 -->
+          <div class="projects-grid" id="projectsGrid">
+            <div class="loading">
+              <i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i>
+              <p>加载中...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let projects = [];
+    let tasks = [];
+    let currentFilter = 'all';
+
+    document.addEventListener('DOMContentLoaded', function() {
+      Sidebar.init({ activePage: 'projects' });
+      loadData();
+      setupEvents();
+    });
+
+    async function loadData() {
+      try {
+        // 并行加载项目和任务
+        const [projRes, taskRes] = await Promise.all([
+          fetch(`${API_BASE}/api/devops/projects`),
+          fetch(`${API_BASE}/api/tasks?limit=1000&showCompleted=true`)
+        ]);
+
+        const projData = await projRes.json();
+        const taskData = await taskRes.json();
+
+        // 兼容两种返回格式: { success, data } 和 { code, data }
+        projects = projData.success ? projData.data : (projData.data || []);
+        // API 返回 { code, data: { tasks: [...] } }
+        tasks = (taskData.data?.tasks) || [];
+
+        updateStats();
+        renderProjects();
+      } catch (error) {
+        console.error('加载失败:', error);
+        document.getElementById('projectsGrid').innerHTML = `
+          <div class="empty-state">
+            <i class="ri-error-warning-line"></i>
+            <p>加载失败，请刷新重试</p>
+          </div>
+        `;
+      }
+    }
+
+    function updateStats() {
+      // 计算每个项目的智能状态
+      const getSmartStatus = (project) => {
+        const taskStats = getTaskStats(project.id);
+        return (taskStats.total > 0 && taskStats.completed >= taskStats.total) 
+          ? 'completed' 
+          : project.status;
+      };
+
+      const stats = {
+        total: projects.length,
+        active: projects.filter(p => ['active', 'developing'].includes(getSmartStatus(p))).length,
+        paused: projects.filter(p => getSmartStatus(p) === 'paused').length,
+        completed: projects.filter(p => getSmartStatus(p) === 'completed' || getSmartStatus(p) === 'released').length
+      };
+
+      document.getElementById('totalProjects').textContent = stats.total;
+      document.getElementById('activeProjects').textContent = stats.active;
+      document.getElementById('pausedProjects').textContent = stats.paused;
+      document.getElementById('completedProjects').textContent = stats.completed;
+    }
+
+    function renderProjects() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      
+      let filtered = projects.filter(p => {
+        // 搜索过滤
+        const matchSearch = !searchTerm || 
+          p.name.toLowerCase().includes(searchTerm) ||
+          (p.description && p.description.toLowerCase().includes(searchTerm));
+
+        // 状态过滤
+        let matchFilter = true;
+        if (currentFilter === 'active') {
+          matchFilter = ['active', 'developing'].includes(p.status);
+        } else if (currentFilter === 'paused') {
+          matchFilter = p.status === 'paused';
+        } else if (currentFilter === 'completed') {
+          matchFilter = ['completed', 'released'].includes(p.status);
+        }
+
+        return matchSearch && matchFilter;
+      });
+
+      if (filtered.length === 0) {
+        document.getElementById('projectsGrid').innerHTML = `
+          <div class="empty-state">
+            <i class="ri-folder-open-line"></i>
+            <p>${searchTerm ? '未找到匹配的项目' : '暂无项目'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      const html = filtered.map(project => {
+        const taskStats = getTaskStats(project.id);
+        // 智能状态：如果所有任务都完成，显示已完成
+        const smartStatus = (taskStats.total > 0 && taskStats.completed >= taskStats.total) 
+          ? 'completed' 
+          : project.status;
+        const statusText = getStatusText(smartStatus);
+        const progressColor = getProgressColor(taskStats.percentage);
+
+        return `
+          <div class="project-card" onclick="goToDetail('${project.id}')">
+            <div class="project-header">
+              <div class="project-info">
+                <div class="project-icon">${getIcon(project.name)}</div>
+                <div>
+                  <div class="project-name">${escapeHtml(project.name)}</div>
+                  <div class="project-meta">${formatDate(project.created_at)}</div>
+                </div>
+              </div>
+              <span class="status-badge ${smartStatus}">${statusText}</span>
+            </div>
+            <div class="project-desc">${escapeHtml(project.description || '暂无描述')}</div>
+            <div class="project-progress">
+              <div class="progress-header">
+                <span class="progress-label">任务进度</span>
+                <span class="progress-value">${taskStats.completed}/${taskStats.total} 完成</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${taskStats.percentage}%; background: ${progressColor};"></div>
+              </div>
+            </div>
+            <div class="project-footer">
+              <div class="project-stats">
+                <span><i class="ri-task-line"></i> ${taskStats.total} 任务</span>
+                <span><i class="ri-user-line"></i> ${taskStats.agents.size} Agent</span>
+              </div>
+              <span class="project-env">${getEnvText(project.environment)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('projectsGrid').innerHTML = html;
+    }
+
+    function getTaskStats(projectId) {
+      // 兼容两种字段名: project_id 和 projectId
+      const projectTasks = tasks.filter(t => t.project_id === projectId || t.projectId === projectId);
+      const total = projectTasks.length;
+      const completed = projectTasks.filter(t => t.status === 'completed').length;
+      const agents = new Set(projectTasks.map(t => t.assignedAgent).filter(Boolean));
+
+      return {
+        total,
+        completed,
+        percentage: total > 0 ? Math.round((completed / total) * 100) : 0,
+        agents
+      };
+    }
+
+    function getStatusText(status) {
+      const map = {
+        'active': '进行中',
+        'developing': '开发中',
+        'paused': '已暂停',
+        'completed': '已完成',
+        'released': '已发布',
+        'planning': '规划中'
+      };
+      return map[status] || status;
+    }
+
+    function getEnvText(env) {
+      const map = {
+        'develop': '开发环境',
+        'staging': '测试环境',
+        'production': '生产环境'
+      };
+      return map[env] || env || '开发环境';
+    }
+
+    function getProgressColor(percentage) {
+      if (percentage >= 100) return '#8b5cf6';
+      if (percentage >= 70) return '#10b981';
+      if (percentage >= 40) return '#3b82f6';
+      return '#f59e0b';
+    }
+
+    function getIcon(name) {
+      const icons = ['🎯', '📱', '⚡', '🤖', '📊', '🔧', '🌐', '💾', '🚀', '💡'];
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = ((hash << 5) - hash) + name.charCodeAt(i);
+      }
+      return icons[Math.abs(hash) % icons.length];
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      return dateStr.split('T')[0];
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function goToDetail(id) {
+      window.location.href = `project-detail.html?id=${encodeURIComponent(id)}`;
+    }
+
+    function createProject() {
+      // TODO: 实现创建项目对话框
+      alert('创建项目功能开发中');
+    }
+
+    function setupEvents() {
+      // 搜索
+      document.getElementById('searchInput').addEventListener('input', renderProjects);
+
+      // 筛选标签
+      document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+          document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+          this.classList.add('active');
+          currentFilter = this.dataset.filter;
+          renderProjects();
+        });
+      });
+    }
+  </script>
+
+  <script src="js/sidebar.js"></script>
+<script>FieldTips.init({pageType:"project"});</script></body>
+</html>

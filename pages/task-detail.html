@@ -1,0 +1,3652 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务详情 - Morning 任务管理系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+      
+  <style>
+    /* 图标样式 */
+    i[class^="ri-"], i[class*=" ri-"] {
+      font-size: 1em;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .nav-item i, .tab i, .section-title i {
+      margin-right: 4px;
+    }
+    
+    /* ========== 任务详情页面专用样式 ========== */
+    
+    .nav-section { margin-bottom: 16px; }
+    
+    .nav-section-title {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      padding: 8px 12px;
+      text-transform: uppercase;
+    }
+    
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    
+    .nav-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .nav-item.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+    }
+    
+    /* 主内容区 */
+    /* 已移除，使用 frame.css */
+    
+    /* 已移除，使用 frame.css */
+    
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    
+    .back-btn:hover { color: var(--text-primary); }
+    
+    .content-wrapper {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    
+    /* 已移除，使用 frame.css */
+    
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    
+    /* 右侧边栏 */
+    .right-sidebar {
+      width: 300px;
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .sidebar-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .sidebar-section-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-tertiary);
+    }
+    
+    .sidebar-section-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+    
+    /* 任务头部 */
+    .task-header {
+      padding: 20px 24px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .task-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    
+    .task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 20px;
+      font-size: 12px;
+    }
+    
+    .status-badge { font-weight: 500; }
+    .status-badge.doing { color: var(--primary); }
+    .status-badge.pending { color: var(--warning); }
+    .status-badge.completed { color: var(--success); }
+    .status-badge.paused { color: var(--text-tertiary); }
+    
+    .priority-badge.p0 { color: var(--danger); }
+    .priority-badge.p1 { color: var(--warning); }
+    .priority-badge.p2 { color: var(--primary); }
+    .priority-badge.p3 { color: var(--text-tertiary); }
+    
+    /* 进度条 */
+    .progress-section {
+      margin-bottom: 16px;
+    }
+    
+    .progress-bar {
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+      border-radius: 3px;
+    }
+    
+    .progress-text {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    
+    /* 描述区 */
+    .task-description {
+      padding: 16px 20px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+    
+    .description-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-bottom: 8px;
+    }
+    
+    .description-text {
+      white-space: pre-wrap;
+      line-height: 1.8;
+      color: var(--text-secondary);
+    }
+    
+    /* Tab 导航 */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-secondary);
+      padding: 4px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .tab {
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      transition: all 0.15s;
+    }
+    
+    .tab:hover {
+      color: var(--text-primary);
+      background: var(--bg-tertiary);
+    }
+    
+    .tab.active {
+      color: var(--primary);
+      background: rgba(59, 130, 246, 0.15);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* 区块 */
+    .section {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    
+    .section-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .section-header:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .section-title {
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .section-toggle {
+      color: var(--text-tertiary);
+      font-size: 12px;
+      transition: transform 0.2s;
+    }
+    
+    .section.collapsed .section-toggle {
+      transform: rotate(-90deg);
+    }
+    
+    .section.collapsed .section-content {
+      display: none;
+    }
+    
+    .section-content {
+      padding: 16px 20px;
+    }
+    
+    /* 步骤列表 */
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+    
+    .step-number {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    
+    .step-number.completed {
+      background: var(--success);
+    }
+    
+    .step-content {
+      flex: 1;
+    }
+    
+    .step-title {
+      font-weight: 500;
+      font-size: 13px;
+    }
+    
+    .step-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+    
+    /* 测试区块 */
+    .test-section {
+      margin-bottom: 16px;
+    }
+    
+    .test-section-header {
+      padding: 12px 16px;
+      background: var(--bg-tertiary);
+      border-radius: 8px 8px 0 0;
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    
+    .test-section-content {
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 0 0 8px 8px;
+    }
+    
+    .test-stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    
+    .test-stat {
+      text-align: center;
+    }
+    
+    .test-stat-value {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .test-stat-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    
+    .test-cases {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .test-case {
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .test-case-status {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    
+    .test-case-status.passed {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+    }
+    
+    .test-case-status.failed {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+    }
+    
+    /* 问题列表 */
+    .issue-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .issue-item {
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+    }
+    
+    .issue-item:hover {
+      background: rgba(59, 130, 246, 0.1);
+    }
+    
+    .issue-item.open {
+      border-left-color: var(--warning);
+    }
+    
+    .issue-item.resolved {
+      border-left-color: var(--success);
+    }
+    
+    .issue-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    
+    .issue-title {
+      font-weight: 500;
+      font-size: 13px;
+    }
+    
+    .issue-status {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    
+    .issue-status.open {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+    }
+    
+    .issue-status.resolved {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+    }
+    
+    .issue-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    
+    .issue-detail {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .issue-item.expanded .issue-detail {
+      display: block;
+    }
+    
+    .issue-detail-section {
+      margin-bottom: 12px;
+    }
+    
+    .issue-detail-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-bottom: 4px;
+    }
+    
+    .issue-detail-content {
+      font-size: 13px;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+    }
+    
+    /* 创建问题按钮 */
+    .create-issue-btn {
+      width: 100%;
+      padding: 10px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    
+    .create-issue-btn:hover {
+      background: #2563eb;
+    }
+    
+    /* 弹窗 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal-overlay.active {
+      display: flex;
+    }
+    
+    .modal {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      width: 500px;
+      max-width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-title {
+      font-weight: 600;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      font-size: 20px;
+    }
+    
+    .modal-body {
+      padding: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+    
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 20px;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+    
+    /* 输出列表 */
+    .output-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .output-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
+    }
+    
+    .output-item:hover {
+      background: #e9ecef;
+      transform: translateX(4px);
+    }
+    
+    .output-icon {
+      font-size: 20px;
+      width: 24px;
+      text-align: center;
+    }
+    
+    .output-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+    }
+    
+    .output-name {
+      font-size: 14px;
+      color: #333;
+    }
+    
+    .output-type {
+      font-size: 11px;
+      color: #6c757d;
+      text-transform: uppercase;
+    }
+    .output-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .output-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+    
+    .output-item:hover {
+      background: rgba(59, 130, 246, 0.15);
+    }
+    
+    .output-icon {
+      font-size: 14px;
+    }
+    
+    .output-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    /* 执行日志时间线 */
+    .timeline {
+      position: relative;
+      padding-left: 16px;
+    }
+    
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    
+    .timeline-item {
+      position: relative;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      font-size: 11px;
+    }
+    
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -14px;
+      top: 12px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid var(--bg-secondary);
+    }
+    
+    .timeline-time {
+      color: var(--text-tertiary);
+      margin-bottom: 2px;
+    }
+    
+    .timeline-action {
+      font-weight: 500;
+    }
+    
+    .timeline-detail {
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      padding: 20px;
+      text-align: center;
+      color: var(--text-tertiary);
+      font-size: 13px;
+    }
+    
+    /* 加载状态 */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--text-tertiary);
+    }
+    
+    .error-state {
+      padding: 40px;
+      text-align: center;
+    }
+    
+    @media (max-width: 1200px) {
+      .right-sidebar {
+        width: 260px;
+      }
+    }
+    
+    @media (max-width: 900px) {
+      .right-sidebar {
+        display: none;
+      }
+    }
+  /* 详细分析样式 */
+    .analysis-subsection {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #4a90d9;
+    }
+    
+    .subsection-title {
+      margin: 0 0 12px 0;
+      font-size: 15px;
+      color: #333;
+    }
+    
+    .subsection-content {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    .subsection-content ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+    
+    .subsection-content li {
+      margin: 4px 0;
+    }
+    
+    .advantages-list li {
+      color: #28a745;
+    }
+    
+    .concerns-list li {
+      color: #dc3545;
+    }
+    
+    .findings-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 13px;
+    }
+    
+    .findings-table th,
+    .findings-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+    
+    .findings-table th {
+      background: #e9ecef;
+      font-weight: 600;
+    }
+    
+    .findings-table tr.priority-p0 {
+      background: #fff3cd;
+    }
+    
+    .findings-table tr.priority-p1 {
+      background: #f8f9fa;
+    }
+    
+    .priority-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #6c757d;
+      color: white;
+    }
+    
+    .phases-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    
+    .phase-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid #e9ecef;
+    }
+    
+    .phase-number {
+      font-weight: 600;
+      color: #4a90d9;
+      min-width: 70px;
+    }
+    
+    .phase-tasks {
+      flex: 1;
+      color: #555;
+    }
+    
+    .phase-hours {
+      font-weight: 600;
+      color: #28a745;
+    }
+    
+    .subsection-content code {
+      background: #e9ecef;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    
+    /* ========== 执行日志 Tab 样式 ========== */
+    .execution-log-controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 8px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+    
+    .view-btn {
+      padding: 8px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+    
+    .view-btn:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+    
+    .view-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .execution-view {
+      display: none;
+    }
+    
+    .execution-view.active {
+      display: block;
+    }
+    
+    /* 时间线样式 */
+    .execution-timeline {
+      position: relative;
+      padding-left: 32px;
+    }
+    
+    .execution-timeline::before {
+      content: '';
+      position: absolute;
+      left: 12px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    
+    .execution-timeline .timeline-item {
+      position: relative;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border-left: 3px solid var(--border);
+    }
+    
+    .execution-timeline .timeline-marker {
+      position: absolute;
+      left: -26px;
+      top: 14px;
+      width: 24px;
+      height: 24px;
+      background: var(--bg-primary);
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    
+    .execution-timeline .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .execution-timeline .timeline-action {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .execution-timeline .timeline-time {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    .execution-timeline .timeline-detail {
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    
+    .execution-timeline .timeline-meta {
+    .timeline-changes {
+      margin: 8px 0;
+      padding: 8px 12px;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 6px;
+      border-left: 3px solid var(--primary);
+    }
+    .timeline-changes .change-item {
+      font-size: 12px;
+      margin: 4px 0;
+      font-family: monospace;
+    }
+    .timeline-changes .change-field {
+      color: var(--cyan);
+      font-weight: 500;
+    }
+    .timeline-changes .change-before {
+      color: var(--danger);
+      text-decoration: line-through;
+    }
+    .timeline-changes .change-after {
+      color: var(--success);
+      font-weight: 500;
+    }
+    .timeline-source code {
+      background: rgba(0,0,0,0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    /* 动作类型颜色 */
+    .action-start { border-left-color: #1d9bf0 !important; }
+    .action-start .timeline-marker { border-color: #1d9bf0; color: #1d9bf0; }
+    
+    .action-step-done { border-left-color: #00ba7c !important; }
+    .action-step-done .timeline-marker { border-color: #00ba7c; color: #00ba7c; }
+    
+    .action-step-fail, .action-error { border-left-color: #f4212e !important; }
+    .action-step-fail .timeline-marker, .action-error .timeline-marker { border-color: #f4212e; color: #f4212e; }
+    
+    .action-done { border-left-color: #00ba7c !important; background: rgba(0, 186, 124, 0.1); }
+    .action-done .timeline-marker { border-color: #00ba7c; color: #00ba7c; background: #00ba7c; }
+    .action-done .timeline-marker i { color: white; }
+    
+    .action-wait { border-left-color: #ffad1f !important; }
+    .action-wait .timeline-marker { border-color: #ffad1f; color: #ffad1f; }
+    
+    /* 表格样式 */
+    .execution-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    
+    .execution-table th {
+      text-align: left;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .execution-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+    
+    .execution-table tr:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .action-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--bg-tertiary);
+    }
+    
+    /* 原始日志样式 */
+    .raw-log {
+      background: var(--bg-tertiary);
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      overflow-x: auto;
+      color: var(--text-primary);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    
+    /* 审计日志样式 */
+    .audit-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .audit-header h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+    .audit-desc {
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    .audit-stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+    .audit-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .audit-item {
+      display: grid;
+      grid-template-columns: 120px 140px 1fr;
+      gap: 12px;
+      padding: 10px 12px;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      align-items: center;
+    }
+    .audit-time {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .audit-agent {
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+    .audit-action .action-badge {
+      background: var(--accent-primary);
+      color: white;
+    }
+    .audit-detail {
+      grid-column: 1 / -1;
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding-top: 4px;
+    }
+    
+    /* 工具调用样式 */
+    .tools-header, .collab-header {
+      margin-bottom: 16px;
+    }
+    .tools-header h3, .collab-header h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+    .tool-stats-panel {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      text-align: center;
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+    .stat-num {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--accent-primary);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .tool-calls-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tool-call-item {
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+    }
+    .tool-call-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .tool-name {
+      font-weight: 500;
+    }
+    .tool-time {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .tool-call-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .tool-result {
+      margin-top: 8px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      display: inline-block;
+    }
+    .tool-result.success {
+      background: #d4edda;
+      color: #155724;
+    }
+    .tool-result.failed {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    /* 协作样式 */
+    .participants-panel {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+    .participants-panel h4 {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .participants-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .participant-badge {
+      padding: 4px 10px;
+      background: var(--accent-primary);
+      color: white;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+    .collab-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .collab-item {
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+    }
+    .collab-time {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .collab-flow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .agent-from, .agent-to {
+      font-weight: 500;
+      font-size: 13px;
+    }
+    .collab-action {
+      font-size: 12px;
+      color: var(--accent-primary);
+      margin-bottom: 4px;
+    }
+    .collab-message {
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding: 8px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+    }
+    
+    /* Tips 图标和弹窗样式 */
+    .title-with-tips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tips-icon {
+      cursor: pointer;
+      color: var(--text-tertiary);
+      font-size: 16px;
+      transition: color 0.2s;
+    }
+    .tips-icon:hover {
+      color: var(--primary);
+    }
+    .tips-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .tips-modal.active {
+      display: flex;
+    }
+    .tips-content {
+      background: var(--bg-primary);
+      border-radius: 12px;
+      max-width: 900px;
+      max-height: 80vh;
+      width: 90%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .tips-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .tips-header h3 {
+      margin: 0;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tips-close {
+      cursor: pointer;
+      font-size: 20px;
+      color: var(--text-tertiary);
+    }
+    .tips-close:hover {
+      color: var(--text-primary);
+    }
+    .tips-body {
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .field-section {
+      margin-bottom: 24px;
+    }
+    .field-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .field-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .field-table th {
+      text-align: left;
+      padding: 10px 12px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+      font-weight: 500;
+    }
+    .field-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .field-name {
+      font-family: monospace;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+    .field-meaning {
+      color: var(--text-primary);
+    }
+    .field-format {
+      color: var(--text-secondary);
+      font-size: 11px;
+    }
+    .field-source {
+      color: var(--accent-primary);
+      font-size: 11px;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <!-- 字段说明弹窗 -->
+  <div id="field-tips-modal" class="tips-modal" onclick="if(event.target===this)closeFieldTips()">
+    <div class="tips-content">
+      <div class="tips-header">
+        <h3><i class="ri-information-line"></i> 字段说明</h3>
+        <span class="tips-close" onclick="closeFieldTips()">×</span>
+      </div>
+      <div id="tips-body-content"></div>
+    </div>
+  </div>
+  
+  <div class="layout">
+    <!-- 统一侧边栏容器 -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容区 -->
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <button class="header-btn" onclick="history.back()" title="返回"><i class="ri-arrow-left-line"></i></button>
+          <div class="breadcrumb">
+            <a href="tasks-v2.html">任务</a>
+            <span>/</span>
+            <span>任务详情</span>
+          </div>
+        </div>
+      </header>
+      
+      <div class="content-wrapper">
+        <!-- 左侧主内容 -->
+        <div class="main-content" id="content">
+          <div class="loading">加载中...</div>
+        </div>
+        
+        <!-- 右侧边栏 -->
+        <aside class="right-sidebar">
+          <!-- 输出结果 -->
+          <div class="sidebar-section" style="flex: 0 0 auto;">
+            <div class="sidebar-section-header">
+              <span><i class="ri-upload-2-line"></i></span>
+              <span>输出结果</span>
+            </div>
+            <div class="sidebar-section-content" id="outputs-panel">
+              <div class="empty-state">暂无输出</div>
+            </div>
+          </div>
+          
+          <!-- 执行日志 -->
+          <div class="sidebar-section">
+            <div class="sidebar-section-header">
+              <span><i class="ri-flashlight-line"></i></span>
+              <span>执行日志</span>
+            </div>
+            <div class="sidebar-section-content" id="execution-log-panel">
+              <div class="empty-state">暂无执行记录</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 创建问题弹窗 -->
+  <div class="modal-overlay" id="create-issue-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">创建问题</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">问题名称 *</label>
+          <input type="text" class="form-input" id="issue-title" placeholder="简要描述问题">
+        </div>
+        <div class="form-group">
+          <label class="form-label">问题详情</label>
+          <textarea class="form-textarea" id="issue-description" placeholder="详细描述问题现象"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">优先级</label>
+          <select class="form-select" id="issue-priority">
+            <option value="high">高</option>
+            <option value="medium" selected>中</option>
+            <option value="low">低</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" onclick="createIssue()">创建</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const taskId = urlParams.get('id');
+    const API_BASE = window.location.origin;
+    let currentTask = null;
+    
+    async function loadTaskData() {
+      if (!taskId) {
+        showError('缺少任务 ID');
+        return;
+      }
+      
+      try {
+        // 加载任务详情
+        const res = await fetch(API_BASE + '/api/tasks/' + taskId);
+        const data = await res.json();
+        currentTask = data.task || data;
+        
+        if (!currentTask.id) {
+          showError('未找到任务');
+          return;
+        }
+        
+        // 加载所有任务用于显示父子关系
+        const allTasksRes = await fetch(API_BASE + '/api/tasks?showCompleted=true');
+        const allTasksData = await allTasksRes.json();
+        const allTasks = allTasksData.tasks || [];
+        
+        renderTaskDetail(currentTask, allTasks);
+        
+      } catch (error) {
+        console.error('加载失败:', error);
+        showError('加载失败: ' + error.message);
+      }
+    }
+    
+    function renderTaskDetail(task, allTasks) {
+      allTasks = allTasks || [];
+      const statusMap = {
+        'doing': '进行中',
+        'pending': '待办',
+        'completed': '已完成',
+        'paused': '已暂停'
+      };
+      
+      const statusClass = task.status || 'pending';
+      const statusText = statusMap[statusClass] || task.status;
+      const priorityClass = (task.priority || 'p3').toLowerCase();
+      
+      const progress = task.total_steps 
+        ? Math.round((task.completed_steps || 0) / task.total_steps * 100) 
+        : (task.status === 'completed' ? 100 : 0);
+      
+      // 构建页面内容
+      let html = buildTaskHeader(task, statusText, statusClass, priorityClass, progress, allTasks);
+      html += buildTabs();
+      html += buildAnalysisTab(task);
+      html += buildBreakdownTab(task);
+      html += buildAutomationMonitorTab(task);
+      html += buildExecutionLogTab(task);
+      html += buildTestTab(task);
+      html += buildIssuesTab(task);
+      html += buildAuditTab(task);
+      html += buildToolsTab(task);
+      html += buildCollabTab(task);
+      html += buildPlanTab(task);
+      html += buildReflectTab(task);
+      html += buildAcceptanceTab(task);
+      
+      document.getElementById('content').innerHTML = html;
+      
+      // 渲染右侧面板
+      renderOutputsPanel(task);
+      renderExecutionLogPanel(task);
+      
+      // 绑定事件
+      bindEvents();
+    }
+    
+    function buildTaskHeader(task, statusText, statusClass, priorityClass, progress, allTasks) {
+      allTasks = allTasks || [];
+      let html = '<div class="task-header">';
+      html += '<div class="title-with-tips">';
+      html += '<h2 class="task-title">' + escapeHtml(task.title || '未命名任务') + '</h2>';
+      html += '<i class="ri-question-circle-line tips-icon" onclick="showFieldTips()" title="查看字段说明"></i>';
+      html += '</div>';
+      
+      // Meta 信息
+      html += '<div class="task-meta">';
+      html += '<span class="meta-item"><span>📊</span><span class="status-badge ' + statusClass + '">' + statusText + '</span></span>';
+      html += '<span class="meta-item"><span>🎯</span><span class="priority-badge ' + priorityClass + '">' + (task.priority || 'P3') + '</span></span>';
+      html += '<span class="meta-item"><span>📍</span><span>' + (task.quadrant || 'Q1') + '</span></span>';
+      
+      if (task.projectId) {
+        html += '<span class="meta-item"><span>📦</span><span>' + escapeHtml(task.projectId) + '</span></span>';
+      }
+      if (task.assigned_agent) {
+        html += '<span class="meta-item"><span>🤖</span><span>' + escapeHtml(task.assigned_agent) + '</span></span>';
+      }
+      html += '</div>';
+      
+      // 时间信息
+      html += '<div class="task-meta" style="margin-top: 8px;">';
+      if (task.created_at) {
+        html += '<span class="meta-item" style="font-size: 11px;"><span>📅</span><span>创建: ' + formatDateTime(task.created_at) + '</span></span>';
+      }
+      if (task.deadline) {
+        const deadlineClass = new Date(task.deadline) < new Date() ? 'style="color: var(--danger);"' : '';
+        html += '<span class="meta-item" style="font-size: 11px;" ' + deadlineClass + '><span>⏰</span><span>截止: ' + formatDateTime(task.deadline) + '</span></span>';
+      }
+      if (task.completed_at) {
+        html += '<span class="meta-item" style="font-size: 11px; color: var(--success);"><span>✅</span><span>完成: ' + formatDateTime(task.completed_at) + '</span></span>';
+      }
+      if (task.duration_human) {
+        html += '<span class="meta-item" style="font-size: 11px; color: var(--primary);"><span>⏱️</span><span>耗时: ' + escapeHtml(task.duration_human) + '</span></span>';
+      } else if (task.duration_minutes) {
+        const hours = Math.floor(task.duration_minutes / 60);
+        const mins = task.duration_minutes % 60;
+        const durationText = hours > 0 ? hours + '小时' + mins + '分钟' : mins + '分钟';
+        html += '<span class="meta-item" style="font-size: 11px; color: var(--primary);"><span>⏱️</span><span>耗时: ' + durationText + '</span></span>';
+      } else if (task.completed_at && task.created_at) {
+        // 计算耗时
+        const durationMs = new Date(task.completed_at).getTime() - new Date(task.created_at).getTime();
+        const durationMins = Math.round(durationMs / 60000);
+        const hours = Math.floor(durationMins / 60);
+        const mins = durationMins % 60;
+        const durationText = hours > 0 ? hours + '小时' + mins + '分钟' : mins + '分钟';
+        html += '<span class="meta-item" style="font-size: 11px; color: var(--primary);"><span>⏱️</span><span>耗时: ' + durationText + '</span></span>';
+      }
+      html += '</div>';
+      
+      // 进度条
+      if (task.total_steps) {
+        html += '<div class="progress-section">';
+        html += '<div class="progress-bar"><div class="progress-fill" style="width: ' + progress + '%"></div></div>';
+        html += '<div class="progress-text">进度: ' + (task.completed_steps || 0) + '/' + task.total_steps + ' 步骤 (' + progress + '%)</div>';
+        html += '</div>';
+      }
+      
+      // 描述
+      if (task.user_description || task.description) {
+        html += '<div class="task-description" style="margin-top: 16px;">';
+        html += '<div class="description-label">📝 任务描述</div>';
+        html += '<div class="description-text">' + escapeHtml(task.user_description || task.description) + '</div>';
+        html += '</div>';
+      }
+      
+      // Token消耗 - 使用真实数据，添加统计规则
+      const totalTokens = task.tokenUsage || task.total_tokens || 0;
+      const inputTokens = task.inputTokens || task.input_tokens || 0;
+      const outputTokens = task.outputTokens || task.output_tokens || 0;
+      
+      html += '<div class="task-description" style="margin-top: 16px; background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success);">';
+      html += '<div class="description-label" style="color: var(--success);">💎 Token 消耗</div>';
+      html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px;">';
+      html += '<div style="text-align: center; padding: 12px; background: var(--bg-secondary); border-radius: 6px;">';
+      html += '<div style="font-size: 20px; font-weight: 600; color: var(--primary);">' + formatTokenCount(totalTokens) + '</div>';
+      html += '<div style="font-size: 11px; color: var(--text-tertiary);">总计消耗</div>';
+      html += '</div>';
+      html += '<div style="text-align: center; padding: 12px; background: var(--bg-secondary); border-radius: 6px;">';
+      html += '<div style="font-size: 20px; font-weight: 600; color: var(--success);">' + formatTokenCount(inputTokens) + '</div>';
+      html += '<div style="font-size: 11px; color: var(--text-tertiary);">输入Token</div>';
+      html += '</div>';
+      html += '<div style="text-align: center; padding: 12px; background: var(--bg-secondary); border-radius: 6px;">';
+      html += '<div style="font-size: 20px; font-weight: 600; color: var(--warning);">' + formatTokenCount(outputTokens) + '</div>';
+      html += '<div style="font-size: 11px; color: var(--text-tertiary);">输出Token</div>';
+      html += '</div>';
+      html += '</div>';
+      // 添加统计规则说明
+      html += '<div style="margin-top: 12px; padding: 8px; background: var(--bg-tertiary); border-radius: 4px; font-size: 11px; color: var(--text-secondary);">';
+      html += '<details style="cursor: pointer;">';
+      html += '<summary style="font-weight: 600; margin-bottom: 4px;">📊 Token 统计说明</summary>';
+      html += '<div style="margin-top: 8px; line-height: 1.6;">';
+      html += '<p><strong>计算公式：</strong> 总计 = 输入Token + 输出Token</p>';
+      html += '<p><strong>输入Token：</strong> 包含用户提示词、系统提示、上下文历史、文档内容等</p>';
+      html += '<p><strong>输出Token：</strong> 包含Agent生成的所有回复内容</p>';
+      html += '<p style="color: var(--text-tertiary); font-size: 10px; margin-top: 8px;">💡 数据来源：从OpenClaw Gateway实时获取，按任务执行周期统计</p>';
+      html += '</div>';
+      html += '</details>';
+      html += '</div>';
+      html += '</div>';
+      
+      // 关联任务区域
+      html += buildRelatedTasksSection(task, allTasks);
+      
+      html += '</div>';
+      return html;
+    }
+    
+    function buildRelatedTasksSection(task, allTasks) {
+      // 查找前置任务和后继任务
+      const preTask = task.preTaskId ? allTasks.find(function(t) { return t.id === task.preTaskId; }) : null;
+      const nextTask = task.nextTaskId ? allTasks.find(function(t) { return t.id === task.nextTaskId; }) : null;
+      
+      // 查找子任务（以当前任务为前置任务的任务）
+      const childTasks = allTasks.filter(function(t) { return t.preTaskId === task.id; });
+      
+      // 如果没有任何关联任务，不显示该区域
+      if (!preTask && !nextTask && childTasks.length === 0) {
+        return '';
+      }
+      
+      let html = '<div class="task-description" style="margin-top: 16px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid var(--primary);">';
+      html += '<div class="description-label" style="color: var(--primary);">🔗 关联任务</div>';
+      
+      // 前置任务
+      if (preTask) {
+        html += '<div style="margin-bottom: 8px;">';
+        html += '<span style="color: var(--text-tertiary); font-size: 12px;">↑ 前置任务:</span> ';
+        html += '<a href="task-detail.html?id=' + preTask.id + '" style="color: var(--primary); text-decoration: none;">';
+        html += escapeHtml(preTask.title || '未命名');
+        html += '</a>';
+        html += '<span class="status-badge ' + (preTask.status || 'pending') + '" style="margin-left: 8px; font-size: 10px;">' + getStatusText(preTask.status) + '</span>';
+        html += '</div>';
+      }
+      
+      // 后继任务
+      if (nextTask) {
+        html += '<div style="margin-bottom: 8px;">';
+        html += '<span style="color: var(--text-tertiary); font-size: 12px;">↓ 后继任务:</span> ';
+        html += '<a href="task-detail.html?id=' + nextTask.id + '" style="color: var(--primary); text-decoration: none;">';
+        html += escapeHtml(nextTask.title || '未命名');
+        html += '</a>';
+        html += '<span class="status-badge ' + (nextTask.status || 'pending') + '" style="margin-left: 8px; font-size: 10px;">' + getStatusText(nextTask.status) + '</span>';
+        html += '</div>';
+      }
+      
+      // 子任务列表
+      if (childTasks.length > 0) {
+        html += '<div style="margin-top: 12px;">';
+        html += '<div style="color: var(--text-tertiary); font-size: 12px; margin-bottom: 6px;">📋 子任务 (' + childTasks.length + '):</div>';
+        html += '<div style="display: flex; flex-direction: column; gap: 4px;">';
+        childTasks.forEach(function(child) {
+          html += '<div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(255,255,255,0.05); border-radius: 4px;">';
+          html += '<a href="task-detail.html?id=' + child.id + '" style="color: var(--text-primary); text-decoration: none; flex: 1;">';
+          html += escapeHtml(child.title || '未命名');
+          html += '</a>';
+          html += '<span class="status-badge ' + (child.status || 'pending') + '" style="font-size: 10px;">' + getStatusText(child.status) + '</span>';
+          html += '</div>';
+        });
+        html += '</div>';
+        html += '</div>';
+      }
+      
+      html += '</div>';
+      return html;
+    }
+    
+    function getStatusText(status) {
+      const map = {
+        'pending': '待办',
+        'doing': '进行中',
+        'paused': '已暂停',
+        'completed': '已完成',
+        'failed': '失败'
+      };
+      return map[status] || status || '未知';
+    }
+    
+    function buildTabs() {
+      return '<div class="tabs">' +
+        '<button class="tab active" data-tab="analysis"><i class="ri-search-eye-line"></i> 分析</button>' +
+        '<button class="tab" data-tab="breakdown"><i class="ri-list-check-2"></i> 拆解</button>' +
+        '<button class="tab" data-tab="automation"><i class="ri-radar-line"></i> 自动化监控</button>' +
+        '<button class="tab" data-tab="test"><i class="ri-flask-line"></i> 测试</button>' +
+        '<button class="tab" data-tab="issues"><i class="ri-bug-line"></i> 问题</button>' +
+        '<button class="tab" data-tab="audit"><i class="ri-history-line"></i> 审计</button>' +
+        '<button class="tab" data-tab="tools"><i class="ri-tools-line"></i> 工具</button>' +
+        '<button class="tab" data-tab="collab"><i class="ri-team-line"></i> 协作</button>' +
+        '<button class="tab" data-tab="plan"><i class="ri-calendar-line"></i> 计划</button>' +
+        '<button class="tab" data-tab="reflect"><i class="ri-brain-line"></i> 反思</button>' +
+        '</div>';
+    }
+    
+    function buildAnalysisTab(task) {
+      let html = '<div class="tab-content active" id="tab-analysis">';
+      
+      // 初步分析 - analysis 可能是对象或字符串
+      let analysisText = '暂无初步分析';
+      if (task.analysis) {
+        if (typeof task.analysis === 'string') {
+          analysisText = task.analysis;
+        } else if (task.analysis.thought) {
+          analysisText = task.analysis.thought;
+        }
+      }
+      html += buildSection('<i class="ri-lightbulb-line"></i> 初步分析', analysisText);
+      
+      // 详细分析 - 复杂结构渲染
+      html += buildDetailedAnalysisSection(task.analysis_details);
+      
+      // 分析结论 - analysis.conclusion 或 task.conclusion
+      let conclusionText = '暂无分析结论';
+      if (task.analysis && task.analysis.conclusion) {
+        conclusionText = task.analysis.conclusion;
+      } else if (task.conclusion) {
+        conclusionText = task.conclusion;
+      }
+      html += buildSection('<i class="ri-pushpin-line"></i> 分析结论', conclusionText);
+      
+      html += '</div>';
+      return html;
+    }
+    
+    function buildDetailedAnalysisSection(details) {
+      if (!details || typeof details !== 'object') {
+        return buildSection('<i class="ri-microscope-line"></i> 详细分析', '暂无详细分析');
+      }
+      
+      let html = '<div class="section">' +
+        '<div class="section-header">' +
+        '<h3 class="section-title"><i class="ri-microscope-line"></i> 详细分析</h3>' +
+        '<span class="section-toggle">▼</span>' +
+        '</div>' +
+        '<div class="section-content">';
+      
+      // 1. 初步方案
+      if (details.initial_proposal) {
+        html += '<div class="analysis-subsection">';
+        html += '<h4 class="subsection-title">📋 初步方案（评审前）</h4>';
+        html += '<div class="subsection-content">';
+        
+        const proposal = details.initial_proposal;
+        html += '<p><strong>' + escapeHtml(proposal.title || '') + '</strong></p>';
+        
+        if (proposal.approach) {
+          html += '<p><em>实现方式：</em>' + escapeHtml(proposal.approach) + '</p>';
+        }
+        
+        if (proposal.interfaces && proposal.interfaces.length > 0) {
+          html += '<p><em>标准接口：</em></p><ul>';
+          proposal.interfaces.forEach(function(iface) {
+            html += '<li><code>' + escapeHtml(iface) + '</code></li>';
+          });
+          html += '</ul>';
+        }
+        
+        if (proposal.advantages && proposal.advantages.length > 0) {
+          html += '<p><em>优点：</em></p><ul class="advantages-list">';
+          proposal.advantages.forEach(function(adv) {
+            html += '<li class="advantage-item">✅ ' + escapeHtml(adv) + '</li>';
+          });
+          html += '</ul>';
+        }
+        
+        if (proposal.concerns && proposal.concerns.length > 0) {
+          html += '<p><em>担忧：</em></p><ul class="concerns-list">';
+          proposal.concerns.forEach(function(con) {
+            html += '<li class="concern-item">⚠️ ' + escapeHtml(con) + '</li>';
+          });
+          html += '</ul>';
+        }
+        
+        html += '</div></div>';
+      }
+      
+      // 2. 评审发现
+      if (details.review_findings) {
+        html += '<div class="analysis-subsection">';
+        html += '<h4 class="subsection-title">🔍 评审发现</h4>';
+        html += '<div class="subsection-content">';
+        
+        const findings = details.review_findings;
+        html += '<p><em>评审人员：</em>' + escapeHtml(findings.reviewer || '') + '</p>';
+        
+        if (findings.must_fix && findings.must_fix.length > 0) {
+          html += '<table class="findings-table"><thead><tr><th>问题</th><th>解决方案</th><th>优先级</th></tr></thead><tbody>';
+          findings.must_fix.forEach(function(item) {
+            html += '<tr class="priority-' + (item.priority || 'p2').toLowerCase() + '">';
+            html += '<td>' + escapeHtml(item.issue) + '</td>';
+            html += '<td>' + escapeHtml(item.solution) + '</td>';
+            html += '<td><span class="priority-badge">' + escapeHtml(item.priority) + '</span></td>';
+            html += '</tr>';
+          });
+          html += '</tbody></table>';
+        }
+        
+        if (findings.should_fix && findings.should_fix.length > 0) {
+          html += '<p><em>建议解决：</em></p><ul>';
+          findings.should_fix.forEach(function(item) {
+            html += '<li><strong>' + escapeHtml(item.issue) + '</strong> → ' + escapeHtml(item.solution) + ' <span class="priority-badge">' + escapeHtml(item.priority) + '</span></li>';
+          });
+          html += '</ul>';
+        }
+        
+        html += '</div></div>';
+      }
+      
+      // 3. 最终方案
+      if (details.final_solution) {
+        html += '<div class="analysis-subsection">';
+        html += '<h4 class="subsection-title">✅ 最终方案（评审后）</h4>';
+        html += '<div class="subsection-content">';
+        
+        const solution = details.final_solution;
+        html += '<p><strong>架构：</strong>' + escapeHtml(solution.architecture || '') + '</p>';
+        
+        if (solution.components && solution.components.length > 0) {
+          html += '<p><em>核心组件：</em></p><ul>';
+          solution.components.forEach(function(comp) {
+            html += '<li><strong>' + escapeHtml(comp.name) + '</strong>：' + escapeHtml(comp.purpose) + '</li>';
+          });
+          html += '</ul>';
+        }
+        
+        if (solution.implementation_phases && solution.implementation_phases.length > 0) {
+          html += '<p><em>实施阶段：</em></p>';
+          html += '<div class="phases-timeline">';
+          solution.implementation_phases.forEach(function(phase) {
+            html += '<div class="phase-item">';
+            html += '<span class="phase-number">Phase ' + phase.phase + '</span>';
+            html += '<span class="phase-tasks">' + escapeHtml(phase.tasks) + '</span>';
+            html += '<span class="phase-hours">' + phase.hours + 'h</span>';
+            html += '</div>';
+          });
+          html += '</div>';
+          html += '<p><strong>总工时：</strong>' + (solution.total_hours || 0) + ' 小时</p>';
+        }
+        
+        html += '</div></div>';
+      }
+      
+      html += '</div></div>';
+      return html;
+    }
+    
+    function buildSection(title, content) {
+      return '<div class="section">' +
+        '<div class="section-header">' +
+        '<h3 class="section-title">' + title + '</h3>' +
+        '<span class="section-toggle">▼</span>' +
+        '</div>' +
+        '<div class="section-content">' +
+        '<div class="description-text">' + escapeHtml(content) + '</div>' +
+        '</div>' +
+        '</div>';
+    }
+    
+    function buildBreakdownTab(task) {
+      let html = '<div class="tab-content" id="tab-breakdown">';
+      html += '<div class="section">';
+      html += '<div class="section-header"><h3 class="section-title"><i class="ri-list-check"></i> 任务步骤</h3><span class="section-toggle">▼</span></div>';
+      html += '<div class="section-content">';
+      
+      if (task.breakdown && task.breakdown.length > 0) {
+        html += '<div class="steps-list" style="display: flex; flex-direction: column; gap: 12px;">';
+        task.breakdown.forEach(function(step, i) {
+          const isCompleted = step.status === 'completed';
+          const statusClass = isCompleted ? 'completed' : (step.status === 'running' ? 'running' : 'pending');
+          const statusIcon = isCompleted ? '✅' : (step.status === 'running' ? '🔄' : '⏳');
+          const stepName = step.name || step.title || ('步骤 ' + (step.step || i + 1));
+          
+          html += '<div class="step-card" style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">';
+          
+          // 步骤头部：序号 + 名称 + 状态
+          html += '<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">';
+          html += '<div style="width: 32px; height: 32px; border-radius: 50%; background: ' + (isCompleted ? 'var(--success)' : 'var(--bg-tertiary)') + '; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">' + (step.step || i + 1) + '</div>';
+          html += '<div style="flex: 1;"><div style="font-weight: 600; font-size: 15px;">' + escapeHtml(stepName) + '</div></div>';
+          html += '<span style="font-size: 13px; padding: 4px 10px; border-radius: 4px; background: ' + (isCompleted ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)') + '; color: ' + (isCompleted ? 'var(--success)' : 'var(--warning)') + ';">' + statusIcon + ' ' + (isCompleted ? '已完成' : (step.status === 'running' ? '执行中' : '待执行')) + '</span>';
+          html += '</div>';
+          
+          // 步骤描述
+          if (step.description) {
+            html += '<div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; padding-left: 44px;">' + escapeHtml(step.description) + '</div>';
+          }
+          
+          // 步骤元信息
+          html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; padding-left: 44px; font-size: 12px; color: var(--text-tertiary);">';
+          
+          // 阶段
+          if (step.phase) {
+            html += '<div><span style="color: var(--text-tertiary);">📁 阶段:</span> ' + escapeHtml(step.phase) + '</div>';
+          }
+          
+          // 开发人员
+          if (step.assignee) {
+            html += '<div><span style="color: var(--text-tertiary);">👤 开发:</span> ' + escapeHtml(step.assignee) + '</div>';
+          }
+          
+          // 创建时间
+          if (step.created_at) {
+            html += '<div><span style="color: var(--text-tertiary);">📅 创建:</span> ' + formatDateTime(step.created_at) + '</div>';
+          }
+          
+          // 开始时间
+          if (step.started_at) {
+            html += '<div><span style="color: var(--text-tertiary);">▶️ 开始:</span> ' + formatDateTime(step.started_at) + '</div>';
+          }
+          
+          // 完成时间
+          if (step.completed_at) {
+            html += '<div><span style="color: var(--text-tertiary);">✅ 完成:</span> ' + formatDateTime(step.completed_at) + '</div>';
+          }
+          
+          html += '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      } else if (task.total_steps) {
+        html += '<div class="empty-state">共 ' + task.total_steps + ' 个步骤，已完成 ' + (task.completed_steps || 0) + ' 个</div>';
+      } else {
+        html += '<div class="empty-state">暂无步骤信息</div>';
+      }
+      
+      html += '</div></div></div>';
+      return html;
+    }
+    
+    // P0: 自动化监控 Tab
+    function buildAutomationMonitorTab(task) {
+      let html = '<div class="tab-content" id="tab-automation">';
+      
+      const monitor = task.automation_monitor || {};
+      
+      // 监控流程状态
+      html += '<div class="section">';
+      html += '<div class="section-header"><h3 class="section-title"><i class="ri-radar-line"></i> 监控流程状态</h3><span class="section-toggle">▼</span></div>';
+      html += '<div class="section-content">';
+      html += buildMonitorFlowStatus(monitor);
+      html += '</div></div>';
+      
+      // 监控对象
+      html += '<div class="section">';
+      html += '<div class="section-header"><h3 class="section-title"><i class="ri-focus-3-line"></i> 监控对象</h3><span class="section-toggle">▼</span></div>';
+      html += '<div class="section-content">';
+      html += buildMonitoredObjects(monitor, task);
+      html += '</div></div>';
+      
+      // 监控日志
+      html += '<div class="section">';
+      html += '<div class="section-header"><h3 class="section-title"><i class="ri-file-list-3-line"></i> 监控日志</h3><span class="section-toggle">▼</span></div>';
+      html += '<div class="section-content">';
+      html += buildMonitorLogs(monitor);
+      html += '</div></div>';
+      
+      // 告警记录
+      if (monitor.alerts && monitor.alerts.length > 0) {
+        html += '<div class="section">';
+        html += '<div class="section-header"><h3 class="section-title"><i class="ri-alarm-warning-line"></i> ⚠️ 告警记录</h3><span class="section-toggle">▼</span></div>';
+        html += '<div class="section-content">';
+        html += buildMonitorAlerts(monitor);
+        html += '</div></div>';
+      }
+      
+      html += '</div>';
+      return html;
+    }
+    
+    function buildMonitorFlowStatus(monitor) {
+      const statusMap = {
+        'running': { text: '运行中', icon: '🟢', class: 'status-running' },
+        'paused': { text: '已暂停', icon: '🟡', class: 'status-paused' },
+        'completed': { text: '已完成', icon: '✅', class: 'status-completed' },
+        'failed': { text: '失败', icon: '🔴', class: 'status-failed' },
+        'idle': { text: '待机', icon: '⚪', class: 'status-idle' }
+      };
+      
+      const status = monitor.flow_status || 'idle';
+      const statusInfo = statusMap[status] || statusMap['idle'];
+      const enabled = monitor.enabled !== false;
+      
+      let html = '<div class="monitor-flow-status">';
+      html += '<div class="flow-status-main">';
+      html += '<span class="flow-status-icon">' + statusInfo.icon + '</span>';
+      html += '<span class="flow-status-text">' + statusInfo.text + '</span>';
+      if (!enabled) {
+        html += '<span class="flow-status-badge disabled">已禁用</span>';
+      }
+      html += '</div>';
+      
+      // 快速操作按钮
+      html += '<div class="monitor-actions" style="margin-top: 12px;">';
+      if (status === 'running') {
+        html += '<button class="btn btn-secondary" onclick="pauseAutomation()"><i class="ri-pause-line"></i> 暂停监控</button>';
+      } else if (status === 'paused') {
+        html += '<button class="btn btn-primary" onclick="resumeAutomation()"><i class="ri-play-line"></i> 恢复监控</button>';
+      }
+      html += '<button class="btn btn-secondary" onclick="refreshMonitorData()"><i class="ri-refresh-line"></i> 刷新</button>';
+      html += '</div>';
+      
+      html += '</div>';
+      return html;
+    }
+    
+    function buildMonitoredObjects(monitor, task) {
+      const objects = monitor.monitored_objects || [];
+      const breakdown = task.breakdown || [];
+      
+      // 如果没有监控对象，从任务步骤自动生成
+      const displayObjects = objects.length > 0 ? objects : breakdown.map(function(step, i) {
+        return { type: 'step', id: i, status: step.status || 'pending' };
+      });
+      
+      if (displayObjects.length === 0) {
+        return '<div class="empty-state">暂无监控对象</div>';
+      }
+      
+      let html = '<div class="monitored-objects-list">';
+      
+      displayObjects.forEach(function(obj) {
+        const statusInfo = getMonitorObjectStatus(obj);
+        html += '<div class="monitored-object-item">';
+        html += '<div class="object-status-icon">' + statusInfo.icon + '</div>';
+        html += '<div class="object-info">';
+        html += '<div class="object-title">' + statusInfo.title + '</div>';
+        html += '<div class="object-status">' + statusInfo.statusText + '</div>';
+        if (obj.duration) {
+          html += '<div class="object-duration">运行 ' + obj.duration + '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+      });
+      
+      html += '</div>';
+      
+      // 添加样式
+      html += '<style>';
+      html += '.monitored-objects-list { display: flex; flex-direction: column; gap: 8px; }';
+      html += '.monitored-object-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px; }';
+      html += '.object-status-icon { font-size: 20px; }';
+      html += '.object-info { flex: 1; }';
+      html += '.object-title { font-weight: 500; font-size: 13px; }';
+      html += '.object-status { font-size: 12px; color: var(--text-secondary); }';
+      html += '.object-duration { font-size: 11px; color: var(--text-tertiary); }';
+      html += '.monitor-flow-status { padding: 16px; background: var(--bg-tertiary); border-radius: 8px; }';
+      html += '.flow-status-main { display: flex; align-items: center; gap: 12px; font-size: 16px; }';
+      html += '.flow-status-icon { font-size: 24px; }';
+      html += '.flow-status-text { font-weight: 600; }';
+      html += '.flow-status-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--bg-secondary); }';
+      html += '.flow-status-badge.disabled { background: rgba(239, 68, 68, 0.2); color: var(--danger); }';
+      html += '</style>';
+      
+      return html;
+    }
+    
+    function getMonitorObjectStatus(obj) {
+      const statusMap = {
+        'completed': { icon: '✅', text: '已完成' },
+        'running': { icon: '🔄', text: '执行中' },
+        'pending': { icon: '⏳', text: '等待中' },
+        'failed': { icon: '❌', text: '失败' },
+        'paused': { icon: '⏸️', text: '已暂停' },
+        'skipped': { icon: '⏭️', text: '已跳过' }
+      };
+      
+      const info = statusMap[obj.status] || statusMap['pending'];
+      const title = obj.type === 'step' ? '步骤' + obj.id : (obj.name || '监控对象');
+      
+      return {
+        icon: info.icon,
+        title: title,
+        statusText: info.text
+      };
+    }
+    
+    function buildMonitorLogs(monitor) {
+      const logs = monitor.logs || [];
+      
+      if (logs.length === 0) {
+        return '<div class="empty-state">暂无监控日志</div>';
+      }
+      
+      let html = '<div class="monitor-logs-container">';
+      html += '<div class="monitor-logs-list">';
+      
+      logs.slice(-20).reverse().forEach(function(log) {
+        const time = log.time ? formatTime(log.time) : '-';
+        const eventIcon = getMonitorEventIcon(log.event);
+        
+        html += '<div class="monitor-log-item">';
+        html += '<span class="log-time">' + time + '</span>';
+        html += '<span class="log-event">' + eventIcon + ' ' + escapeHtml(log.event) + '</span>';
+        html += '<span class="log-detail">' + escapeHtml(log.detail || '-') + '</span>';
+        html += '</div>';
+      });
+      
+      html += '</div>';
+      
+      // 样式
+      html += '<style>';
+      html += '.monitor-logs-container { max-height: 400px; overflow-y: auto; }';
+      html += '.monitor-logs-list { display: flex; flex-direction: column; gap: 4px; }';
+      html += '.monitor-log-item { display: flex; gap: 12px; padding: 8px 12px; background: var(--bg-tertiary); border-radius: 6px; font-size: 12px; }';
+      html += '.log-time { color: var(--text-tertiary); min-width: 70px; }';
+      html += '.log-event { color: var(--primary); min-width: 120px; }';
+      html += '.log-detail { color: var(--text-secondary); flex: 1; }';
+      html += '</style>';
+      
+      html += '</div>';
+      return html;
+    }
+    
+    function getMonitorEventIcon(event) {
+      const iconMap = {
+        'step_started': '▶️',
+        'step_completed': '✅',
+        'step_failed': '❌',
+        'step_paused': '⏸️',
+        'step_resumed': '🔄',
+        'timeout_detected': '⏰',
+        'error_detected': '⚠️',
+        'auto_recovery': '🔧',
+        'alert_triggered': '🔔',
+        'monitoring_started': '📡',
+        'monitoring_stopped': '🛑'
+      };
+      return iconMap[event] || '📋';
+    }
+    
+    function buildMonitorAlerts(monitor) {
+      const alerts = monitor.alerts || [];
+      
+      if (alerts.length === 0) {
+        return '<div class="empty-state">暂无告警</div>';
+      }
+      
+      let html = '<div class="monitor-alerts-list">';
+      
+      alerts.forEach(function(alert) {
+        const time = alert.time ? formatTime(alert.time) : '-';
+        const levelClass = alert.level === 'error' ? 'alert-error' : (alert.level === 'warning' ? 'alert-warning' : 'alert-info');
+        const levelIcon = alert.level === 'error' ? '🔴' : (alert.level === 'warning' ? '🟡' : '🔵');
+        
+        html += '<div class="monitor-alert-item ' + levelClass + '">';
+        html += '<span class="alert-icon">' + levelIcon + '</span>';
+        html += '<span class="alert-time">' + time + '</span>';
+        html += '<span class="alert-message">' + escapeHtml(alert.message) + '</span>';
+        if (alert.resolved) {
+          html += '<span class="alert-resolved">✅ 已处理</span>';
+        }
+        html += '</div>';
+      });
+      
+      html += '</div>';
+      
+      // 样式
+      html += '<style>';
+      html += '.monitor-alerts-list { display: flex; flex-direction: column; gap: 8px; }';
+      html += '.monitor-alert-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; font-size: 13px; }';
+      html += '.monitor-alert-item.alert-error { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }';
+      html += '.monitor-alert-item.alert-warning { background: rgba(245, 158, 11, 0.1); border-left: 3px solid var(--warning); }';
+      html += '.monitor-alert-item.alert-info { background: rgba(59, 130, 246, 0.1); border-left: 3px solid var(--primary); }';
+      html += '.alert-icon { font-size: 16px; }';
+      html += '.alert-time { color: var(--text-tertiary); font-size: 11px; min-width: 70px; }';
+      html += '.alert-message { flex: 1; }';
+      html += '.alert-resolved { font-size: 11px; color: var(--success); }';
+      html += '</style>';
+      
+      return html;
+    }
+    
+    function buildTestTab(task) {
+      let html = '<div class="tab-content" id="tab-test">';
+      const ta = task.test_acceptance || {};
+      
+      // 单元测试
+      html += '<div class="test-section" style="margin-bottom: 20px;">';
+      html += '<div class="test-section-header" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--bg-tertiary); border-radius: 8px 8px 0 0; cursor: pointer;"><span style="font-weight: 600;"><i class="ri-test-tube-line" style="margin-right: 8px;"></i> 单元测试</span></div>';
+      html += '<div class="test-section-content" style="padding: 16px; background: var(--bg-secondary); border-radius: 0 0 8px 8px;">';
+      html += buildUnitTestSection(ta.unit_test);
+      html += '</div></div>';
+      
+      // 集成测试
+      html += '<div class="test-section" style="margin-bottom: 20px;">';
+      html += '<div class="test-section-header" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--bg-tertiary); border-radius: 8px 8px 0 0; cursor: pointer;"><span style="font-weight: 600;"><i class="ri-git-merge-line" style="margin-right: 8px;"></i> 集成测试</span></div>';
+      html += '<div class="test-section-content" style="padding: 16px; background: var(--bg-secondary); border-radius: 0 0 8px 8px;">';
+      html += buildIntegrationTestSection(ta.integration_test);
+      html += '</div></div>';
+      
+      // 验收测试
+      html += '<div class="test-section" style="margin-bottom: 20px;">';
+      html += '<div class="test-section-header" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--bg-tertiary); border-radius: 8px 8px 0 0; cursor: pointer;"><span style="font-weight: 600;"><i class="ri-checkbox-circle-line" style="margin-right: 8px;"></i> 验收测试</span></div>';
+      html += '<div class="test-section-content" style="padding: 16px; background: var(--bg-secondary); border-radius: 0 0 8px 8px;">';
+      html += buildAcceptanceSection(ta.acceptance);
+      html += '</div></div>';
+      
+      // 测试结果汇总
+      if (ta.result) {
+        html += '<div style="padding: 16px; background: rgba(16,185,129,0.1); border-left: 3px solid var(--success); border-radius: 8px;">';
+        html += '<div style="font-weight: 600; color: var(--success); margin-bottom: 8px;">📊 测试结果汇总</div>';
+        html += '<div style="font-size: 14px;">' + escapeHtml(ta.result) + '</div>';
+        html += '</div>';
+      }
+      
+      html += '</div>';
+      return html;
+    }
+    
+    function buildUnitTestSection(ut) {
+      if (!ut) return '<div style="color: var(--text-tertiary); font-size: 14px;">暂无单元测试数据</div>';
+      
+      const statusColor = ut.status === 'passed' ? 'var(--success)' : 'var(--danger)';
+      const statusIcon = ut.status === 'passed' ? '✅' : '❌';
+      
+      let html = '<div style="margin-bottom: 16px;">';
+      html += '<span style="font-size: 18px; font-weight: 600; color: ' + statusColor + ';">' + statusIcon + ' ' + (ut.name || '单元测试') + '</span>';
+      html += '<span style="margin-left: 16px; color: var(--text-tertiary);">通过: ' + (ut.passed || 0) + '/' + (ut.total || 0) + '</span>';
+      if (ut.duration) html += '<span style="margin-left: 16px; color: var(--text-tertiary);">耗时: ' + ut.duration + '</span>';
+      html += '</div>';
+      
+      if (ut.cases && ut.cases.length > 0) {
+        html += '<div style="display: grid; gap: 8px;">';
+        ut.cases.forEach(function(tc) {
+          const tcIcon = tc.status === 'passed' ? '✅' : '❌';
+          html += '<div style="padding: 10px 12px; background: var(--bg-primary); border-radius: 6px; display: flex; align-items: center; gap: 10px;">';
+          html += '<span>' + tcIcon + '</span>';
+          html += '<span style="flex: 1;">' + escapeHtml(tc.name) + '</span>';
+          if (tc.duration) html += '<span style="color: var(--text-tertiary); font-size: 12px;">' + tc.duration + '</span>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      
+      return html;
+    }
+    
+    function buildIntegrationTestSection(it) {
+      if (!it) return '<div style="color: var(--text-tertiary); font-size: 14px;">暂无集成测试数据</div>';
+      
+      const statusColor = it.status === 'passed' ? 'var(--success)' : 'var(--danger)';
+      const statusIcon = it.status === 'passed' ? '✅' : '❌';
+      
+      let html = '<div style="margin-bottom: 16px;">';
+      html += '<span style="font-size: 18px; font-weight: 600; color: ' + statusColor + ';">' + statusIcon + ' ' + (it.name || '集成测试') + '</span>';
+      html += '<span style="margin-left: 16px; color: var(--text-tertiary);">通过: ' + (it.passed || 0) + '/' + (it.total || 0) + '</span>';
+      if (it.duration) html += '<span style="margin-left: 16px; color: var(--text-tertiary);">耗时: ' + it.duration + '</span>';
+      html += '</div>';
+      
+      if (it.cases && it.cases.length > 0) {
+        html += '<div style="display: grid; gap: 8px;">';
+        it.cases.forEach(function(tc) {
+          const tcIcon = tc.status === 'passed' ? '✅' : '❌';
+          html += '<div style="padding: 10px 12px; background: var(--bg-primary); border-radius: 6px; display: flex; align-items: center; gap: 10px;">';
+          html += '<span>' + tcIcon + '</span>';
+          html += '<span style="flex: 1;">' + escapeHtml(tc.name) + '</span>';
+          if (tc.duration) html += '<span style="color: var(--text-tertiary); font-size: 12px;">' + tc.duration + '</span>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      
+      return html;
+    }
+    
+    function buildAcceptanceSection(acc) {
+      if (!acc) return '<div style="color: var(--text-tertiary); font-size: 14px;">暂无验收数据</div>';
+      
+      const statusColor = acc.status === 'passed' ? 'var(--success)' : 'var(--danger)';
+      const statusIcon = acc.status === 'passed' ? '✅' : '❌';
+      
+      let html = '<div style="margin-bottom: 16px;">';
+      html += '<span style="font-size: 18px; font-weight: 600; color: ' + statusColor + ';">' + statusIcon + ' ' + (acc.name || '验收测试') + '</span>';
+      if (acc.acceptor) html += '<span style="margin-left: 16px; color: var(--text-tertiary);">验收人: ' + escapeHtml(acc.acceptor) + '</span>';
+      if (acc.acceptance_time) html += '<span style="margin-left: 16px; color: var(--text-tertiary);">时间: ' + formatDateTime(acc.acceptance_time) + '</span>';
+      html += '</div>';
+      
+      if (acc.checklist && acc.checklist.length > 0) {
+        html += '<div style="display: grid; gap: 8px;">';
+        acc.checklist.forEach(function(item) {
+          const itemIcon = item.status === 'passed' ? '✅' : '❌';
+          html += '<div style="padding: 10px 12px; background: var(--bg-primary); border-radius: 6px; display: flex; align-items: center; gap: 10px;">';
+          html += '<span>' + itemIcon + '</span>';
+          html += '<span style="flex: 1;">' + escapeHtml(item.item) + '</span>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      
+      return html;
+    }
+    
+    function buildTestContent(task, type) {
+      const ta = task.test_acceptance || {};
+      const allCases = ta.cases || [];
+      const cases = allCases.filter(function(c) { return c.type === type; });
+      
+      const passed = cases.filter(function(c) { return c.status === 'passed'; }).length;
+      const failed = cases.filter(function(c) { return c.status === 'failed'; }).length;
+      
+      let html = '<div class="test-stats">';
+      html += '<div class="test-stat"><div class="test-stat-value">' + cases.length + '</div><div class="test-stat-label">用例数</div></div>';
+      html += '<div class="test-stat"><div class="test-stat-value" style="color: var(--success);">' + passed + '</div><div class="test-stat-label">通过</div></div>';
+      html += '<div class="test-stat"><div class="test-stat-value" style="color: var(--danger);">' + failed + '</div><div class="test-stat-label">失败</div></div>';
+      html += '</div>';
+      
+      if (cases.length > 0) {
+        html += '<div class="test-cases">';
+        cases.forEach(function(c) {
+          const name = c.name || c;
+          const status = c.status || 'pending';
+          const statusText = status === 'passed' ? '✓ 通过' : (status === 'failed' ? '✗ 失败' : '待执行');
+          html += '<div class="test-case">';
+          html += '<span>' + escapeHtml(name) + '</span>';
+          html += '<span class="test-case-status ' + status + '">' + statusText + '</span>';
+          html += '</div>';
+        });
+        html += '</div>';
+      } else {
+        html += '<div class="empty-state">暂无测试用例</div>';
+      }
+      
+      return html;
+    }
+    
+    function buildIssuesTab(task) {
+      let html = '<div class="tab-content" id="tab-issues">';
+      html += '<button class="create-issue-btn" onclick="openCreateIssueModal()"><i class="ri-add-line"></i> 创建问题</button>';
+      html += '<div class="issue-list" id="issue-list">';
+      html += renderIssuesHtml(task);
+      html += '</div></div>';
+      return html;
+    }
+    
+    // 审计日志 Tab
+    function buildAuditTab(task) {
+      let html = '<div class="tab-content" id="tab-audit">';
+      html += '<div class="audit-header">';
+      html += '<h3><i class="ri-history-line"></i> 操作审计日志</h3>';
+      html += '<span class="audit-desc">记录所有操作：什么时间、谁、做了什么</span>';
+      html += '</div>';
+      
+      // 审计日志列表
+      const auditLog = task.audit_log || [];
+      if (auditLog.length === 0) {
+        html += '<div class="empty-state"><i class="ri-file-list-3-line"></i><p>暂无审计记录</p></div>';
+      } else {
+        html += '<div class="audit-stats">';
+        html += '<div class="stat-item"><span class="stat-label">总记录</span><span class="stat-value">' + auditLog.length + '</span></div>';
+        
+        // 按操作类型统计
+        const byAction = {};
+        auditLog.forEach(l => {
+          byAction[l.action] = (byAction[l.action] || 0) + 1;
+        });
+        const topActions = Object.entries(byAction).sort((a, b) => b[1] - a[1]).slice(0, 3);
+        html += '<div class="stat-item"><span class="stat-label">操作类型</span><span class="stat-value">' + topActions.map(a => a[0].replace(/_/g, ' ')).join(', ') + '</span></div>';
+        
+        html += '</div>';
+        
+        html += '<div class="audit-list">';
+        auditLog.slice().reverse().forEach(log => {
+          html += '<div class="audit-item">';
+          html += '<div class="audit-time">' + formatTime(log.timestamp) + '</div>';
+          html += '<div class="audit-agent"><i class="ri-user-line"></i> ' + escapeHtml(log.agent) + '</div>';
+          html += '<div class="audit-action"><span class="action-badge">' + escapeHtml(log.action.replace(/_/g, ' ')) + '</span></div>';
+          if (log.after) {
+            html += '<div class="audit-detail">' + escapeHtml(log.after) + '</div>';
+          }
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      
+      html += '</div>';
+      return html;
+    }
+    
+    // 工具调用 Tab (V4 Tool Use)
+    function buildToolsTab(task) {
+      let html = '<div class="tab-content" id="tab-tools">';
+      html += '<div class="tools-header">';
+      html += '<h3><i class="ri-tools-line"></i> 工具调用记录</h3>';
+      html += '</div>';
+      
+      const toolCalls = task.tool_calls || [];
+      const stats = task.tool_stats || {};
+      
+      // 统计面板
+      html += '<div class="tool-stats-panel">';
+      html += '<div class="stat-card"><div class="stat-num">' + (stats.total_calls || 0) + '</div><div class="stat-label">总调用</div></div>';
+      html += '<div class="stat-card"><div class="stat-num">' + (stats.total_duration_ms || 0) + 'ms</div><div class="stat-label">总耗时</div></div>';
+      html += '<div class="stat-card"><div class="stat-num">' + ((stats.success_rate || 1) * 100).toFixed(0) + '%</div><div class="stat-label">成功率</div></div>';
+      html += '</div>';
+      
+      // 工具调用列表
+      if (toolCalls.length === 0) {
+        html += '<div class="empty-state"><i class="ri-tools-line"></i><p>暂无工具调用记录</p></div>';
+      } else {
+        html += '<div class="tool-calls-list">';
+        toolCalls.slice().reverse().forEach(call => {
+          html += '<div class="tool-call-item">';
+          html += '<div class="tool-call-header">';
+          html += '<span class="tool-name"><i class="ri-tools-fill"></i> ' + escapeHtml(call.tool) + '</span>';
+          html += '<span class="tool-time">' + formatTime(call.timestamp) + '</span>';
+          html += '</div>';
+          html += '<div class="tool-call-meta">';
+          html += '<span class="tool-agent">Agent: ' + escapeHtml(call.agent || 'unknown') + '</span>';
+          html += '<span class="tool-duration">' + (call.duration_ms || 0) + 'ms</span>';
+          html += '</div>';
+          if (call.result) {
+            const success = call.result.success !== false;
+            html += '<div class="tool-result ' + (success ? 'success' : 'failed') + '">';
+            html += success ? '<i class="ri-check-line"></i> 成功' : '<i class="ri-close-line"></i> 失败';
+            html += '</div>';
+          }
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      
+      html += '</div>';
+      return html;
+    }
+    
+    // 协作 Tab (V4 Multi-Agent)
+    function buildCollabTab(task) {
+      let html = '<div class="tab-content" id="tab-collab">';
+      html += '<div class="collab-header">';
+      html += '<h3><i class="ri-team-line"></i> Agent 协作记录</h3>';
+      html += '</div>';
+      
+      const collaboration = task.collaboration || {};
+      const records = collaboration.records || [];
+      const participants = collaboration.participants || [];
+      
+      // 参与者
+      html += '<div class="participants-panel">';
+      html += '<h4>参与 Agent (' + participants.length + ')</h4>';
+      html += '<div class="participants-list">';
+      participants.forEach(p => {
+        html += '<span class="participant-badge">' + escapeHtml(p) + '</span>';
+      });
+      html += '</div></div>';
+      
+      // 协作记录
+      if (records.length === 0) {
+        html += '<div class="empty-state"><i class="ri-team-line"></i><p>暂无协作记录</p></div>';
+      } else {
+        html += '<div class="collab-timeline">';
+        records.forEach(rec => {
+          html += '<div class="collab-item">';
+          html += '<div class="collab-time">' + formatTime(rec.timestamp) + '</div>';
+          html += '<div class="collab-flow">';
+          html += '<span class="agent-from">' + escapeHtml(rec.from_agent) + '</span>';
+          html += '<i class="ri-arrow-right-line"></i>';
+          html += '<span class="agent-to">' + escapeHtml(rec.to_agent) + '</span>';
+          html += '</div>';
+          html += '<div class="collab-action">' + escapeHtml(rec.action) + '</div>';
+          if (rec.message) {
+            html += '<div class="collab-message">' + escapeHtml(rec.message) + '</div>';
+          }
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      
+      html += '</div>';
+      return html;
+    }
+    
+    // 计划执行 Tab
+    function buildPlanTab(task) {
+      let html = '<div class="tab-content" id="tab-plan">';
+      html += '<div class="section">' +
+        '<div class="section-header">' +
+        '<h3 class="section-title"><i class="ri-calendar-line"></i> 计划执行</h3>' +
+        '<span class="section-toggle">▼</span>' +
+        '</div>' +
+        '<div class="section-content">';
+      
+      // 计划信息
+      if (task.plan) {
+        html += '<div style="margin-bottom: 16px;">';
+        if (typeof task.plan === 'string') {
+          html += '<div class="description-text">' + escapeHtml(task.plan) + '</div>';
+        } else {
+          // 计划对象
+          if (task.plan.summary) {
+            html += '<div style="margin-bottom: 12px;"><span style="color: var(--primary); font-weight: 600;">📋 执行概要</span><div class="description-text" style="margin-top: 8px;">' + escapeHtml(task.plan.summary) + '</div></div>';
+          }
+          if (task.plan.steps && task.plan.steps.length > 0) {
+            html += '<div style="margin-bottom: 12px;"><span style="color: var(--primary); font-weight: 600;">📝 执行步骤</span></div>';
+            html += '<div style="display: flex; flex-direction: column; gap: 8px;">';
+            task.plan.steps.forEach(function(step, i) {
+              html += '<div style="padding: 10px 12px; background: var(--bg-tertiary); border-radius: 6px; font-size: 13px;">';
+              html += '<span style="color: var(--text-secondary); margin-right: 8px;">' + (i + 1) + '.</span>';
+              html += '<span>' + escapeHtml(step) + '</span>';
+              html += '</div>';
+            });
+            html += '</div>';
+          }
+          if (task.plan.resources) {
+            html += '<div style="margin-bottom: 12px;"><span style="color: var(--primary); font-weight: 600;">🛠️ 所需资源</span><div class="description-text" style="margin-top: 8px;">' + escapeHtml(task.plan.resources) + '</div></div>';
+          }
+          if (task.plan.expected_duration) {
+            html += '<div style="margin-bottom: 12px;"><span style="color: var(--primary); font-weight: 600;">⏱️ 预估耗时</span><div class="description-text" style="margin-top: 8px;">' + escapeHtml(task.plan.expected_duration) + '</div></div>';
+          }
+          if (task.plan.dependencies) {
+            html += '<div style="margin-bottom: 12px;"><span style="color: var(--primary); font-weight: 600;">🔗 依赖关系</span><div class="description-text" style="margin-top: 8px;">' + escapeHtml(task.plan.dependencies) + '</div></div>';
+          }
+        }
+        html += '</div>';
+      } else {
+        html += '<div class="empty-state"><i class="ri-calendar-line"></i><p>暂无计划信息</p></div>';
+      }
+      
+      html += '</div></div></div>';
+      return html;
+    }
+    
+    // 反思应用 Tab
+    function buildReflectTab(task) {
+      let html = '<div class="tab-content" id="tab-reflect">';
+      html += '<div class="section">' +
+        '<div class="section-header">' +
+        '<h3 class="section-title"><i class="ri-brain-line"></i> 反思应用</h3>' +
+        '<span class="section-toggle">▼</span>' +
+        '</div>' +
+        '<div class="section-content">';
+      
+      // 反思信息
+      if (task.reflection) {
+        html += '<div style="margin-bottom: 16px;">';
+        if (typeof task.reflection === 'string') {
+          html += '<div class="description-text">' + escapeHtml(task.reflection) + '</div>';
+        } else {
+          // 反思对象
+          if (task.reflection.summary) {
+            html += '<div style="margin-bottom: 12px;"><span style="color: var(--primary); font-weight: 600;">💡 反思总结</span><div class="description-text" style="margin-top: 8px;">' + escapeHtml(task.reflection.summary) + '</div></div>';
+          }
+          if (task.reflection.learnings && task.reflection.learnings.length > 0) {
+            html += '<div style="margin-bottom: 12px;"><span style="color: var(--primary); font-weight: 600;">🌟 收获与经验</span></div>';
+            html += '<div style="display: flex; flex-direction: column; gap: 8px;">';
+            task.reflection.learnings.forEach(function(item) {
+              html += '<div style="padding: 10px 12px; background: var(--bg-tertiary); border-radius: 6px; font-size: 13px;">';
+              html += '<span>📌 ' + escapeHtml(item) + '</span>';
+              html += '</div>';
+            });
+            html += '</div>';
+          }
+          if (task.reflection.improvements && task.reflection.improvements.length > 0) {
+            html += '<div style="margin-bottom: 12px;"><span style="color: var(--warning); font-weight: 600;">🔧 改进建议</span></div>';
+            html += '<div style="display: flex; flex-direction: column; gap: 8px;">';
+            task.reflection.improvements.forEach(function(item) {
+              html += '<div style="padding: 10px 12px; background: rgba(245, 158, 11, 0.1); border-radius: 6px; border-left: 3px solid var(--warning); font-size: 13px;">';
+              html += '<span>📝 ' + escapeHtml(item) + '</span>';
+              html += '</div>';
+            });
+            html += '</div>';
+          }
+          if (task.reflection.actions && task.reflection.actions.length > 0) {
+            html += '<div style="margin-bottom: 12px;"><span style="color: var(--success); font-weight: 600;">✅ 应用实践</span></div>';
+            html += '<div style="display: flex; flex-direction: column; gap: 8px;">';
+            task.reflection.actions.forEach(function(item) {
+              html += '<div style="padding: 10px 12px; background: rgba(16, 185, 129, 0.1); border-radius: 6px; border-left: 3px solid var(--success); font-size: 13px;">';
+              html += '<span>🚀 ' + escapeHtml(item) + '</span>';
+              html += '</div>';
+            });
+            html += '</div>';
+          }
+          if (task.reflection.knowledge_base) {
+            html += '<div style="margin-bottom: 12px;"><span style="color: var(--primary); font-weight: 600;">📚 知识沉淀</span><div class="description-text" style="margin-top: 8px;">' + escapeHtml(task.reflection.knowledge_base) + '</div></div>';
+          }
+        }
+        html += '</div>';
+      } else {
+        html += '<div class="empty-state"><i class="ri-brain-line"></i><p>暂无反思信息</p></div>';
+      }
+      
+      html += '</div></div></div>';
+      return html;
+    }
+    
+    // 时间格式化
+    function formatTime(timestamp) {
+      if (!timestamp) return '-';
+      const d = new Date(timestamp);
+      return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    
+    // 验收 Tab (流程验收 + 质量验收)
+    function buildAcceptanceTab(task) {
+      const pv = task.process_validation || {};
+      const qa = task.quality_acceptance || {};
+      
+      let html = '<div class="tab-content" id="tab-acceptance">';
+      
+      // 流程验收卡片
+      html += '<div class="section">';
+      html += '<div class="section-header">';
+      html += '<h3 class="section-title"><i class="ri-check-line"></i> 流程验收</h3>';
+      html += '<span class="section-toggle">▼</span>';
+      html += '</div>';
+      html += '<div class="section-content">';
+      
+      if (pv && Object.keys(pv).length > 0) {
+        html += '<div style="display: grid; gap: 12px;">';
+        
+        // 模式
+        if (pv.mode) {
+          html += '<div style="padding: 10px 12px; background: var(--bg-tertiary); border-radius: 6px; font-size: 13px;">';
+          html += '<span style="color: var(--text-secondary); margin-right: 8px;">🔄 执行模式:</span>';
+          html += '<span style="color: var(--primary);">' + escapeHtml(pv.mode) + '</span>';
+          html += '</div>';
+        }
+        
+        // 完整度评分
+        if (pv.completeness_score !== undefined) {
+          html += '<div style="padding: 10px 12px; background: var(--bg-tertiary); border-radius: 6px; font-size: 13px;">';
+          html += '<span style="color: var(--text-secondary); margin-right: 8px;">📊 完整度评分:</span>';
+          html += '<span style="color: var(--success); font-weight: 600;">' + (pv.completeness_score || 0) + '/100</span>';
+          html += '</div>';
+        }
+        
+        // 是否通过
+        if (pv.passed !== undefined) {
+          const passed = pv.passed === 1 || pv.passed === true;
+          html += '<div style="padding: 10px 12px; background: ' + (passed ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)') + '; border-radius: 6px; border-left: 3px solid ' + (passed ? 'var(--success)' : 'var(--danger)') + ';">';
+          html += '<span style="color: var(--text-secondary); margin-right: 8px;">✅ 验收结论:</span>';
+          html += '<span style="color: ' + (passed ? 'var(--success)' : 'var(--danger)') + '; font-weight: 600;">' + (passed ? '✓ 通过' : '✗ 不通过') + '</span>';
+          html += '</div>';
+        }
+        
+        // 问题数量
+        if (pv.issues) {
+          const issues = typeof pv.issues === 'string' ? JSON.parse(pv.issues) : pv.issues;
+          html += '<div style="padding: 10px 12px; background: var(--bg-tertiary); border-radius: 6px; font-size: 13px;">';
+          html += '<span style="color: var(--text-secondary); margin-right: 8px;">⚠️ 发现问题:</span>';
+          html += '<span style="color: var(--warning); font-weight: 600;">' + (issues.length || 0) + ' 个</span>';
+          html += '</div>';
+        }
+        
+        html += '</div>';
+      } else {
+        html += '<div class="empty-state"><i class="ri-check-line"></i><p>暂无流程验收记录</p></div>';
+      }
+      
+      html += '</div></div>';
+      
+      // 质量验收卡片
+      html += '<div class="section" style="margin-top: 16px;">';
+      html += '<div class="section-header">';
+      html += '<h3 class="section-title"><i class="ri-flask-line"></i> 质量验收</h3>';
+      html += '<span class="section-toggle">▼</span>';
+      html += '</div>';
+      html += '<div class="section-content">';
+      
+      if (qa && Object.keys(qa).length > 0) {
+        html += '<div style="display: grid; gap: 12px;">';
+        
+        // 通过率
+        if (qa.pass_rate !== undefined) {
+          html += '<div style="padding: 10px 12px; background: var(--bg-tertiary); border-radius: 6px; font-size: 13px;">';
+          html += '<span style="color: var(--text-secondary); margin-right: 8px;">📊 通过率:</span>';
+          html += '<span style="color: var(--primary); font-weight: 600;">' + (qa.pass_rate || 0) + '%</span>';
+          html += '</div>';
+        }
+        
+        // 质量等级
+        if (qa.quality_grade) {
+          const gradeColor = getQualityGradeColor(qa.quality_grade);
+          html += '<div style="padding: 10px 12px; background: var(--bg-tertiary); border-radius: 6px; font-size: 13px;">';
+          html += '<span style="color: var(--text-secondary); margin-right: 8px;">⭐ 质量等级:</span>';
+          html += '<span style="color: ' + gradeColor + '; font-weight: 600;">' + getQualityGradeText(qa.quality_grade) + '</span>';
+          html += '</div>';
+        }
+        
+        // 是否通过
+        if (qa.passed !== undefined) {
+          const passed = qa.passed === 1 || qa.passed === true;
+          html += '<div style="padding: 10px 12px; background: ' + (passed ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)') + '; border-radius: 6px; border-left: 3px solid ' + (passed ? 'var(--success)' : 'var(--danger)') + ';">';
+          html += '<span style="color: var(--text-secondary); margin-right: 8px;">✅ 验收结论:</span>';
+          html += '<span style="color: ' + (passed ? 'var(--success)' : 'var(--danger)') + '; font-weight: 600;">' + (passed ? '✓ 通过' : '✗ 不通过') + '</span>';
+          html += '</div>';
+        }
+        
+        // 测试用例统计
+        if (qa.test_cases) {
+          const testCases = typeof qa.test_cases === 'string' ? JSON.parse(qa.test_cases) : qa.test_cases;
+          const passedCount = testCases.filter(tc => tc.status === 'passed').length;
+          const totalCount = testCases.length;
+          
+          html += '<div style="padding: 10px 12px; background: var(--bg-tertiary); border-radius: 6px; font-size: 13px;">';
+          html += '<span style="color: var(--text-secondary); margin-right: 8px;">🧪 测试用例:</span>';
+          html += '<span>' + passedCount + '/' + totalCount + ' 通过</span>';
+          html += '</div>';
+        }
+        
+        html += '</div>';
+      } else {
+        html += '<div class="empty-state"><i class="ri-flask-line"></i><p>暂无质量验收记录</p></div>';
+      }
+      
+      html += '</div></div>';
+      
+      html += '</div>';
+      return html;
+    }
+    
+    function getQualityGradeColor(grade) {
+      const colors = {
+        'excellent': 'var(--success)',
+        'good': '#10b981',
+        'fair': '#f59e0b',
+        'pass': '#f97316',
+        'fail': '#ef4444'
+      };
+      return colors[grade] || '#6b7280';
+    }
+    
+    function getQualityGradeText(grade) {
+      const texts = {
+        'excellent': '🌟 卓越',
+        'good': '⭐ 优秀',
+        'fair': '⭐⭐ 一般',
+        'pass': '⚠️ 通过',
+        'fail': '❌ 不通过'
+      };
+      return texts[grade] || grade;
+    }
+    
+    // P1任务：执行日志Tab（事件格式）
+    function buildExecutionLogTab(task) {
+      let html = '<div class="tab-content" id="tab-execution">';
+      
+      // 视图切换按钮
+      html += '<div class="execution-log-controls">';
+      html += '<button class="view-btn active" data-view="timeline"><i class="ri-time-line"></i> 时间线</button>';
+      html += '<button class="view-btn" data-view="table"><i class="ri-table-line"></i> 表格</button>';
+      html += '<button class="view-btn" data-view="raw"><i class="ri-code-line"></i> 原始日志</button>';
+      html += '</div>';
+      
+      // 执行日志内容
+      if (!task.execution_log || task.execution_log.length === 0) {
+        html += '<div class="empty-state"><i class="ri-flashlight-line"></i><p>暂无执行记录</p></div>';
+      } else {
+        // 时间线视图
+        html += '<div class="execution-view active" id="view-timeline">';
+        html += buildExecutionTimeline(task.execution_log);
+        html += '</div>';
+        
+        // 表格视图
+        html += '<div class="execution-view" id="view-table">';
+        html += buildExecutionTable(task.execution_log);
+        html += '</div>';
+        
+        // 原始日志视图
+        html += '<div class="execution-view" id="view-raw">';
+        html += '<pre class="raw-log">' + JSON.stringify(task.execution_log, null, 2) + '</pre>';
+        html += '</div>';
+      }
+      
+      html += '</div>';
+      return html;
+    }
+    
+    // 构建时间线视图
+    function buildExecutionTimeline(logs) {
+      let html = '<div class="execution-timeline">';
+      
+      logs.forEach(function(log, index) {
+        const actionClass = getActionClass(log.action);
+        const actionIcon = getActionIcon(log.action);
+        
+        html += '<div class="timeline-item ' + actionClass + '">';
+        html += '<div class="timeline-marker"><i class="' + actionIcon + '"></i></div>';
+        html += '<div class="timeline-content">';
+        html += '<div class="timeline-header">';
+        html += '<span class="timeline-action">' + getActionText(log.action) + '</span>';
+        html += '<span class="timeline-time">' + (log.time || formatTime(log.timestamp)) + '</span>';
+        html += '</div>';
+        
+        if (log.detail) {
+          html += '<div class="timeline-detail">' + escapeHtml(log.detail) + '</div>';
+        }
+        
+        // 显示变更字段（审计增强）
+        if (log.changes && log.changes.length > 0) {
+          html += '<div class="timeline-changes">';
+          log.changes.forEach(function(change) {
+            html += '<div class="change-item">';
+            html += '<span class="change-field">' + escapeHtml(change.field) + ':</span> ';
+            html += '<span class="change-before">' + escapeHtml(change.before || 'null') + '</span>';
+            html += ' → ';
+            html += '<span class="change-after">' + escapeHtml(change.after || 'null') + '</span>';
+            html += '</div>';
+          });
+          html += '</div>';
+        }
+        
+        if (log.agent) {
+          html += '<div class="timeline-meta"><span class="timeline-agent">🤖 ' + escapeHtml(log.agent) + '</span></div>';
+        }
+        
+        // 显示来源信息（审计增强）
+        if (log.source || log.sourceDetail) {
+          html += '<div class="timeline-meta">';
+          html += '<span class="timeline-source">📡 ' + escapeHtml(log.source || 'unknown');
+          if (log.sourceDetail) {
+            html += ' <code>' + escapeHtml(log.sourceDetail) + '</code>';
+          }
+          html += '</span></div>';
+        }
+        
+        // 额外信息
+        if (log.step_id) {
+          html += '<div class="timeline-meta"><span>步骤: ' + escapeHtml(log.step_id) + '</span></div>';
+        }
+        if (log.duration) {
+          html += '<div class="timeline-meta"><span>耗时: ' + escapeHtml(log.duration) + '</span></div>';
+        }
+        
+        html += '</div></div>';
+      });
+      
+      html += '</div>';
+      return html;
+    }
+    
+    // 构建表格视图
+    function buildExecutionTable(logs) {
+      let html = '<div class="table-container"><table class="execution-table">';
+      html += '<thead><tr>';
+      html += '<th>时间</th><th>事件类型</th><th>详情</th><th>执行者</th>';
+      html += '</tr></thead><tbody>';
+      
+      logs.forEach(function(log) {
+        const actionClass = getActionClass(log.action);
+        html += '<tr class="' + actionClass + '">';
+        html += '<td>' + (log.time || formatTime(log.timestamp)) + '</td>';
+        html += '<td><span class="action-badge">' + getActionText(log.action) + '</span></td>';
+        html += '<td>' + escapeHtml(log.detail || '-') + '</td>';
+        html += '<td>' + escapeHtml(log.agent || '-') + '</td>';
+        html += '</tr>';
+      });
+      
+      html += '</tbody></table></div>';
+      return html;
+    }
+    
+    // 获取动作对应的CSS类
+    function getActionClass(action) {
+      const classMap = {
+        'TASK_STARTED': 'action-start',
+        'TASK_WAITING_START': 'action-wait',
+        'TASK_ANALYZING': 'action-analyze',
+        'TASK_BREAKDOWN': 'action-breakdown',
+        'STEP_STARTED': 'action-step-start',
+        'STEP_RUNNING': 'action-step-run',
+        'STEP_COMPLETED': 'action-step-done',
+        'STEP_FAILED': 'action-step-fail',
+        'TASK_COMPLETED': 'action-done',
+        'TASK_FAILED': 'action-fail',
+        'TASK_ERROR': 'action-error'
+      };
+      return classMap[action] || 'action-info';
+    }
+    
+    // 获取动作对应的图标
+    function getActionIcon(action) {
+      const iconMap = {
+        'TASK_STARTED': 'ri-play-circle-line',
+        'TASK_WAITING_START': 'ri-time-line',
+        'TASK_ANALYZING': 'ri-search-eye-line',
+        'TASK_BREAKDOWN': 'ri-list-check-2',
+        'STEP_STARTED': 'ri-arrow-right-circle-line',
+        'STEP_RUNNING': 'ri-loader-4-line',
+        'STEP_COMPLETED': 'ri-check-circle-line',
+        'STEP_FAILED': 'ri-close-circle-line',
+        'TASK_COMPLETED': 'ri-checkbox-circle-line',
+        'TASK_FAILED': 'ri-error-warning-line',
+        'TASK_ERROR': 'ri-alert-line'
+      };
+      return iconMap[action] || 'ri-information-line';
+    }
+    
+    function renderIssuesHtml(task) {
+      if (!task.issues || (Array.isArray(task.issues) && task.issues.length === 0)) {
+        return '<div class="empty-state">暂无问题记录</div>';
+      }
+      
+      const issues = Array.isArray(task.issues) ? task.issues : [task.issues];
+      let html = '';
+      
+      issues.forEach(function(issue, i) {
+        const isResolved = issue.status === 'fixed' || issue.status === 'resolved';
+        const statusClass = isResolved ? 'resolved' : 'open';
+        const statusText = isResolved ? '已解决' : '待处理';
+        
+        // 分析状态
+        const isAnalyzing = issue.analysis_status === 'analyzing';
+        const isAnalyzed = issue.analysis_status === 'completed';
+        
+        html += '<div class="issue-item ' + statusClass + '" onclick="toggleIssue(this)">';
+        html += '<div class="issue-header">';
+        html += '<div class="issue-title">' + escapeHtml(issue.name || issue.title || ('问题 #' + (i + 1))) + '</div>';
+        
+        // 状态标签
+        html += '<div style="display: flex; gap: 8px;">';
+        html += '<span class="issue-status ' + statusClass + '">' + statusText + '</span>';
+        
+        // 分析状态标签
+        if (isAnalyzing) {
+          html += '<span style="background: rgba(59,130,246,0.15); color: var(--primary); padding: 2px 8px; border-radius: 4px; font-size: 11px;">🔄 分析中</span>';
+        } else if (isAnalyzed) {
+          html += '<span style="background: rgba(16,185,129,0.15); color: var(--success); padding: 2px 8px; border-radius: 4px; font-size: 11px;">✅ 已分析</span>';
+        }
+        
+        // 自动修复标签
+        if (issue.can_auto_fix && !isResolved) {
+          html += '<span style="background: rgba(139,92,246,0.15); color: #8b5cf6; padding: 2px 8px; border-radius: 4px; font-size: 11px;">🤖 可自动修复</span>';
+        }
+        
+        html += '</div></div>';
+        
+        // 问题基本信息
+        html += '<div class="issue-meta">';
+        html += '<span><i class="ri-user-line"></i> 发现人: ' + escapeHtml(issue.discoverer || '-') + '</span>';
+        html += '<span><i class="ri-calendar-line"></i> 创建时间: ' + formatDateTime(issue.created_at) + '</span>';
+        if (issue.resolver) {
+          html += '<span><i class="ri-user-check-line"></i> 解决人: ' + escapeHtml(issue.resolver) + '</span>';
+        }
+        if (issue.resolved_at) {
+          html += '<span><i class="ri-check-line"></i> 解决时间: ' + formatDateTime(issue.resolved_at) + '</span>';
+        }
+        if (issue.analyzer && issue.analyzed_at) {
+          html += '<span><i class="ri-robot-line"></i> 分析: ' + escapeHtml(issue.analyzer) + ' (' + formatDateTime(issue.analyzed_at) + ')</span>';
+        }
+        html += '</div>';
+        
+        // 详情区
+        html += '<div class="issue-detail">';
+        if (issue.description) {
+          html += '<div class="issue-detail-section"><div class="issue-detail-label">📋 问题描述</div><div class="issue-detail-content">' + escapeHtml(issue.description) + '</div></div>';
+        }
+        
+        // 缺失功能列表（深度分析结果）
+        if (issue.missing_features && issue.missing_features.length > 0) {
+          html += '<div class="issue-detail-section"><div class="issue-detail-label">🔍 缺失功能</div>';
+          html += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+          issue.missing_features.forEach(function(f) {
+            const priorityColor = f.priority === 'high' ? 'var(--danger)' : (f.priority === 'medium' ? 'var(--warning)' : 'var(--text-secondary)');
+            html += '<span style="padding: 4px 12px; background: rgba(239,68,68,0.1); border-left: 3px solid ' + priorityColor + '; border-radius: 4px; font-size: 13px;">' + escapeHtml(f.name) + '</span>';
+          });
+          html += '</div></div>';
+        }
+        
+        if (issue.root_cause) {
+          html += '<div class="issue-detail-section"><div class="issue-detail-label">🔍 根因分析</div><div class="issue-detail-content" style="background: rgba(59,130,246,0.05); padding: 8px; border-radius: 4px;">' + escapeHtml(issue.root_cause) + '</div></div>';
+        }
+        if (issue.solution) {
+          html += '<div class="issue-detail-section"><div class="issue-detail-label">💡 解决方案</div><div class="issue-detail-content" style="background: rgba(16,185,129,0.05); padding: 8px; border-radius: 4px;">' + escapeHtml(issue.solution) + '</div></div>';
+        }
+        
+        // 修复步骤（深度分析结果）
+        if (issue.fix_steps && issue.fix_steps.length > 0) {
+          html += '<div class="issue-detail-section"><div class="issue-detail-label">📝 修复步骤</div>';
+          html += '<ol style="margin: 8px 0; padding-left: 20px;">';
+          issue.fix_steps.forEach(function(step) {
+            html += '<li style="margin: 4px 0; color: var(--text-secondary);">' + escapeHtml(step) + '</li>';
+          });
+          html += '</ol></div>';
+        }
+        
+        // 预估工作量
+        if (issue.estimated_effort) {
+          html += '<div class="issue-detail-section"><div class="issue-detail-label">⏱️ 预估工作量</div><div class="issue-detail-content">' + escapeHtml(issue.estimated_effort) + '</div></div>';
+        }
+        
+        if (issue.fix_detail) {
+          html += '<div class="issue-detail-section"><div class="issue-detail-label">📝 修复详情</div><div class="issue-detail-content">' + escapeHtml(issue.fix_detail) + '</div></div>';
+        }
+        
+        // 分析类型标签
+        if (issue.analysis_type === 'deep') {
+          html += '<div style="margin-top: 8px; padding: 8px; background: rgba(139,92,246,0.1); border-radius: 4px; font-size: 12px; color: #8b5cf6;">';
+          html += '<i class="ri-robot-line"></i> 已进行深度分析（对比原始需求和实现情况）';
+          html += '</div>';
+        }
+        
+        // 操作按钮（未解决的问题）
+        if (!isResolved) {
+          html += '<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; gap: 8px;">';
+          if (!isAnalyzed && !isAnalyzing) {
+            html += '<button onclick="event.stopPropagation(); analyzeIssue(\'' + issue.id + '\')" style="padding: 6px 12px; border-radius: 4px; border: 1px solid var(--primary); background: transparent; color: var(--primary); cursor: pointer; font-size: 12px;">🔄 重新分析</button>';
+          }
+          if (issue.can_auto_fix) {
+            html += '<button onclick="event.stopPropagation(); autoFixIssue(\'' + issue.id + '\')" style="padding: 6px 12px; border-radius: 4px; border: 1px solid #8b5cf6; background: rgba(139,92,246,0.1); color: #8b5cf6; cursor: pointer; font-size: 12px;">🤖 自动修复</button>';
+          }
+          html += '<button onclick="event.stopPropagation(); markIssueFixed(\'' + issue.id + '\')" style="padding: 6px 12px; border-radius: 4px; border: 1px solid var(--success); background: transparent; color: var(--success); cursor: pointer; font-size: 12px;">✅ 标记已解决</button>';
+          html += '</div>';
+        }
+        
+        html += '</div>';
+        html += '</div>';
+      });
+      
+      return html;
+    }
+    
+    // 手动触发分析
+    async function analyzeIssue(issueId) {
+      try {
+        showToast('正在重新分析...', 'info');
+        const response = await fetch(API_BASE + '/api/issues/' + taskId + '/' + issueId + '/analyze', {
+          method: 'POST'
+        });
+        const result = await response.json();
+        if (result.success) {
+          showToast('分析完成', 'success');
+          // 刷新显示
+          setTimeout(async function() {
+            currentTask = await loadTask(taskId);
+            document.getElementById('issue-list').innerHTML = renderIssuesHtml(currentTask);
+          }, 1000);
+        } else {
+          showToast('分析失败: ' + result.error, 'error');
+        }
+      } catch (err) {
+        showToast('分析失败: ' + err.message, 'error');
+      }
+    }
+    
+    // 标记问题已解决
+    async function markIssueFixed(issueId) {
+      try {
+        const response = await fetch(API_BASE + '/api/issues/' + taskId + '/' + issueId, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'fixed', resolver: 'manual' })
+        });
+        const result = await response.json();
+        if (result.success) {
+          showToast('问题已标记为已解决', 'success');
+          currentTask = await loadTask(taskId);
+          document.getElementById('issue-list').innerHTML = renderIssuesHtml(currentTask);
+        }
+      } catch (err) {
+        showToast('操作失败: ' + err.message, 'error');
+      }
+    }
+    
+    // 触发自动修复
+    async function autoFixIssue(issueId) {
+      try {
+        showToast('正在创建修复任务...', 'info');
+        
+        const response = await fetch(API_BASE + '/api/issues/' + taskId + '/' + issueId + '/auto-fix', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showToast('修复任务已创建！' + (result.data.message || ''), 'success');
+          
+          // 显示修复任务信息
+          if (result.data.fix_task) {
+            const fixTask = result.data.fix_task;
+            const confirmMsg = `修复任务已创建:\n\n标题: ${fixTask.title}\n优先级: ${fixTask.priority}\n建议执行者: ${fixTask.suggested_agent}\n\n是否立即执行修复？`;
+            
+            if (confirm(confirmMsg)) {
+              // 调用 sessions_spawn 执行修复
+              showToast('正在启动修复 Agent...', 'info');
+              // 实际应该调用后端 API 触发 subagent
+              // 这里暂时只更新状态
+              setTimeout(async function() {
+                currentTask = await loadTask(taskId);
+                document.getElementById('issue-list').innerHTML = renderIssuesHtml(currentTask);
+                showToast('修复任务已分配给 Agent 执行', 'success');
+              }, 1000);
+            }
+          }
+        } else {
+          showToast('无法自动修复: ' + result.error, 'error');
+          if (result.suggestion) {
+            alert('建议解决方案:\n\n' + result.suggestion);
+          }
+        }
+      } catch (err) {
+        showToast('操作失败: ' + err.message, 'error');
+      }
+    }
+    
+    function renderOutputsPanel(task) {
+      const panel = document.getElementById('outputs-panel');
+      
+      if (!task.related_docs || task.related_docs.length === 0) {
+        panel.innerHTML = '<div class="empty-state">暂无输出</div>';
+        return;
+      }
+      
+      // 异步加载文档名称映射后渲染
+      fetch('/api/doc-mapping')
+        .then(r => r.json())
+        .then(mappingData => {
+          const docMapping = mappingData.data?.docs || {};
+          renderOutputList(task.related_docs, docMapping);
+        })
+        .catch(() => {
+          renderOutputList(task.related_docs, {});
+        });
+    }
+    
+    function renderOutputList(relatedDocs, docMapping) {
+      const panel = document.getElementById('outputs-panel');
+      
+      let html = '<div class="output-list">';
+      relatedDocs.forEach(function(doc) {
+        // 支持字符串或对象格式
+        let path = doc.path || doc;
+        let name = doc.title || doc.name || getFileName(path);
+        const docType = doc.type || getDocType(path);
+        const icon = getDocIcon(docType);
+        
+        // 尝试获取中文名称
+        const fileName = path.split('/').pop();
+        if (docMapping[fileName]) {
+          name = docMapping[fileName];
+        }
+        
+        // 自动补全路径前缀
+        if (path.startsWith('docs/') && !path.startsWith('task-system-v2/')) {
+          path = 'task-system-v2/' + path;
+        }
+        
+        // 使用文档详情页面
+        const docUrl = 'doc-detail.html?path=' + encodeURIComponent(path);
+        
+        html += '<a href="' + escapeHtml(docUrl) + '" class="output-item" target="_blank">';
+        html += '<span class="output-icon">' + icon + '</span>';
+        html += '<div class="output-info">';
+        html += '<span class="output-name">' + escapeHtml(name) + '</span>';
+        if (docType) {
+          html += '<span class="output-type">' + escapeHtml(docType) + '</span>';
+        }
+        html += '</div>';
+        html += '</a>';
+      });
+      html += '</div>';
+      
+      panel.innerHTML = html;
+    }
+    
+    function getDocType(path) {
+      if (!path) return 'doc';
+      const ext = path.split('.').pop().toLowerCase();
+      const typeMap = {
+        'md': 'doc',
+        'txt': 'doc',
+        'json': 'data',
+        'js': 'code',
+        'ts': 'code',
+        'html': 'code',
+        'css': 'code',
+        'py': 'code',
+        'pdf': 'pdf',
+        'png': 'image',
+        'jpg': 'image',
+        'jpeg': 'image',
+        'gif': 'image'
+      };
+      return typeMap[ext] || 'doc';
+    }
+    
+    function renderExecutionLogPanel(task) {
+      const panel = document.getElementById('execution-log-panel');
+      
+      if (!task.execution_log || task.execution_log.length === 0) {
+        panel.innerHTML = '<div class="empty-state">暂无执行记录</div>';
+        return;
+      }
+      
+      let html = '<div class="timeline">';
+      task.execution_log.forEach(function(log) {
+        html += '<div class="timeline-item">';
+        html += '<div class="timeline-time">' + (log.time || formatTime(log.timestamp)) + '</div>';
+        html += '<div class="timeline-action">' + getActionText(log.action) + '</div>';
+        if (log.detail) {
+          html += '<div class="timeline-detail">' + escapeHtml(log.detail) + '</div>';
+        }
+        if (log.agent) {
+          html += '<div class="timeline-detail">🤖 ' + escapeHtml(log.agent) + '</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+      
+      panel.innerHTML = html;
+    }
+    
+    function bindEvents() {
+      // Tab 切换
+      document.querySelectorAll('.tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+          document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+          tab.classList.add('active');
+          document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        });
+      });
+      
+      // 执行日志视图切换
+      document.querySelectorAll('.view-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.view-btn').forEach(function(b) { b.classList.remove('active'); });
+          document.querySelectorAll('.execution-view').forEach(function(v) { v.classList.remove('active'); });
+          btn.classList.add('active');
+          document.getElementById('view-' + btn.dataset.view).classList.add('active');
+        });
+      });
+      
+      // 区块折叠
+      document.querySelectorAll('.section-header').forEach(function(header) {
+        header.addEventListener('click', function() {
+          header.parentElement.classList.toggle('collapsed');
+        });
+      });
+      
+      // 处理 URL 参数中的 tab
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get('tab');
+      if (tabParam) {
+        const targetTab = document.querySelector('.tab[data-tab="' + tabParam + '"]');
+        if (targetTab) {
+          targetTab.click();
+        }
+      }
+    }
+    
+    function toggleIssue(item) {
+      item.classList.toggle('expanded');
+    }
+    
+    function openCreateIssueModal() {
+      document.getElementById('create-issue-modal').classList.add('active');
+    }
+    
+    function closeModal() {
+      document.getElementById('create-issue-modal').classList.remove('active');
+    }
+    
+    async function createIssue() {
+      const title = document.getElementById('issue-title').value.trim();
+      const description = document.getElementById('issue-description').value.trim();
+      const priority = document.getElementById('issue-priority').value;
+      
+      if (!title) {
+        alert('请输入问题名称');
+        return;
+      }
+      
+      // 调用新的问题创建 API（会自动触发分析）
+      try {
+        const response = await fetch(API_BASE + '/api/issues/' + taskId, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: title,
+            description: description,
+            priority: priority,
+            discoverer: 'user'
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // 更新当前任务数据
+          currentTask = await loadTask(taskId);
+          
+          // 重新渲染
+          document.getElementById('issue-list').innerHTML = renderIssuesHtml(currentTask);
+          closeModal();
+          
+          // 清空表单
+          document.getElementById('issue-title').value = '';
+          document.getElementById('issue-description').value = '';
+          
+          // 显示提示
+          showToast('问题已创建，正在自动分析中...', 'success');
+          
+          // 3秒后刷新以查看分析结果
+          setTimeout(async function() {
+            currentTask = await loadTask(taskId);
+            document.getElementById('issue-list').innerHTML = renderIssuesHtml(currentTask);
+          }, 3000);
+          
+        } else {
+          alert('创建失败: ' + (result.error || '未知错误'));
+        }
+        
+      } catch (error) {
+        alert('创建失败: ' + error.message);
+      }
+    }
+    
+    // 显示提示
+    function showToast(message, type) {
+      const toast = document.createElement('div');
+      toast.style.cssText = 'position:fixed;top:20px;right:20px;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeIn 0.3s;';
+      toast.style.background = type === 'success' ? 'rgba(16,185,129,0.9)' : 'rgba(59,130,246,0.9)';
+      toast.style.color = 'white';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(function() { toast.remove(); }, 3000);
+    }
+    
+    // 辅助函数
+    function formatTokenCount(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+      return num.toString();
+    }
+    
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    
+    function getActionText(action) {
+      const map = {
+        'CREATE': '📝 任务创建',
+        'ASSIGN': '🤖 分配 Agent',
+        'START': '▶️ 开始执行',
+        'STEP_START': '🔄 开始步骤',
+        'STEP_COMPLETE': '✅ 步骤完成',
+        'COMPLETE': '🎉 任务完成',
+        'PAUSE': '⏸️ 任务暂停',
+        'FAIL': '❌ 执行失败',
+        'RETRY': '🔄 重试执行'
+      };
+      return map[action] || action;
+    }
+    
+    function formatTime(time) {
+      if (!time) return '-';
+      const d = new Date(time);
+      return (d.getMonth() + 1).toString().padStart(2, '0') + '-' +
+             d.getDate().toString().padStart(2, '0') + ' ' +
+             d.getHours().toString().padStart(2, '0') + ':' +
+             d.getMinutes().toString().padStart(2, '0');
+    }
+    
+    function formatDateTime(time) {
+      if (!time) return '-';
+      const d = new Date(time);
+      return d.getFullYear() + '-' +
+             (d.getMonth() + 1).toString().padStart(2, '0') + '-' +
+             d.getDate().toString().padStart(2, '0') + ' ' +
+             d.getHours().toString().padStart(2, '0') + ':' +
+             d.getMinutes().toString().padStart(2, '0');
+    }
+    
+    function getDocIcon(type) {
+      const icons = { 'md': '📄', 'doc': '📘', 'docx': '📘', 'pdf': '📕', 'code': '💻' };
+      return icons[type] || '📄';
+    }
+    
+    function getFileName(path) {
+      if (!path) return '文档';
+      return path.split('/').pop();
+    }
+    
+    function showError(message) {
+      document.getElementById('content').innerHTML = 
+        '<div class="error-state">' +
+        '<p>❌ ' + escapeHtml(message) + '</p>' +
+        '<button class="btn btn-primary" onclick="loadTaskData()" style="margin-top: 12px;">重试</button>' +
+        '</div>';
+    }
+    
+    // 初始化
+    loadTaskData();
+    
+    // ========== 自动化监控相关函数 ==========
+    
+    async function pauseAutomation() {
+      if (!taskId || !currentTask) return;
+      
+      try {
+        const monitor = currentTask.automation_monitor || {};
+        monitor.flow_status = 'paused';
+        monitor.enabled = true;
+        currentTask.automation_monitor = monitor;
+        
+        await fetch(API_BASE + '/api/tasks/' + taskId, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(currentTask)
+        });
+        
+        loadTaskData();
+      } catch (error) {
+        console.error('暂停监控失败:', error);
+        alert('暂停监控失败: ' + error.message);
+      }
+    }
+    
+    async function resumeAutomation() {
+      if (!taskId || !currentTask) return;
+      
+      try {
+        const monitor = currentTask.automation_monitor || {};
+        monitor.flow_status = 'running';
+        monitor.enabled = true;
+        currentTask.automation_monitor = monitor;
+        
+        await fetch(API_BASE + '/api/tasks/' + taskId, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(currentTask)
+        });
+        
+        loadTaskData();
+      } catch (error) {
+        console.error('恢复监控失败:', error);
+        alert('恢复监控失败: ' + error.message);
+      }
+    }
+    
+    function refreshMonitorData() {
+      loadTaskData();
+    }
+    
+    // ========== 字段说明 Tips ==========
+    
+    const FIELD_TIPS = {
+      basic: {
+        title: '📋 基本信息',
+        fields: [
+          { name: 'id', meaning: '任务唯一标识', format: 'task-{timestamp}-{random}', source: '创建时系统生成' },
+          { name: 'title', meaning: '任务标题', format: '1-100字符', source: '用户输入或从消息提取' },
+          { name: 'description', meaning: '任务详细描述', format: '0-2000字符，支持Markdown', source: '用户输入或系统提取' },
+          { name: 'status', meaning: '任务状态', format: 'pending/assigned/doing/done/failed/cancelled', source: '系统自动流转' },
+          { name: 'priority', meaning: '优先级', format: 'P0(紧急)/P1(高)/P2(中)/P3(低)', source: '用户指定或系统判断' },
+          { name: 'quadrant', meaning: '四象限分类', format: '1-重要紧急, 2-重要不紧急, 3-不重要紧急, 4-不重要不紧急', source: '系统自动计算' },
+          { name: 'assigned_agent', meaning: '分配的执行 Agent', format: 'main/coder/deep/fast/chat/office/test', source: 'auto-task-assigner 分配' },
+          { name: 'total_steps', meaning: '总步骤数', format: '正整数 ≥1', source: 'Agent 分析拆解时填充' },
+          { name: 'completed_steps', meaning: '已完成步骤数', format: '正整数 ≤ total_steps', source: '执行过程中实时更新' },
+          { name: 'deadline', meaning: '截止时间', format: 'ISO 8601 格式', source: '用户指定' },
+        ]
+      },
+      time: {
+        title: '⏰ 时间信息',
+        fields: [
+          { name: 'created_at', meaning: '创建时间', format: 'ISO 8601 格式', source: '创建时系统自动填充' },
+          { name: 'started_at', meaning: '开始执行时间', format: 'ISO 8601 格式', source: 'status 变为 doing 时填充' },
+          { name: 'completed_at', meaning: '完成时间', format: 'ISO 8601 格式', source: 'status 变为 done 时填充' },
+          { name: 'duration_human', meaning: '人工可读耗时', format: '"2小时30分钟"', source: '系统自动计算' },
+          { name: 'duration_minutes', meaning: '分钟耗时', format: '正整数', source: '系统自动计算' },
+        ]
+      },
+      analysis: {
+        title: '🔍 分析信息',
+        fields: [
+          { name: 'analysis', meaning: '初步分析结果', format: '字符串或JSON', source: 'Agent 分析阶段填充' },
+          { name: 'analysis_details', meaning: '详细分析内容', format: 'JSON: context, requirements, constraints, risks', source: 'Agent 分析阶段填充' },
+          { name: 'breakdown', meaning: '任务拆解步骤', format: 'JSON 数组', source: 'Agent 拆解阶段填充' },
+          { name: 'conclusion', meaning: '分析结论', format: '字符串 0-500字符', source: 'Agent 分析完成后填写' },
+        ]
+      },
+      execution: {
+        title: '⚙️ 执行信息',
+        fields: [
+          { name: 'execution_log', meaning: '执行日志（任务如何完成）', format: 'JSON 数组: timestamp, action, detail, agent', source: '执行过程中追加' },
+          { name: 'tool_calls', meaning: '工具调用记录', format: 'JSON 数组: tool, agent, duration_ms, result', source: 'Gateway 自动记录' },
+          { name: 'tool_stats', meaning: '工具统计', format: 'JSON: total_calls, success_rate', source: '从 tool_calls 计算' },
+          { name: 'input_tokens', meaning: '输入 Token 消耗', format: '正整数', source: 'Gateway 记录' },
+          { name: 'output_tokens', meaning: '输出 Token 消耗', format: '正整数', source: 'Gateway 记录' },
+          { name: 'total_tokens', meaning: '总 Token 消耗', format: '正整数', source: '系统自动计算' },
+        ]
+      },
+      monitor: {
+        title: '📡 监控信息',
+        fields: [
+          { name: 'automation_monitor', meaning: '自动化监控数据（流程是否正确）', format: 'JSON: flow_status, logs, alerts', source: 'assigner/listener/connector 记录' },
+          { name: 'audit_log', meaning: '审计日志（追责回溯）', format: 'JSON 数组: agent, action, before, after', source: '关键操作时系统记录' },
+          { name: 'collaboration', meaning: 'Agent 协作记录', format: 'JSON: participants, records', source: 'Federation 通信记录' },
+          { name: 'subagent_session', meaning: 'Subagent 会话 ID', format: 'agent:{agentId}:subagent:{uuid}', source: 'agent-connector 填充' },
+          { name: 'subagent_status', meaning: 'Subagent 状态', format: 'pending/running/completed/failed', source: 'agent-connector 监控更新' },
+        ]
+      },
+      plan: {
+        title: '📅 计划与反思',
+        fields: [
+          { name: 'plan', meaning: '执行计划', format: 'JSON: summary, steps, resources, dependencies', source: 'Agent 制定计划时填充' },
+          { name: 'reflection', meaning: '反思总结', format: 'JSON: summary, learnings, improvements', source: '任务完成后反思机制填充' },
+        ]
+      },
+      acceptance: {
+        title: '✅ 验收信息',
+        fields: [
+          { name: 'test_acceptance', meaning: '测试验收', format: 'JSON: test_cases, passed, coverage', source: 'Agent 测试阶段填充' },
+          { name: 'process_validation', meaning: '流程验收', format: 'JSON: mode, steps_completed, status', source: '任务验收时填充' },
+          { name: 'quality_acceptance', meaning: '质量验收', format: 'JSON: code_quality, test_coverage, performance', source: '任务验收时填充' },
+        ]
+      },
+      relation: {
+        title: '🔗 关联信息',
+        fields: [
+          { name: 'project_id', meaning: '所属项目', format: '项目 ID', source: '用户关联或系统判断' },
+          { name: 'pretask_id', meaning: '前置任务', format: '任务 ID', source: '用户或系统关联' },
+          { name: 'nexttask_id', meaning: '后续任务', format: '任务 ID', source: '用户或系统关联' },
+          { name: 'issues', meaning: '关联问题', format: '问题 ID 数组', source: '关联时填充' },
+          { name: 'related_docs', meaning: '关联文档', format: '文档路径或 URL 数组', source: '关联时填充' },
+        ]
+      }
+    };
+    
+    function showFieldTips() {
+      let html = '<div class="tips-body">';
+      
+      for (const [key, section] of Object.entries(FIELD_TIPS)) {
+        html += '<div class="field-section">';
+        html += '<div class="field-section-title">' + section.title + '</div>';
+        html += '<table class="field-table">';
+        html += '<tr><th>字段名</th><th>业务意义</th><th>值规范</th><th>填充来源</th></tr>';
+        
+        section.fields.forEach(field => {
+          html += '<tr>';
+          html += '<td class="field-name">' + field.name + '</td>';
+          html += '<td class="field-meaning">' + field.meaning + '</td>';
+          html += '<td class="field-format">' + field.format + '</td>';
+          html += '<td class="field-source">' + field.source + '</td>';
+          html += '</tr>';
+        });
+        
+        html += '</table></div>';
+      }
+      
+      html += '</div>';
+      
+      document.getElementById('tips-body-content').innerHTML = html;
+      document.getElementById('field-tips-modal').classList.add('active');
+    }
+    
+    function closeFieldTips() {
+      document.getElementById('field-tips-modal').classList.remove('active');
+    }
+  </script>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'tasks' });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学习 - Morning 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-content { padding: 24px; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--text-primary); }
+    
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-secondary); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid var(--border); }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+    
+    .section { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .section-title { font-size: 16px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+    .section-title i { color: var(--primary); }
+    
+    .category-filter { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn { padding: 6px 14px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-secondary); cursor: pointer; transition: all 0.2s; }
+    .filter-btn:hover, .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    
+    /* 卡片样式 */
+    .paths-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; }
+    
+    .path-card { 
+      background: var(--bg-tertiary); 
+      border-radius: 16px; 
+      overflow: hidden; 
+      transition: all 0.3s; 
+      border: 1px solid transparent; 
+      padding: 16px;
+    }
+    .path-card:hover { 
+      border-color: var(--primary); 
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15); 
+    }
+    
+    /* 头部：图标 + 标题同行 */
+    .path-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+    
+    .card-icon { 
+      width: 40px; 
+      height: 40px; 
+      border-radius: 10px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 18px; 
+      flex-shrink: 0;
+    }
+    .card-icon.frontend { background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+    .card-icon.backend { background: linear-gradient(135deg, #10b981, #059669); }
+    .card-icon.ai { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+    .card-icon.ops { background: linear-gradient(135deg, #6366f1, #3b82f6); }
+    .card-icon.multimedia { background: linear-gradient(135deg, #ec4899, #f43f5e); }
+    .card-icon.dev { background: linear-gradient(135deg, #14b8a6, #10b981); }
+    .card-icon.domestic { background: linear-gradient(135deg, #f97316, #eab308); }
+    .card-icon.creative { background: linear-gradient(135deg, #a855f7, #6366f1); }
+    
+    .header-info { flex: 1; min-width: 0; }
+    .path-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .path-name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .path-category { padding: 2px 8px; border-radius: 10px; font-size: 10px; background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .path-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .path-meta { display: flex; gap: 12px; font-size: 11px; color: var(--text-tertiary); }
+    .path-meta span { display: flex; align-items: center; gap: 4px; }
+    
+    /* 进度条 */
+    .progress-section { margin-bottom: 12px; }
+    .progress-bar { height: 4px; background: var(--bg-secondary); border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
+    .progress-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+    .progress-fill.high { background: linear-gradient(90deg, #10b981, #34d399); }
+    .progress-fill.medium { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .progress-fill.low { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .progress-text { font-size: 11px; color: var(--text-secondary); }
+    .progress-text span { color: var(--primary); font-weight: 600; }
+    
+    /* 里程碑区域 - 左对齐无缩进 */
+    .milestones-section { 
+      background: var(--bg-secondary); 
+      border-radius: 8px; 
+      padding: 10px 12px; 
+      margin-bottom: 10px; 
+    }
+    .milestone-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+    .milestone-item:not(:last-child) { border-bottom: 1px solid var(--bg-tertiary); }
+    
+    /* 序号 */
+    .milestone-index { 
+      width: 24px; 
+      height: 20px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 10px; 
+      color: var(--text-tertiary); 
+      flex-shrink: 0;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+    }
+    
+    .milestone-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .milestone-dot.completed { background: var(--success); }
+    .milestone-dot.current { background: var(--primary); }
+    .milestone-dot.pending { background: var(--border); }
+    .milestone-content { flex: 1; min-width: 0; }
+    .milestone-title { font-size: 11px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .milestone-meta { font-size: 10px; color: var(--text-tertiary); }
+    .milestone-status { padding: 2px 6px; border-radius: 8px; font-size: 9px; flex-shrink: 0; }
+    .milestone-status.completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .milestone-status.current { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .milestone-status.pending { background: var(--bg-tertiary); color: var(--text-tertiary); }
+    
+    /* 更多里程碑提示 */
+    .more-milestones { 
+      font-size: 10px; 
+      color: var(--text-tertiary); 
+      text-align: center; 
+      padding: 6px 0; 
+      border-top: 1px dashed var(--border);
+      margin-top: 6px;
+    }
+    
+    /* 资源区域 - 左对齐无缩进 */
+    .resources-section { }
+    .resources-title { font-size: 10px; color: var(--text-tertiary); margin-bottom: 6px; }
+    .resource-links { display: flex; flex-wrap: wrap; gap: 6px; }
+    .resource-link { 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 4px; 
+      padding: 4px 10px; 
+      background: var(--bg-secondary); 
+      border-radius: 12px; 
+      font-size: 10px; 
+      color: var(--text-secondary); 
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .resource-link:hover { background: var(--primary); color: white; }
+    .resource-link i { font-size: 11px; }
+    
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    
+    /* 双进度条样式 */
+    .dual-progress { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .progress-item { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+    .progress-label { width: 50px; color: var(--text-secondary); flex-shrink: 0; }
+    .mini-progress-bar { 
+      flex: 1; height: 4px; background: var(--bg-secondary); 
+      border-radius: 2px; overflow: hidden; 
+    }
+    .mini-progress-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+    .mini-progress-fill.learning { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .mini-progress-fill.practice { background: linear-gradient(90deg, #10b981, #34d399); }
+    .progress-value { width: 32px; text-align: right; color: var(--text-secondary); }
+    
+    .milestone-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 60px; }
+    .total-score { 
+      font-size: 14px; font-weight: 600; 
+      color: var(--primary); 
+    }
+    
+    .milestone-item { cursor: pointer; }
+    .milestone-item:hover { background: var(--bg-secondary); border-radius: 8px; }
+  </style>
+  <link rel="stylesheet" href="css/page-tips.css">
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div class="header-left"><div class="breadcrumb"><span>能力积累</span> / <span>学习</span></div></div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadData()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      <div class="content">
+        <div class="page-content">
+          <div class="page-header">
+            <h1 class="page-title"><i class="ri-book-mark-line"></i> 学习</h1>
+            <div id="tipsContainer"></div>
+          </div>
+          
+          <!-- 统计概览 -->
+          <div class="stats-row" id="statsRow">
+            <div class="stat-card">
+              <div class="stat-value" id="totalPaths">-</div>
+              <div class="stat-label">学习路径</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="completedMilestones">-</div>
+              <div class="stat-label">已完成里程碑</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="inProgressMilestones">-</div>
+              <div class="stat-label">进行中</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="totalHours">-</div>
+              <div class="stat-label">预计总时长(h)</div>
+            </div>
+          </div>
+          
+          <!-- 学习路径 -->
+          <div class="section">
+            <div class="section-header">
+              <div class="section-title"><i class="ri-route-line"></i> 学习路径</div>
+              <div class="category-filter">
+                <button class="filter-btn active" onclick="filterPaths('all')">全部</button>
+                <button class="filter-btn" onclick="filterPaths('前端')">前端</button>
+                <button class="filter-btn" onclick="filterPaths('后端')">后端</button>
+                <button class="filter-btn" onclick="filterPaths('AI')">AI</button>
+                <button class="filter-btn" onclick="filterPaths('运维')">运维</button>
+                <button class="filter-btn" onclick="filterPaths('国产化')">国产化</button>
+                <button class="filter-btn" onclick="filterPaths('创作')">创作</button>
+              </div>
+            </div>
+            
+            <div class="paths-grid" id="pathsGrid">
+              <div class="empty-state">
+                <i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i>
+                <p>加载中...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    const API_BASE = window.location.origin;
+    let allPaths = [];
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      Sidebar.init({ activePage: 'learning-path' });
+      loadData();
+    });
+    
+    async function loadData() {
+      try {
+        const res = await fetch(`${API_BASE}/api/learning-paths/list`);
+        const data = await res.json();
+        
+        if (data.success) {
+          allPaths = data.data;
+          renderStats(data.stats);
+          renderPaths(allPaths);
+        }
+      } catch (error) {
+        document.getElementById('pathsGrid').innerHTML = `
+          <div class="empty-state">
+            <i class="ri-error-warning-line"></i>
+            <p>加载失败: ${error.message}</p>
+          </div>
+        `;
+      }
+    }
+    
+    function renderStats(stats) {
+      document.getElementById('totalPaths').textContent = stats.totalPaths || 0;
+      document.getElementById('completedMilestones').textContent = stats.completedMilestones || 0;
+      document.getElementById('inProgressMilestones').textContent = stats.inProgressMilestones || 0;
+      document.getElementById('totalHours').textContent = stats.totalHours || 0;
+    }
+    
+    function renderPaths(paths) {
+      const grid = document.getElementById('pathsGrid');
+      
+      if (!paths.length) {
+        grid.innerHTML = '<div class="empty-state"><i class="ri-folder-open-line"></i><p>暂无学习路径</p></div>';
+        return;
+      }
+      
+      grid.innerHTML = paths.map(path => {
+        const iconClass = getCategoryIconClass(path.category);
+        const iconEmoji = getCategoryEmoji(path.category);
+        const progressClass = path.progress >= 60 ? 'high' : path.progress >= 30 ? 'medium' : 'low';
+        const resources = path.resources || [];
+        const totalMilestones = path.milestones.length;
+        const displayMilestones = path.milestones.slice(0, 5);
+        const hasMore = totalMilestones > 5;
+        
+        return `
+          <div class="path-card" onclick="goToPath('${path.id}')">
+            <!-- 头部：图标 + 标题同行 -->
+            <div class="path-header">
+              <div class="card-icon ${iconClass}">${iconEmoji}</div>
+              <div class="header-info">
+                <div class="path-title-row">
+                  <div class="path-name">${path.name}</div>
+                  <span class="path-category">${path.category}</span>
+                </div>
+                <div class="path-desc">${path.description}</div>
+                <div class="path-meta">
+                  <span><i class="ri-time-line"></i> ${path.estimatedHours}h</span>
+                  <span><i class="ri-bar-chart-line"></i> ${path.difficulty}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 进度条 -->
+            <div class="progress-section">
+              <div class="progress-bar">
+                <div class="progress-fill ${progressClass}" style="width: ${path.progress}%"></div>
+              </div>
+              <div class="progress-text">进度: <span>${path.progress}%</span></div>
+            </div>
+            
+            <!-- 里程碑列表 - 双进度显示 -->
+            <div class="milestones-section">
+              ${displayMilestones.map((ms, idx) => {
+                // 计算双进度
+                const learningProgress = ms.learning?.progress || (ms.status === 'completed' ? 100 : ms.status === 'current' ? 50 : 0);
+                const practiceProgress = ms.practice?.progress || 0;
+                const totalProgress = Math.round(learningProgress * 0.4 + practiceProgress * 0.6);
+                
+                return `
+                <div class="milestone-item" onclick="event.stopPropagation(); toggleMilestoneDetail('${path.id}', ${idx})">
+                  <div class="milestone-index">${idx + 1}/${totalMilestones}</div>
+                  <div class="milestone-dot ${ms.status}"></div>
+                  <div class="milestone-content">
+                    <div class="milestone-title">${ms.title}</div>
+                    <div class="milestone-meta">${ms.hours}h · ${ms.date}</div>
+                    <!-- 双进度条 -->
+                    <div class="dual-progress">
+                      <div class="progress-item">
+                        <span class="progress-label">📚 学习</span>
+                        <div class="mini-progress-bar">
+                          <div class="mini-progress-fill learning" style="width: ${learningProgress}%"></div>
+                        </div>
+                        <span class="progress-value">${learningProgress}%</span>
+                      </div>
+                      <div class="progress-item">
+                        <span class="progress-label">🔧 实践</span>
+                        <div class="mini-progress-bar">
+                          <div class="mini-progress-fill practice" style="width: ${practiceProgress}%"></div>
+                        </div>
+                        <span class="progress-value">${practiceProgress}%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="milestone-right">
+                    <div class="total-score">${totalProgress}%</div>
+                    <span class="milestone-status ${ms.status}">${getStatusLabel(ms.status)}</span>
+                  </div>
+                </div>
+                `;
+              }).join('')}
+              ${hasMore ? `<div class="more-milestones">还有 ${totalMilestones - 5} 个里程碑，点击查看详情</div>` : ''}
+            </div>
+            
+            <!-- 学习资源 - 左对齐无缩进 -->
+            ${resources.length > 0 ? `
+            <div class="resources-section">
+              <div class="resources-title">学习资源</div>
+              <div class="resource-links">
+                ${resources.slice(0, 4).map(r => `
+                  <a href="${r.url}" target="_blank" class="resource-link" onclick="event.stopPropagation()">
+                    <i class="ri-${getResourceIcon(r.type)}"></i>
+                    ${r.title}
+                  </a>
+                `).join('')}
+                ${resources.length > 4 ? `<span class="resource-link" style="cursor: default;">+${resources.length - 4}</span>` : ''}
+              </div>
+            </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function getCategoryIconClass(category) {
+      const map = {
+        '前端': 'frontend',
+        '后端': 'backend',
+        'AI': 'ai',
+        '运维': 'ops',
+        '多媒体': 'multimedia',
+        '开发': 'dev',
+        '国产化': 'domestic',
+        '创作': 'creative'
+      };
+      return map[category] || 'frontend';
+    }
+    
+    function getCategoryEmoji(category) {
+      const map = {
+        '前端': '💻',
+        '后端': '⚙️',
+        'AI': '🤖',
+        '运维': '🔧',
+        '多媒体': '🎬',
+        '开发': '📦',
+        '国产化': '🇨🇳',
+        '创作': '✍️'
+      };
+      return map[category] || '📚';
+    }
+    
+    function getResourceIcon(type) {
+      const map = {
+        '文档': 'file-text-line',
+        '教程': 'book-read-line',
+        'GitHub': 'github-fill',
+        '技能': 'tools-line'
+      };
+      return map[type] || 'link';
+    }
+    
+    function getStatusLabel(status) {
+      const labels = { completed: '已完成', current: '进行中', pending: '待开始' };
+      return labels[status] || status;
+    }
+    
+    function filterPaths(category) {
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      if (category === 'all') {
+        renderPaths(allPaths);
+      } else {
+        renderPaths(allPaths.filter(p => p.category === category));
+      }
+    }
+    
+    function goToPath(id) {
+      window.location.href = `learning-path.html?id=${id}`;
+    }
+  </script>
+  <script src="js/page-tips.js"></script>
+  <script>
+    // 初始化 Tips
+    document.addEventListener('DOMContentLoaded', () => {
+      const tipsContainer = document.getElementById('tipsContainer');
+      if (tipsContainer && PageTips) {
+        PageTips.init('learning-mechanism', tipsContainer);
+      }
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

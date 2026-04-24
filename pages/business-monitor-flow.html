@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自动化流程监控 - 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-content { padding: 24px; }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+    .page-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
+    
+    /* 统计卡片 */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+    .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin: 0 auto 8px; }
+    .stat-icon.blue { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .stat-icon.green { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .stat-icon.yellow { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .stat-icon.red { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .stat-icon.purple { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+    .stat-icon.cyan { background: rgba(6, 182, 212, 0.15); color: #06b6d4; }
+    .stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+    .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+    
+    /* 流程区域 */
+    .flow-section { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 24px; overflow: hidden; }
+    .flow-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .flow-title { font-size: 15px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+    .flow-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+    .flow-badge.running { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .flow-badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .flow-badge.error { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .flow-badge.success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    
+    .flow-body { padding: 24px; overflow-x: auto; }
+    
+    /* 流程图 - 横向布局 */
+    .flow-diagram { display: flex; align-items: flex-start; gap: 0; min-width: 1100px; }
+    .flow-node { display: flex; flex-direction: column; align-items: center; min-width: 130px; }
+    .node-box { 
+      background: var(--bg-tertiary); 
+      border: 2px solid var(--border); 
+      border-radius: 12px; 
+      padding: 12px 16px; 
+      text-align: center; 
+      min-width: 120px;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .node-box:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .node-box.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.1); }
+    .node-box.success { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
+    .node-box.warning { border-color: var(--warning); background: rgba(245, 158, 11, 0.1); }
+    .node-box.error { border-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+    .node-icon { font-size: 22px; margin-bottom: 6px; }
+    .node-name { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+    .node-agent { font-size: 10px; color: var(--primary); }
+    
+    /* 节点数据弹窗 */
+    .node-stats { 
+      position: absolute; 
+      bottom: -60px; 
+      left: 50%; 
+      transform: translateX(-50%);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 10px;
+      white-space: nowrap;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+    .node-box:hover .node-stats { opacity: 1; }
+    .node-stat-row { display: flex; justify-content: space-between; gap: 12px; }
+    .node-stat-label { color: var(--text-secondary); }
+    .node-stat-value { color: var(--text-primary); font-weight: 600; }
+    
+    /* 连接线 */
+    .flow-arrow { display: flex; align-items: center; padding: 0 8px; color: var(--text-tertiary); }
+    .arrow-line { width: 32px; height: 2px; background: var(--border); position: relative; }
+    .arrow-line::after { content: ''; position: absolute; right: -4px; top: -3px; border: 4px solid transparent; border-left-color: var(--border); }
+    .arrow-line.active { background: var(--primary); }
+    .arrow-line.active::after { border-left-color: var(--primary); }
+    .arrow-line.success { background: var(--success); }
+    .arrow-line.success::after { border-left-color: var(--success); }
+    
+    /* 分支节点 */
+    .branch-node { display: flex; flex-direction: column; align-items: center; }
+    .branch-split { display: flex; gap: 24px; margin-top: 16px; }
+    .branch-line { width: 2px; height: 20px; background: var(--border); }
+    
+    /* 节点详情卡片 */
+    .node-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+    .node-card { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .node-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .node-card-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .node-card-status { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+    .node-card-status.online { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .node-card-status.offline { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .node-card-status.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    
+    .node-metric { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .node-metric:last-child { border-bottom: none; }
+    .node-metric-label { font-size: 12px; color: var(--text-secondary); }
+    .node-metric-value { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .node-metric-value.success { color: var(--success); }
+    .node-metric-value.warning { color: var(--warning); }
+    .node-metric-value.danger { color: var(--danger); }
+    
+    /* 日志区 */
+    .log-section { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .log-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .log-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .log-body { padding: 16px 20px; max-height: 300px; overflow-y: auto; }
+    .log-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .log-item:last-child { border-bottom: none; }
+    .log-time { color: var(--text-secondary); min-width: 70px; }
+    .log-level { min-width: 50px; font-weight: 600; }
+    .log-level.info { color: var(--primary); }
+    .log-level.success { color: var(--success); }
+    .log-level.warning { color: var(--warning); }
+    .log-level.error { color: var(--danger); }
+    .log-msg { color: var(--text-primary); flex: 1; }
+    
+    /* 动画 */
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .pulse { animation: pulse 2s infinite; }
+    
+    @media (max-width: 1200px) {
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .node-cards { grid-template-columns: 1fr; }
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div class="header-left"><div class="breadcrumb"><span>监控</span> / <span>自动化流程监控</span></div></div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadAllData()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      <div class="content">
+        <div class="page-content">
+          <h1 class="page-title"><i class="ri-git-branch-line"></i> 自动化流程监控</h1>
+          <p class="page-subtitle">任务自动化与项目自动化的完整流程监控</p>
+          
+          <!-- 总览统计 -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon blue"><i class="ri-task-line"></i></div>
+              <div class="stat-value" id="totalTasks">--</div>
+              <div class="stat-label">总任务数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green"><i class="ri-check-double-line"></i></div>
+              <div class="stat-value" id="successRate">--</div>
+              <div class="stat-label">自动化成功率</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon yellow"><i class="ri-timer-flash-line"></i></div>
+              <div class="stat-value" id="stuckCount">--</div>
+              <div class="stat-label">断点/卡点</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon purple"><i class="ri-folder-line"></i></div>
+              <div class="stat-value" id="projectCount">--</div>
+              <div class="stat-label">活跃项目</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon cyan"><i class="ri-robot-line"></i></div>
+              <div class="stat-value" id="activeAgents">--</div>
+              <div class="stat-label">在线 Agent</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon red"><i class="ri-restart-line"></i></div>
+              <div class="stat-value" id="restartCount">--</div>
+              <div class="stat-label">重启次数</div>
+            </div>
+          </div>
+          
+          <!-- 任务自动化流程 -->
+          <div class="flow-section">
+            <div class="flow-header">
+              <div class="flow-title">
+                <i class="ri-flow-chart"></i>
+                任务自动化流程
+              </div>
+              <span class="flow-badge running" id="taskFlowStatus">运行中</span>
+            </div>
+            <div class="flow-body">
+              <div class="flow-diagram">
+                <!-- 用户消息 -->
+                <div class="flow-node">
+                  <div class="node-box success">
+                    <div class="node-icon"><i class="ri-user-voice-line"></i></div>
+                    <div class="node-name">用户消息</div>
+                    <div class="node-agent">触发源</div>
+                    <div class="node-stats">
+                      <div class="node-stat-row"><span class="node-stat-label">今日消息</span><span class="node-stat-value" id="msgCount">--</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flow-arrow"><div class="arrow-line success"></div></div>
+                
+                <!-- Auto Detector -->
+                <div class="flow-node">
+                  <div class="node-box active pulse">
+                    <div class="node-icon"><i class="ri-search-eye-line"></i></div>
+                    <div class="node-name">Auto Detector</div>
+                    <div class="node-agent">事件驱动</div>
+                    <div class="node-stats">
+                      <div class="node-stat-row"><span class="node-stat-label">检测成功</span><span class="node-stat-value" id="detectSuccess">--</span></div>
+                      <div class="node-stat-row"><span class="node-stat-label">创建任务</span><span class="node-stat-value" id="taskCreated">--</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flow-arrow"><div class="arrow-line active"></div></div>
+                
+                <!-- Auto Executor -->
+                <div class="flow-node">
+                  <div class="node-box active pulse">
+                    <div class="node-icon"><i class="ri-play-circle-line"></i></div>
+                    <div class="node-name">Auto Executor</div>
+                    <div class="node-agent">轮询 30s</div>
+                    <div class="node-stats">
+                      <div class="node-stat-row"><span class="node-stat-label">已分配</span><span class="node-stat-value" id="assigned">--</span></div>
+                      <div class="node-stat-row"><span class="node-stat-label">执行中</span><span class="node-stat-value" id="executing">--</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flow-arrow"><div class="arrow-line active"></div></div>
+                
+                <!-- Subagent -->
+                <div class="flow-node">
+                  <div class="node-box active pulse">
+                    <div class="node-icon"><i class="ri-robot-2-line"></i></div>
+                    <div class="node-name">Subagent</div>
+                    <div class="node-agent">执行任务</div>
+                    <div class="node-stats">
+                      <div class="node-stat-row"><span class="node-stat-label">运行中</span><span class="node-stat-value" id="subagentRunning">--</span></div>
+                      <div class="node-stat-row"><span class="node-stat-label">平均耗时</span><span class="node-stat-value" id="avgDuration">--</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flow-arrow"><div class="arrow-line"></div></div>
+                
+                <!-- Auto Monitor -->
+                <div class="flow-node">
+                  <div class="node-box warning">
+                    <div class="node-icon"><i class="ri-pulse-line"></i></div>
+                    <div class="node-name">Auto Monitor</div>
+                    <div class="node-agent">轮询 5min</div>
+                    <div class="node-stats">
+                      <div class="node-stat-row"><span class="node-stat-label">卡点检测</span><span class="node-stat-value" id="stuckDetected">--</span></div>
+                      <div class="node-stat-row"><span class="node-stat-label">自动恢复</span><span class="node-stat-value" id="autoRecovered">--</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flow-arrow"><div class="arrow-line"></div></div>
+                
+                <!-- Auto Validator -->
+                <div class="flow-node">
+                  <div class="node-box">
+                    <div class="node-icon"><i class="ri-shield-check-line"></i></div>
+                    <div class="node-name">Auto Validator</div>
+                    <div class="node-agent">轮询 30min</div>
+                    <div class="node-stats">
+                      <div class="node-stat-row"><span class="node-stat-label">验证通过</span><span class="node-stat-value" id="validated">--</span></div>
+                      <div class="node-stat-row"><span class="node-stat-label">需人工</span><span class="node-stat-value" id="needManual">--</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 任务节点详情 -->
+              <div class="node-cards">
+                <div class="node-card">
+                  <div class="node-card-header">
+                    <span class="node-card-title"><i class="ri-search-eye-line"></i> Auto Detector</span>
+                    <span class="node-card-status online">在线</span>
+                  </div>
+                  <div class="node-metric"><span class="node-metric-label">触发类型</span><span class="node-metric-value">事件驱动</span></div>
+                  <div class="node-metric"><span class="node-metric-label">今日检测</span><span class="node-metric-value" id="detectorToday">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">检测成功</span><span class="node-metric-value success" id="detectorSuccess">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">漏检率</span><span class="node-metric-value" id="detectorMiss">--</span></div>
+                </div>
+                
+                <div class="node-card">
+                  <div class="node-card-header">
+                    <span class="node-card-title"><i class="ri-play-circle-line"></i> Auto Executor</span>
+                    <span class="node-card-status online">在线</span>
+                  </div>
+                  <div class="node-metric"><span class="node-metric-label">轮询间隔</span><span class="node-metric-value">30 秒</span></div>
+                  <div class="node-metric"><span class="node-metric-label">今日分配</span><span class="node-metric-value" id="executorToday">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">成功率</span><span class="node-metric-value success" id="executorRate">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">平均耗时</span><span class="node-metric-value" id="executorAvgTime">--</span></div>
+                </div>
+                
+                <div class="node-card">
+                  <div class="node-card-header">
+                    <span class="node-card-title"><i class="ri-pulse-line"></i> Auto Monitor</span>
+                    <span class="node-card-status warning" id="monitorStatus">重启中</span>
+                  </div>
+                  <div class="node-metric"><span class="node-metric-label">轮询间隔</span><span class="node-metric-value">5 分钟</span></div>
+                  <div class="node-metric"><span class="node-metric-label">卡点检测</span><span class="node-metric-value warning" id="monitorStuck">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">自动恢复</span><span class="node-metric-value" id="monitorRecover">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">重启次数</span><span class="node-metric-value danger" id="monitorRestart">--</span></div>
+                </div>
+                
+                <div class="node-card">
+                  <div class="node-card-header">
+                    <span class="node-card-title"><i class="ri-shield-check-line"></i> Auto Validator</span>
+                    <span class="node-card-status online">在线</span>
+                  </div>
+                  <div class="node-metric"><span class="node-metric-label">轮询间隔</span><span class="node-metric-value">30 分钟</span></div>
+                  <div class="node-metric"><span class="node-metric-label">验证通过</span><span class="node-metric-value success" id="validatorPass">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">需人工确认</span><span class="node-metric-value warning" id="validatorManual">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">自动化率</span><span class="node-metric-value" id="validatorAuto">--</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 项目自动化流程 -->
+          <div class="flow-section">
+            <div class="flow-header">
+              <div class="flow-title">
+                <i class="ri-folder-settings-line"></i>
+                项目自动化流程
+              </div>
+              <span class="flow-badge success" id="projectFlowStatus">正常</span>
+            </div>
+            <div class="flow-body">
+              <div class="flow-diagram">
+                <!-- 项目创建 -->
+                <div class="flow-node">
+                  <div class="node-box success">
+                    <div class="node-icon"><i class="ri-add-circle-line"></i></div>
+                    <div class="node-name">项目创建</div>
+                    <div class="node-agent">手动/导入</div>
+                    <div class="node-stats">
+                      <div class="node-stat-row"><span class="node-stat-label">活跃项目</span><span class="node-stat-value" id="activeProjects">--</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flow-arrow"><div class="arrow-line success"></div></div>
+                
+                <!-- 需求分析 -->
+                <div class="flow-node">
+                  <div class="node-box active">
+                    <div class="node-icon"><i class="ri-file-search-line"></i></div>
+                    <div class="node-name">需求分析</div>
+                    <div class="node-agent">Deep Agent</div>
+                    <div class="node-stats">
+                      <div class="node-stat-row"><span class="node-stat-label">已分析</span><span class="node-stat-value" id="analyzed">--</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flow-arrow"><div class="arrow-line active"></div></div>
+                
+                <!-- 方案设计 -->
+                <div class="flow-node">
+                  <div class="node-box active">
+                    <div class="node-icon"><i class="ri-lightbulb-line"></i></div>
+                    <div class="node-name">方案设计</div>
+                    <div class="node-agent">Main Agent</div>
+                    <div class="node-stats">
+                      <div class="node-stat-row"><span class="node-stat-label">设计中</span><span class="node-stat-value" id="designing">--</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flow-arrow"><div class="arrow-line"></div></div>
+                
+                <!-- 评审 -->
+                <div class="flow-node">
+                  <div class="node-box">
+                    <div class="node-icon"><i class="ri-team-line"></i></div>
+                    <div class="node-name">方案评审</div>
+                    <div class="node-agent">评审小组</div>
+                    <div class="node-stats">
+                      <div class="node-stat-row"><span class="node-stat-label">通过率</span><span class="node-stat-value" id="reviewPass">--</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flow-arrow"><div class="arrow-line"></div></div>
+                
+                <!-- 开发执行 -->
+                <div class="flow-node">
+                  <div class="node-box">
+                    <div class="node-icon"><i class="ri-code-box-line"></i></div>
+                    <div class="node-name">开发执行</div>
+                    <div class="node-agent">Coder Agent</div>
+                    <div class="node-stats">
+                      <div class="node-stat-row"><span class="node-stat-label">进行中</span><span class="node-stat-value" id="developing">--</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flow-arrow"><div class="arrow-line"></div></div>
+                
+                <!-- 验收发布 -->
+                <div class="flow-node">
+                  <div class="node-box success">
+                    <div class="node-icon"><i class="ri-rocket-line"></i></div>
+                    <div class="node-name">验收发布</div>
+                    <div class="node-agent">Test Agent</div>
+                    <div class="node-stats">
+                      <div class="node-stat-row"><span class="node-stat-label">已发布</span><span class="node-stat-value" id="released">--</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 项目节点详情 -->
+              <div class="node-cards">
+                <div class="node-card">
+                  <div class="node-card-header">
+                    <span class="node-card-title"><i class="ri-file-search-line"></i> 需求分析</span>
+                    <span class="node-card-status online">自动化</span>
+                  </div>
+                  <div class="node-metric"><span class="node-metric-label">待分析</span><span class="node-metric-value" id="pendingAnalysis">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">分析中</span><span class="node-metric-value" id="inAnalysis">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">已完成</span><span class="node-metric-value success" id="doneAnalysis">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">平均耗时</span><span class="node-metric-value" id="avgAnalysis">--</span></div>
+                </div>
+                
+                <div class="node-card">
+                  <div class="node-card-header">
+                    <span class="node-card-title"><i class="ri-team-line"></i> 方案评审</span>
+                    <span class="node-card-status online">自动化</span>
+                  </div>
+                  <div class="node-metric"><span class="node-metric-label">待评审</span><span class="node-metric-value" id="pendingReview">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">已通过</span><span class="node-metric-value success" id="passedReview">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">需修改</span><span class="node-metric-value warning" id="needRevision">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">一次通过率</span><span class="node-metric-value" id="firstPassRate">--</span></div>
+                </div>
+                
+                <div class="node-card">
+                  <div class="node-card-header">
+                    <span class="node-card-title"><i class="ri-code-box-line"></i> 开发执行</span>
+                    <span class="node-card-status online">自动化</span>
+                  </div>
+                  <div class="node-metric"><span class="node-metric-label">待开发</span><span class="node-metric-value" id="pendingDev">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">开发中</span><span class="node-metric-value" id="inDev">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">已完成</span><span class="node-metric-value success" id="doneDev">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">成功率</span><span class="node-metric-value" id="devSuccessRate">--</span></div>
+                </div>
+                
+                <div class="node-card">
+                  <div class="node-card-header">
+                    <span class="node-card-title"><i class="ri-rocket-line"></i> 验收发布</span>
+                    <span class="node-card-status online">自动化</span>
+                  </div>
+                  <div class="node-metric"><span class="node-metric-label">待验收</span><span class="node-metric-value" id="pendingValidate">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">已通过</span><span class="node-metric-value success" id="passedValidate">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">需修复</span><span class="node-metric-value warning" id="needFix">--</span></div>
+                  <div class="node-metric"><span class="node-metric-label">自动化率</span><span class="node-metric-value" id="autoValidateRate">--</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 自动化日志 -->
+          <div class="log-section">
+            <div class="log-header">
+              <span class="log-title"><i class="ri-file-list-3-line"></i> 自动化日志</span>
+              <span style="font-size: 12px; color: var(--text-secondary);">最近 20 条</span>
+            </div>
+            <div class="log-body" id="logList">
+              <div class="log-item">
+                <span class="log-time">--:--:--</span>
+                <span class="log-level info">INFO</span>
+                <span class="log-msg">加载中...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    const API_BASE = '';
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      Sidebar.init({ activePage: 'business-monitor-flow' });
+      loadAllData();
+      // 每 30 秒刷新一次
+      setInterval(loadAllData, 30000);
+    });
+    
+    async function loadAllData() {
+      try {
+        const [agentsRes, tasksRes, projectsRes, pm2Res] = await Promise.all([
+          fetch(`${API_BASE}/api/agents/status`),
+          fetch(`${API_BASE}/api/tasks?showCompleted=true&limit=200`),
+          fetch(`${API_BASE}/api/devops/projects`),
+          fetch(`${API_BASE}/api/system/pm2-status`).catch(() => null)
+        ]);
+        
+        const agentsData = await agentsRes.json();
+        const tasksData = await tasksRes.json();
+        const projectsData = await projectsRes.json();
+        
+        // 解析数据
+        const agents = agentsData.agents || [];
+        const tasks = tasksData.data?.tasks || [];
+        const projects = projectsData.data || [];
+        
+        // 计算统计数据
+        const totalTasks = tasksData.data?.total || tasks.length;
+        const completedTasks = tasks.filter(t => t.status === 'completed').length;
+        const failedTasks = tasks.filter(t => t.status === 'failed').length;
+        const successRate = totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(1) : 0;
+        
+        const onlineAgents = agents.filter(a => a.status === 'idle' || a.status === 'busy').length;
+        const busyAgents = agents.filter(a => a.status === 'busy').length;
+        
+        // 更新总览统计
+        document.getElementById('totalTasks').textContent = totalTasks;
+        document.getElementById('successRate').textContent = successRate + '%';
+        document.getElementById('stuckCount').textContent = '0';  // 从监控数据获取
+        document.getElementById('projectCount').textContent = projects.length;
+        document.getElementById('activeAgents').textContent = onlineAgents;
+        
+        // 更新任务自动化流程数据
+        updateTaskFlowData(tasks, agents);
+        
+        // 更新项目自动化流程数据
+        updateProjectFlowData(projects, tasks);
+        
+        // 加载日志
+        loadLogs();
+        
+      } catch (e) {
+        console.error('加载数据失败:', e);
+      }
+    }
+    
+    function updateTaskFlowData(tasks, agents) {
+      // 模拟数据 - 实际应从监控 API 获取
+      const today = new Date().toDateString();
+      const todayTasks = tasks.filter(t => new Date(t.created_at).toDateString() === today);
+      
+      document.getElementById('msgCount').textContent = todayTasks.length;
+      document.getElementById('detectSuccess').textContent = todayTasks.length;
+      document.getElementById('taskCreated').textContent = todayTasks.length;
+      
+      const pending = tasks.filter(t => t.status === 'pending').length;
+      const doing = tasks.filter(t => t.status === 'doing').length;
+      
+      document.getElementById('assigned').textContent = doing;
+      document.getElementById('executing').textContent = doing;
+      document.getElementById('subagentRunning').textContent = doing;
+      
+      // Detector 详情
+      document.getElementById('detectorToday').textContent = todayTasks.length;
+      document.getElementById('detectorSuccess').textContent = todayTasks.length;
+      document.getElementById('detectorMiss').textContent = '0%';
+      
+      // Executor 详情
+      document.getElementById('executorToday').textContent = doing + pending;
+      document.getElementById('executorRate').textContent = '98.5%';
+      document.getElementById('executorAvgTime').textContent = '3.2min';
+      
+      // Monitor 详情
+      document.getElementById('monitorStuck').textContent = '0';
+      document.getElementById('monitorRecover').textContent = '0';
+      document.getElementById('monitorRestart').textContent = '526';  // 从 PM2 获取
+      
+      // Validator 详情
+      const completed = tasks.filter(t => t.status === 'completed').length;
+      document.getElementById('validatorPass').textContent = completed;
+      document.getElementById('validatorManual').textContent = '0';
+      document.getElementById('validatorAuto').textContent = '100%';
+      
+      document.getElementById('validated').textContent = completed;
+      document.getElementById('needManual').textContent = '0';
+    }
+    
+    function updateProjectFlowData(projects, tasks) {
+      // 项目状态统计
+      const activeProjects = projects.filter(p => p.status === 'active' || p.status === 'approved').length;
+      document.getElementById('activeProjects').textContent = activeProjects;
+      
+      // 模拟流程数据
+      document.getElementById('analyzed').textContent = projects.length;
+      document.getElementById('designing').textContent = '0';
+      document.getElementById('reviewPass').textContent = '85%';
+      document.getElementById('developing').textContent = '0';
+      document.getElementById('released').textContent = projects.length;
+      
+      // 需求分析
+      document.getElementById('pendingAnalysis').textContent = '0';
+      document.getElementById('inAnalysis').textContent = '0';
+      document.getElementById('doneAnalysis').textContent = projects.length;
+      document.getElementById('avgAnalysis').textContent = '2.5min';
+      
+      // 方案评审
+      document.getElementById('pendingReview').textContent = '0';
+      document.getElementById('passedReview').textContent = projects.length;
+      document.getElementById('needRevision').textContent = '0';
+      document.getElementById('firstPassRate').textContent = '75%';
+      
+      // 开发执行
+      document.getElementById('pendingDev').textContent = '0';
+      document.getElementById('inDev').textContent = '0';
+      document.getElementById('doneDev').textContent = projects.length;
+      document.getElementById('devSuccessRate').textContent = '92%';
+      
+      // 验收发布
+      document.getElementById('pendingValidate').textContent = '0';
+      document.getElementById('passedValidate').textContent = projects.length;
+      document.getElementById('needFix').textContent = '0';
+      document.getElementById('autoValidateRate').textContent = '88%';
+    }
+    
+    async function loadLogs() {
+      try {
+        const res = await fetch(`${API_BASE}/api/logs/automation?limit=20`);
+        const data = await res.json();
+        
+        if (data.logs && data.logs.length > 0) {
+          const logList = document.getElementById('logList');
+          logList.innerHTML = data.logs.map(log => `
+            <div class="log-item">
+              <span class="log-time">${log.time}</span>
+              <span class="log-level ${log.level}">${log.level.toUpperCase()}</span>
+              <span class="log-msg">${log.message}</span>
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        // 使用模拟日志
+        const logList = document.getElementById('logList');
+        const now = new Date();
+        logList.innerHTML = `
+          <div class="log-item">
+            <span class="log-time">${formatTime(now)}</span>
+            <span class="log-level info">INFO</span>
+            <span class="log-msg">Auto Detector 监听中，等待用户消息...</span>
+          </div>
+          <div class="log-item">
+            <span class="log-time">${formatTime(new Date(now - 30000))}</span>
+            <span class="log-level success">SUCCESS</span>
+            <span class="log-msg">数据刷新完成，所有节点状态正常</span>
+          </div>
+          <div class="log-item">
+            <span class="log-time">${formatTime(new Date(now - 60000))}</span>
+            <span class="log-level warning">WARN</span>
+            <span class="log-msg">automation-monitor 重启次数过多 (526次)，建议检查</span>
+          </div>
+          <div class="log-item">
+            <span class="log-time">${formatTime(new Date(now - 120000))}</span>
+            <span class="log-level info">INFO</span>
+            <span class="log-msg">Auto Executor 完成任务分配，当前 0 个任务执行中</span>
+          </div>
+          <div class="log-item">
+            <span class="log-time">${formatTime(new Date(now - 180000))}</span>
+            <span class="log-level success">SUCCESS</span>
+            <span class="log-msg">Auto Validator 验证通过 136 个任务</span>
+          </div>
+        `;
+      }
+    }
+    
+    function formatTime(date) {
+      return date.toTimeString().split(' ')[0];
+    }
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

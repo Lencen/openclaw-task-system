@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="deep-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>导航中心 | Task System V2</title>
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/components.css">
+  
+  <style>
+    /* ===================================
+       导航中心特定样式
+       =================================== */
+    
+    /* 导航中心容器 - 一页完整显示 */
+    .nav-center-container {
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    
+    /* 面包屑导航 - 隐藏 */
+    .breadcrumb {
+      display: none;
+    }
+    
+    /* 导航中心标题 - 极简 */
+    .nav-center-header {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    
+    .nav-center-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 0;
+    }
+    
+    .nav-center-subtitle {
+      display: none;
+    }
+    
+    /* 功能模块网格 - 一页完整显示 */
+    .nav-center-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 10px;
+    }
+    
+    /* 功能模块卡片 - 极简紧凑 */
+    .nav-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 3px;
+    }
+    
+    .nav-card::before {
+      display: none;
+    }
+    
+    .nav-card:hover {
+      transform: translateY(-1px);
+      border-color: var(--card-type-color, var(--primary));
+      background: rgba(59, 130, 246, 0.05);
+    }
+    
+    .nav-card-icon {
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      background: transparent;
+      border-radius: 4px;
+    }
+    
+    .nav-card:hover .nav-card-icon {
+      transform: none;
+    }
+    
+    .nav-card-title {
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 0;
+      line-height: 1.2;
+    }
+    
+    .nav-card-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      display: none;
+    }
+    
+    .nav-card-footer {
+      display: none;
+    }
+    
+    .nav-card-badge {
+      display: none;
+    }
+    
+    /* 模块颜色定义 */
+    .nav-card[data-module="tasks"] {
+      --card-type-color: var(--primary);
+    }
+    .nav-card[data-module="agents"] {
+      --card-type-color: var(--warning);
+    }
+    .nav-card[data-module="projects"] {
+      --card-type-color: var(--success);
+    }
+    .nav-card[data-module="documents"] {
+      --card-type-color: var(--danger);
+    }
+    .nav-card[data-module="skills"] {
+      --card-type-color: var(--info);
+    }
+    .nav-card[data-module="settings"] {
+      --card-type-color: var(--text-secondary);
+    }
+    
+    /* 全局搜索模块 - 极简 */
+    .global-search-section {
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 10px;
+    }
+    
+    /* 全局搜索栏 */
+    .global-search-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: text;
+      transition: all 0.15s ease;
+    }
+    
+    .global-search-bar:hover {
+      border-color: var(--primary);
+    }
+    
+    .global-search-bar:focus-within {
+      border-color: var(--primary);
+    }
+    
+    .global-search-bar-icon {
+      color: var(--text-secondary);
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      height: 20px;
+    }
+    
+    .global-search-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+    }
+    
+    .global-search-input::placeholder {
+      color: var(--text-secondary);
+    }
+    
+    .global-search-bar-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-secondary);
+      font-size: 10px;
+    }
+    
+    .global-search-bar-actions kbd {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 2px 4px;
+      font-family: monospace;
+      font-size: 9px;
+      font-weight: 500;
+    }
+    
+    /* 主题切换器 - 极简 */
+    .theme-switcher-section {
+      position: fixed;
+      top: 8px;
+      right: 8px;
+      z-index: 100;
+    }
+    
+    .theme-switcher {
+      display: flex;
+      gap: 1px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px;
+      box-shadow: 0 1px 3px var(--shadow);
+    }
+    
+    .theme-btn {
+      width: 20px;
+      height: 20px;
+      background: transparent;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+    
+    .theme-btn:hover {
+      background: var(--bg);
+      color: var(--primary);
+    }
+    
+    .theme-btn.active {
+      border-color: var(--primary);
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--primary);
+    }
+    
+    /* 页脚隐藏 */
+    .footer {
+      display: none;
+    }
+    
+    /* 响应式适配 */
+    @media (max-width: 767px) {
+      .nav-center-container {
+        padding: var(--spacing-xl) var(--spacing-sm);
+      }
+      
+      .nav-center-title {
+        font-size: 24px;
+      }
+      
+      .nav-center-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+      }
+      
+      .theme-switcher-section {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-top: var(--spacing-md);
+        display: flex;
+        justify-content: center;
+      }
+    }
+    
+    /* 加载动画 */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .nav-card {
+      animation: fadeIn 0.5s ease forwards;
+    }
+    
+    .nav-card:nth-child(1) { animation-delay: 0.1s; }
+    .nav-card:nth-child(2) { animation-delay: 0.2s; }
+    .nav-card:nth-child(3) { animation-delay: 0.3s; }
+    .nav-card:nth-child(4) { animation-delay: 0.4s; }
+    .nav-card:nth-child(5) { animation-delay: 0.5s; }
+    .nav-card:nth-child(6) { animation-delay: 0.6s; }
+  </style>
+  <link rel="stylesheet" href="styles/themes.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <script src="js/field-tips.js"></script></head>
+<body>
+  <!-- 主题切换按钮（固定在右上角） -->
+  <div class="theme-switcher-section" data-testid="theme-switcher-section">
+    <div class="theme-switcher" data-testid="main-theme-switcher">
+      <button class="theme-btn" data-theme="deep-dark" onclick="setTheme('deep-dark')" aria-label="深色主题">
+        <span>🌑</span>
+      </button>
+      <button class="theme-btn" data-theme="light" onclick="setTheme('light')" aria-label="浅色主题">
+        <span>☀️</span>
+      </button>
+      <button class="theme-btn" data-theme="natural" onclick="setTheme('natural')" aria-label="自然主题">
+        <span>🌤️</span>
+      </button>
+      <button class="theme-btn" data-theme="night" onclick="setTheme('night')" aria-label="极夜主题">
+        <span>🌙</span>
+      </button>
+    </div>
+  </div>
+  
+  <div class="nav-center-container">
+    <!-- 面包屑导航 -->
+    <nav class="breadcrumb" data-testid="breadcrumb">
+      <a href="index.html" class="breadcrumb-item" data-testid="breadcrumb-home">
+        <span>🏠</span>
+        <span>首页</span>
+      </a>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item active" data-testid="breadcrumb-current">导航中心</span>
+    </nav>
+    
+    <!-- 导航中心标题 -->
+    <header class="nav-center-header" data-testid="nav-center-header">
+      <h1 class="nav-center-title" data-testid="nav-center-title">🚀 导航中心</h1>
+      <p class="nav-center-subtitle" data-testid="nav-center-subtitle">系统主入口，快速访问所有功能模块</p>
+    </header>
+    
+    <!-- 全局搜索框 -->
+    <div class="global-search-section" data-testid="global-search-section">
+      <div class="global-search-bar" data-testid="global-search-bar">
+        <svg
+          class="global-search-icon"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          data-testid="search-bar-icon"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          class="global-search-input"
+          id="globalSearchInput"
+          placeholder="搜索任务、项目、用户..."
+          data-testid="global-search-bar-input"
+          aria-label="输入搜索关键词"
+          autocomplete="off"
+        />
+        <div class="global-search-bar-actions" data-testid="search-bar-actions">
+          <kbd>⌘K</kbd>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 功能模块入口卡片 -->
+    <div class="nav-center-grid" data-testid="nav-center-grid">
+      <!-- 任务模块 -->
+      <a href="tasks-v2.html" class="nav-card" 
+         data-module="tasks" 
+         data-testid="nav-card-tasks"
+         role="button"
+         aria-label="访问任务管理页">
+        <div class="nav-card-icon" data-testid="nav-card-icon-tasks">📋</div>
+        <div class="nav-card-title" data-testid="nav-card-title-tasks">任务管理</div>
+        <p class="nav-card-desc" data-testid="nav-card-desc-tasks">创建、编辑、查看和管理所有任务，支持四象限分类和 5 种状态</p>
+        <div class="nav-card-footer">
+          <span class="nav-card-badge" data-testid="nav-card-badge-tasks">P0</span>
+        </div>
+      </a>
+      
+      <!-- Agent 模块 -->
+      <a href="agents-new.html" class="nav-card" 
+         data-module="agents" 
+         data-testid="nav-card-agents"
+         role="button"
+         aria-label="访问 Agent 管理页">
+        <div class="nav-card-icon" data-testid="nav-card-icon-agents">🤖</div>
+        <div class="nav-card-title" data-testid="nav-card-title-agents">Agent 管理</div>
+        <p class="nav-card-desc" data-testid="nav-card-desc-agents">配置、管理系统 Agent，查看激活状态，调整系统性能参数</p>
+        <div class="nav-card-footer">
+          <span class="nav-card-badge" data-testid="nav-card-badge-agents">P0</span>
+        </div>
+      </a>
+      
+      <!-- 项目模块 -->
+      <a href="projects-new.html" class="nav-card" 
+         data-module="projects" 
+         data-testid="nav-card-projects"
+         role="button"
+         aria-label="访问项目管理页">
+        <div class="nav-card-icon" data-testid="nav-card-icon-projects">📦</div>
+        <div class="nav-card-title" data-testid="nav-card-title-projects">项目管理</div>
+        <p class="nav-card-desc" data-testid="nav-card-desc-projects">组织任务到项目中，跟踪项目进度，管理项目成员和标签</p>
+        <div class="nav-card-footer">
+          <span class="nav-card-badge" data-testid="nav-card-badge-projects">P1</span>
+        </div>
+      </a>
+      
+      <!-- 文档模块 -->
+      <a href="docs-new.html" class="nav-card" 
+         data-module="documents" 
+         data-testid="nav-card-documents"
+         role="button"
+         aria-label="访问文档中心页">
+        <div class="nav-card-icon" data-testid="nav-card-icon-documents">📚</div>
+        <div class="nav-card-title" data-testid="nav-card-title-documents">文档中心</div>
+        <p class="nav-card-desc" data-testid="nav-card-desc-documents">浏览和管理文档，查看项目文档、API 文档和用户手册</p>
+        <div class="nav-card-footer">
+          <span class="nav-card-badge" data-testid="nav-card-badge-documents">P1</span>
+        </div>
+      </a>
+      
+      <!-- 技能模块 -->
+      <a href="skills-new.html" class="nav-card" 
+         data-module="skills" 
+         data-testid="nav-card-skills"
+         role="button"
+         aria-label="访问技能管理页">
+        <div class="nav-card-icon" data-testid="nav-card-icon-skills">🛠️</div>
+        <div class="nav-card-title" data-testid="nav-card-title-skills">技能管理</div>
+        <p class="nav-card-desc" data-testid="nav-card-desc-skills">管理自定义技能，查看技能使用统计，创建新技能模板</p>
+        <div class="nav-card-footer">
+          <span class="nav-card-badge" data-testid="nav-card-badge-skills">P1</span>
+        </div>
+      </a>
+      
+      <!-- 设置模块 -->
+      <a href="settings-new.html" class="nav-card" 
+         data-module="settings" 
+         data-testid="nav-card-settings"
+         role="button"
+         aria-label="访问系统设置页">
+        <div class="nav-card-icon" data-testid="nav-card-icon-settings">⚙️</div>
+        <div class="nav-card-title" data-testid="nav-card-title-settings">系统设置</div>
+        <p class="nav-card-desc" data-testid="nav-card-desc-settings">配置系统参数，管理用户偏好，调整主题和外观</p>
+        <div class="nav-card-footer">
+          <span class="nav-card-badge" data-testid="nav-card-badge-settings">P0</span>
+        </div>
+      </a>
+      
+      <!-- War Room 业务监控模块 -->
+      <a href="war-room.html" class="nav-card" 
+         data-module="war-room" 
+         data-testid="nav-card-war-room"
+         role="button"
+         aria-label="访问业务监控页">
+        <div class="nav-card-icon" data-testid="nav-card-icon-war-room">📊</div>
+        <div class="nav-card-title" data-testid="nav-card-title-war-room">业务监控</div>
+        <p class="nav-card-desc" data-testid="nav-card-desc-war-room">实时监控业务指标、关键指标(kpi)、异常告警和运营数据</p>
+        <div class="nav-card-footer">
+          <span class="nav-card-badge" data-testid="nav-card-badge-war-room">P0</span>
+        </div>
+      </a>
+      
+      <!-- 系统监控模块 -->
+      <a href="system-monitor-v3.html" class="nav-card" 
+         data-module="system-monitor" 
+         data-testid="nav-card-system-monitor"
+         role="button"
+         aria-label="访问系统监控页">
+        <div class="nav-card-icon" data-testid="nav-card-icon-system-monitor">🖥️</div>
+        <div class="nav-card-title" data-testid="nav-card-title-system-monitor">系统监控</div>
+        <p class="nav-card-desc" data-testid="nav-card-desc-system-monitor">监控服务器、数据库、中间件状态，查看性能指标和日志</p>
+        <div class="nav-card-footer">
+          <span class="nav-card-badge" data-testid="nav-card-badge-system-monitor">P1</span>
+        </div>
+      </a>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer class="footer" data-testid="footer">
+      <p data-testid="footer-text">当前主题：<strong id="current-theme-name">深空黑</strong> | <span data-testid="current-time">加载中...</span></p>
+    </footer>
+  </div>
+  
+  <script>
+    // ===================================
+    // 导航中心 JavaScript
+    // ===================================
+    
+    const themes = ['deep-dark', 'light', 'natural', 'night'];
+    
+    // 主题切换函数
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('uiTheme', theme);
+      updateThemeButtons(theme);
+      document.getElementById('current-theme-name').innerText = getThemeName(theme);
+    }
+    
+    // 更新主题按钮状态
+    function updateThemeButtons(activeTheme) {
+      document.querySelectorAll('.theme-btn').forEach(btn => { 
+        btn.classList.toggle('active', btn.dataset.theme === activeTheme); 
+      });
+      document.querySelectorAll('.theme-btn-mini').forEach(btn => { 
+        btn.classList.toggle('active', btn.dataset.theme === activeTheme); 
+      });
+    }
+    
+    // 获取主题名称
+    function getThemeName(theme) {
+      const names = {
+        'deep-dark': '深空黑',
+        'light': '浅色',
+        'natural': '自然',
+        'night': '极夜'
+      };
+      return names[theme] || '深空黑';
+    }
+    
+    // 更新当前时间
+    function updateCurrentTime() {
+      const now = new Date();
+      const timeStr = now.toLocaleString('zh-CN', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      document.querySelector('[data-testid="current-time"]').textContent = timeStr;
+    }
+    
+    // 初始化
+    function init() {
+      console.log('[NavCenter] 开始初始化...');
+      
+      // 加载保存的主题
+      const savedTheme = localStorage.getItem('uiTheme') || 'deep-dark';
+      setTheme(savedTheme);
+      
+      // 更新时间（每秒更新）
+      setInterval(updateCurrentTime, 1000);
+      updateCurrentTime();
+      
+      console.log('[NavCenter] 初始化完成');
+    }
+    
+    // 渲染主题按钮
+    function renderThemeButtons() {
+      const container = document.getElementById('theme-buttons-container');
+      if (container) {
+        container.innerHTML = themes.map(theme => `
+          <button 
+            class="theme-btn ${theme === (localStorage.getItem('uiTheme') || 'deep-dark') ? 'active' : ''}" 
+            data-theme="${theme}"
+            onclick="setTheme('${theme}')"
+            aria-label="${getThemeName(theme)}主题"
+          >${getThemeIcon(theme)}</button>
+        `).join('');
+      }
+    }
+    
+    // 获取主题图标
+    function getThemeIcon(theme) {
+      const icons = {
+        'deep-dark': '🌑',
+        'light': '☀️',
+        'natural': '🌤️',
+        'night': '🌙'
+      };
+      return icons[theme] || '🌑';
+    }
+    
+    // 页面加载完成后初始化
+    window.addEventListener('DOMContentLoaded', () => {
+      // 加载全局搜索组件
+      loadGlobalSearchComponent();
+      
+      // 初始化导航中心
+      init();
+    });
+    
+    // 动态加载全局搜索组件
+    async function loadGlobalSearchComponent() {
+      try {
+        const response = await fetch('components/global-search.html');
+        if (response.ok) {
+          const html = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          
+          // 获取样式部分
+          const style = doc.querySelector('style');
+          const styleContent = style ? style.innerHTML : '';
+          
+          // 获取脚本部分
+          const script = doc.querySelector('script');
+          const scriptContent = script ? script.innerHTML : '';
+          
+          // 将样式插入到当前文档的 head 中
+          if (styleContent) {
+            const styleEl = document.createElement('style');
+            styleEl.textContent = styleContent;
+            document.head.appendChild(styleEl);
+          }
+          
+          // 获取全局搜索组件的 HTML 内容
+          const globalSearchHtml = doc.body.innerHTML;
+          
+          // 将组件插入到容器中
+          document.getElementById('global-search-container').innerHTML = globalSearchHtml;
+          
+          // 重要：执行脚本以注册全局函数
+          if (scriptContent) {
+            // 创建一个新的 Script 对象来执行
+            const scriptEl = document.createElement('script');
+            scriptEl.textContent = scriptContent;
+            document.body.appendChild(scriptEl);
+          }
+          
+          console.log('[NavCenter] 全局搜索组件加载完成');
+        }
+      } catch (error) {
+        console.error('[NavCenter] 全局搜索组件加载失败:', error);
+        // 显示错误状态
+        document.getElementById('global-search-container').innerHTML = `
+          <div style="text-align: center; padding: var(--spacing-2xl);">
+            <span style="font-size: 48px;">🔍</span>
+            <h3 style="color: var(--text-secondary);">搜索功能加载中</h3>
+            <p style="color: var(--text-secondary);">支持任务、项目、用户搜索</p>
+          </div>
+        `;
+      }
+    }
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>客户管理 - 任务管理系统</title>
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .search-input {
+      flex: 1;
+      max-width: 300px;
+    }
+    
+    .stats-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+    
+    .stat-label {
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    
+    .table-container {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .data-table th,
+    .data-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .data-table th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    
+    .data-table tr:hover {
+      background: var(--hover-bg);
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .status-active {
+      background: #e6f7ee;
+      color: #00a854;
+    }
+    
+    .status-inactive {
+      background: #fff1f0;
+      color: #f5222d;
+    }
+    
+    .type-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+    }
+    
+    .action-btn {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-right: 4px;
+    }
+    
+    .btn-view {
+      background: var(--primary-color);
+      color: white;
+    }
+    
+    .btn-edit {
+      background: #faad14;
+      color: white;
+    }
+    
+    .btn-delete {
+      background: #f5222d;
+      color: white;
+    }
+    
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 16px;
+    }
+    
+    .page-btn {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .page-btn.active {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+    
+    .page-info {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    
+    /* 模态框 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.show {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    
+    .modal-body {
+      padding: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    
+    .form-input,
+    .form-select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .form-input:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+    
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .btn-primary {
+      background: var(--primary-color);
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="app-container">
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar"></aside>
+    
+    <!-- 主内容 -->
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">客户管理</h1>
+        <button class="btn btn-primary" onclick="showCreateModal()">+ 新建客户</button>
+      </div>
+      
+      <!-- 统计卡片 -->
+      <div class="stats-cards" id="statsCards">
+        <div class="stat-card">
+          <div class="stat-value" id="totalCustomers">-</div>
+          <div class="stat-label">客户总数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="activeCustomers">-</div>
+          <div class="stat-label">活跃客户</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalLicenses">-</div>
+          <div class="stat-label">许可证总数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="expiringLicenses">-</div>
+          <div class="stat-label">即将到期</div>
+        </div>
+      </div>
+      
+      <!-- 搜索栏 -->
+      <div class="search-bar">
+        <input type="text" class="form-input search-input" id="searchInput" placeholder="搜索客户名称、联系人、邮箱...">
+        <select class="form-select" id="statusFilter" style="width: 150px;">
+          <option value="">全部状态</option>
+          <option value="active">活跃</option>
+          <option value="inactive">停用</option>
+        </select>
+        <button class="btn btn-primary" onclick="loadCustomers()">搜索</button>
+      </div>
+      
+      <!-- 客户列表 -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>客户ID</th>
+              <th>客户名称</th>
+              <th>联系人</th>
+              <th>邮箱</th>
+              <th>类型</th>
+              <th>许可证</th>
+              <th>状态</th>
+              <th>创建时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="customerTableBody">
+            <tr>
+              <td colspan="9" style="text-align: center; padding: 40px;">加载中...</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <!-- 分页 -->
+        <div class="pagination" id="pagination">
+          <span class="page-info">第 1 页，共 0 条</span>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 创建/编辑客户模态框 -->
+  <div class="modal" id="customerModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">新建客户</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="customerForm">
+          <input type="hidden" id="customerId">
+          
+          <div class="form-group">
+            <label class="form-label">客户名称 *</label>
+            <input type="text" class="form-input" id="customerName" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">联系人</label>
+            <input type="text" class="form-input" id="customerContact">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">邮箱</label>
+            <input type="email" class="form-input" id="customerEmail">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">电话</label>
+            <input type="text" class="form-input" id="customerPhone">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">公司</label>
+            <input type="text" class="form-input" id="customerCompany">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">类型</label>
+            <select class="form-select" id="customerType">
+              <option value="enterprise">企业</option>
+              <option value="personal">个人</option>
+              <option value="trial">试用</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">备注</label>
+            <textarea class="form-input" id="customerNotes" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveCustomer()">保存</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    // API 基础路径
+    const API_BASE = '/api';
+    
+    // 当前页码
+    let currentPage = 1;
+    const pageSize = 20;
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStats();
+      loadCustomers();
+    });
+    
+    // 加载统计数据
+    async function loadStats() {
+      try {
+        const response = await fetch(`${API_BASE}/stats/overview`);
+        const result = await response.json();
+        
+        if (result.success) {
+          document.getElementById('totalCustomers').textContent = result.data.customers.total;
+          document.getElementById('activeCustomers').textContent = result.data.customers.active;
+          document.getElementById('totalLicenses').textContent = result.data.licenses.total;
+          document.getElementById('expiringLicenses').textContent = result.data.licenses.expiringSoon;
+        }
+      } catch (error) {
+        console.error('加载统计数据失败:', error);
+      }
+    }
+    
+    // 加载客户列表
+    async function loadCustomers() {
+      const keyword = document.getElementById('searchInput').value;
+      const status = document.getElementById('statusFilter').value;
+      
+      try {
+        const params = new URLSearchParams({
+          page: currentPage,
+          pageSize: pageSize
+        });
+        
+        if (keyword) params.append('keyword', keyword);
+        if (status) params.append('status', status);
+        
+        const response = await fetch(`${API_BASE}/customers?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          renderCustomers(result.data);
+        }
+      } catch (error) {
+        console.error('加载客户列表失败:', error);
+        document.getElementById('customerTableBody').innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 40px; color: #f5222d;">
+              加载失败: ${error.message}
+            </td>
+          </tr>
+        `;
+      }
+    }
+    
+    // 渲染客户列表
+    async function renderCustomers(data) {
+      const tbody = document.getElementById('customerTableBody');
+      
+      if (data.list.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 40px;">暂无数据</td>
+          </tr>
+        `;
+        return;
+      }
+      
+      // 为每个客户获取许可证数量
+      const rows = await Promise.all(data.list.map(async customer => {
+        const licensesResponse = await fetch(`${API_BASE}/customers/${customer.id}/licenses`);
+        const licensesResult = await licensesResponse.json();
+        const licenseCount = licensesResult.success ? licensesResult.data.length : 0;
+        
+        return `
+          <tr>
+            <td><code>${customer.id}</code></td>
+            <td><strong>${customer.name}</strong></td>
+            <td>${customer.contact || '-'}</td>
+            <td>${customer.email || '-'}</td>
+            <td><span class="type-badge">${getTypeLabel(customer.type)}</span></td>
+            <td>${licenseCount}</td>
+            <td><span class="status-badge status-${customer.status}">${getStatusLabel(customer.status)}</span></td>
+            <td>${formatDate(customer.created_at)}</td>
+            <td>
+              <button class="action-btn btn-view" onclick="viewCustomer('${customer.id}')">查看</button>
+              <button class="action-btn btn-edit" onclick="editCustomer('${customer.id}')">编辑</button>
+              <button class="action-btn btn-delete" onclick="deleteCustomer('${customer.id}')">删除</button>
+            </td>
+          </tr>
+        `;
+      }));
+      
+      tbody.innerHTML = rows.join('');
+      
+      // 更新分页
+      renderPagination(data);
+    }
+    
+    // 渲染分页
+    function renderPagination(data) {
+      const totalPages = Math.ceil(data.total / pageSize);
+      
+      let html = `<span class="page-info">第 ${currentPage} 页，共 ${data.total} 条</span>`;
+      
+      if (totalPages > 1) {
+        if (currentPage > 1) {
+          html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})">上一页</button>`;
+        }
+        
+        for (let i = 1; i <= totalPages && i <= 5; i++) {
+          html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+        
+        if (currentPage < totalPages) {
+          html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})">下一页</button>`;
+        }
+      }
+      
+      document.getElementById('pagination').innerHTML = html;
+    }
+    
+    // 跳转页面
+    function goToPage(page) {
+      currentPage = page;
+      loadCustomers();
+    }
+    
+    // 显示创建模态框
+    function showCreateModal() {
+      document.getElementById('modalTitle').textContent = '新建客户';
+      document.getElementById('customerId').value = '';
+      document.getElementById('customerForm').reset();
+      document.getElementById('customerModal').classList.add('show');
+    }
+    
+    // 编辑客户
+    async function editCustomer(id) {
+      try {
+        const response = await fetch(`${API_BASE}/customers/${id}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          const customer = result.data;
+          document.getElementById('modalTitle').textContent = '编辑客户';
+          document.getElementById('customerId').value = customer.id;
+          document.getElementById('customerName').value = customer.name || '';
+          document.getElementById('customerContact').value = customer.contact || '';
+          document.getElementById('customerEmail').value = customer.email || '';
+          document.getElementById('customerPhone').value = customer.phone || '';
+          document.getElementById('customerCompany').value = customer.company || '';
+          document.getElementById('customerType').value = customer.type || 'enterprise';
+          document.getElementById('customerNotes').value = customer.notes || '';
+          document.getElementById('customerModal').classList.add('show');
+        }
+      } catch (error) {
+        alert('加载客户信息失败: ' + error.message);
+      }
+    }
+    
+    // 保存客户
+    async function saveCustomer() {
+      const id = document.getElementById('customerId').value;
+      const data = {
+        name: document.getElementById('customerName').value,
+        contact: document.getElementById('customerContact').value,
+        email: document.getElementById('customerEmail').value,
+        phone: document.getElementById('customerPhone').value,
+        company: document.getElementById('customerCompany').value,
+        type: document.getElementById('customerType').value,
+        notes: document.getElementById('customerNotes').value
+      };
+      
+      try {
+        const url = id ? `${API_BASE}/customers/${id}` : `${API_BASE}/customers`;
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          closeModal();
+          loadCustomers();
+          loadStats();
+          alert(id ? '客户更新成功' : '客户创建成功');
+        } else {
+          alert('保存失败: ' + result.error);
+        }
+      } catch (error) {
+        alert('保存失败: ' + error.message);
+      }
+    }
+    
+    // 删除客户
+    async function deleteCustomer(id) {
+      if (!confirm('确定要删除这个客户吗？')) return;
+      
+      try {
+        const response = await fetch(`${API_BASE}/customers/${id}`, {
+          method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          loadCustomers();
+          loadStats();
+          alert('客户删除成功');
+        } else {
+          alert('删除失败: ' + result.error);
+        }
+      } catch (error) {
+        alert('删除失败: ' + error.message);
+      }
+    }
+    
+    // 查看客户详情
+    function viewCustomer(id) {
+      window.location.href = `customer-detail.html?id=${id}`;
+    }
+    
+    // 关闭模态框
+    function closeModal() {
+      document.getElementById('customerModal').classList.remove('show');
+    }
+    
+    // 工具函数
+    function getTypeLabel(type) {
+      const labels = {
+        enterprise: '企业',
+        personal: '个人',
+        trial: '试用'
+      };
+      return labels[type] || type;
+    }
+    
+    function getStatusLabel(status) {
+      const labels = {
+        active: '活跃',
+        inactive: '停用'
+      };
+      return labels[status] || status;
+    }
+    
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      return new Date(dateStr).toLocaleDateString('zh-CN');
+    }
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

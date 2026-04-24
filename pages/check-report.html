@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>检查报告 - Morning 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-content { padding: 24px; max-width: 1200px; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 12px; }
+    
+    /* 总体状态 */
+    .overall-status { background: var(--bg-secondary); border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid var(--border); }
+    .overall-status.pass { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
+    .overall-status.warn { border-color: var(--warning); background: rgba(245, 158, 11, 0.1); }
+    .overall-status.fail { border-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+    
+    .overall-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 16px; }
+    .overall-icon.pass { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .overall-icon.warn { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .overall-icon.fail { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    
+    .overall-title { font-size: 24px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+    .overall-message { font-size: 15px; color: var(--text-secondary); }
+    .overall-meta { display: flex; gap: 24px; margin-top: 16px; font-size: 13px; color: var(--text-secondary); }
+    
+    /* 统计卡片 */
+    .stats-row { display: flex; gap: 16px; margin-bottom: 24px; }
+    .stat-card { flex: 1; background: var(--bg-secondary); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid var(--border); }
+    .stat-value { font-size: 32px; font-weight: 700; }
+    .stat-value.success { color: var(--success); }
+    .stat-value.warning { color: var(--warning); }
+    .stat-value.danger { color: var(--danger); }
+    .stat-value.primary { color: var(--primary); }
+    .stat-label { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
+    
+    /* 检查分类 */
+    .check-section { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: var(--bg-tertiary); border-bottom: 1px solid var(--border); cursor: pointer; }
+    .section-header:hover { background: rgba(59, 130, 246, 0.1); }
+    .section-title { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .section-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .section-icon.business { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .section-icon.data { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .section-icon.display { background: rgba(6, 182, 212, 0.15); color: #06b6d4; }
+    .section-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; background: var(--bg-secondary); }
+    .section-badge.pass { color: var(--success); }
+    .section-badge.warn { color: var(--warning); }
+    .section-badge.fail { color: var(--danger); }
+    .section-toggle { color: var(--text-secondary); transition: transform 0.3s; }
+    .section-header.collapsed .section-toggle { transform: rotate(-90deg); }
+    .section-content { padding: 0; max-height: 2000px; overflow: hidden; transition: max-height 0.3s ease; }
+    .section-content.collapsed { max-height: 0; }
+    
+    /* 检查项 */
+    .check-item { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .check-item:last-child { border-bottom: none; }
+    .check-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .check-item-name { font-size: 14px; font-weight: 500; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+    .check-item-status { font-size: 12px; padding: 2px 8px; border-radius: 10px; }
+    .check-item-status.pass { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .check-item-status.warn { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .check-item-status.fail { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .check-item-message { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+    .check-item-details { margin-top: 12px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px; font-size: 12px; font-family: monospace; overflow-x: auto; }
+    
+    /* 操作按钮 */
+    .action-bar { display: flex; gap: 12px; margin-bottom: 24px; }
+    .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.15s; display: flex; align-items: center; gap: 8px; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--primary); }
+    
+    /* 空状态 */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    
+    /* 分析建议 */
+    .recommendations { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+    .recommendations-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .recommendation-item { padding: 12px; background: var(--bg-tertiary); border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
+    .recommendation-item:last-child { margin-bottom: 0; }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div class="header-left"><div class="breadcrumb"><span>系统管理</span> / <span>检查报告</span></div></div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadReport()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      <div class="content">
+        <div class="page-content">
+          <!-- 总体状态 -->
+          <div class="overall-status" id="overallStatus">
+            <div class="overall-icon" id="overallIcon"><i class="ri-check-line"></i></div>
+            <div class="overall-title" id="overallTitle">检查中...</div>
+            <div class="overall-message" id="overallMessage">正在加载检查报告</div>
+            <div class="overall-meta" id="overallMeta"></div>
+          </div>
+          
+          <!-- 统计卡片 -->
+          <div class="stats-row" id="statsRow">
+            <div class="stat-card">
+              <div class="stat-value primary" id="totalCount">-</div>
+              <div class="stat-label">检查项总数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value success" id="passCount">-</div>
+              <div class="stat-label">通过</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value warning" id="warnCount">-</div>
+              <div class="stat-label">警告</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value danger" id="failCount">-</div>
+              <div class="stat-label">失败</div>
+            </div>
+          </div>
+          
+          <!-- 操作按钮 -->
+          <div class="action-bar">
+            <button class="btn btn-secondary" onclick="window.location.href='check-records.html'">
+              <i class="ri-arrow-left-line"></i> 返回列表
+            </button>
+            <button class="btn btn-primary" onclick="exportReport()">
+              <i class="ri-download-line"></i> 导出报告
+            </button>
+          </div>
+          
+          <!-- 检查结果 -->
+          <div id="checkResults">
+            <!-- 动态生成 -->
+          </div>
+          
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    const API_BASE = window.location.origin;
+    let recordId = null;
+    let reportData = null;
+    
+    // 从 URL 获取记录 ID
+    const urlParams = new URLSearchParams(window.location.search);
+    recordId = urlParams.get('id');
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      if (recordId) {
+        loadReport();
+      } else {
+        showError('缺少记录ID');
+      }
+    });
+    
+    async function loadReport() {
+      try {
+        const response = await fetch(`${API_BASE}/api/system/records/${recordId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          reportData = data.data;
+          renderReport(reportData);
+        } else {
+          showError(data.error || '加载失败');
+        }
+      } catch (error) {
+        showError(error.message);
+      }
+    }
+    
+    function renderReport(record) {
+      // 更新总体状态
+      const statusEl = document.getElementById('overallStatus');
+      statusEl.className = `overall-status ${record.overallStatus}`;
+      
+      const iconEl = document.getElementById('overallIcon');
+      iconEl.className = `overall-icon ${record.overallStatus}`;
+      iconEl.innerHTML = record.overallStatus === 'pass' ? '<i class="ri-check-line"></i>' :
+                        record.overallStatus === 'warn' ? '<i class="ri-alert-line"></i>' : 
+                        '<i class="ri-close-line"></i>';
+      
+      document.getElementById('overallTitle').textContent = 
+        record.overallStatus === 'pass' ? '检查通过' :
+        record.overallStatus === 'warn' ? '检查完成（有警告）' : '检查发现问题';
+      
+      document.getElementById('overallMessage').textContent = record.overallMessage || '';
+      
+      const time = new Date(record.timestamp).toLocaleString('zh-CN');
+      const duration = record.duration ? `${(record.duration / 1000).toFixed(1)}秒` : '-';
+      document.getElementById('overallMeta').innerHTML = `
+        <span><i class="ri-time-line"></i> ${time}</span>
+        <span><i class="ri-timer-line"></i> 耗时 ${duration}</span>
+        <span><i class="ri-file-list-line"></i> ID: ${record.id}</span>
+      `;
+      
+      // 更新统计
+      document.getElementById('totalCount').textContent = record.summary?.total || 0;
+      document.getElementById('passCount').textContent = record.summary?.passed || 0;
+      document.getElementById('warnCount').textContent = record.summary?.warnings || 0;
+      document.getElementById('failCount').textContent = record.summary?.failed || 0;
+      
+      // 渲染检查结果
+      renderChecks(record.checks || []);
+    }
+    
+    function renderChecks(checks) {
+      const container = document.getElementById('checkResults');
+      
+      if (!checks || checks.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="ri-file-list-3-line"></i><p>无检查结果</p></div>';
+        return;
+      }
+      
+      // 按分类分组
+      const groups = {};
+      checks.forEach(check => {
+        const category = check.category || 'other';
+        if (!groups[category]) {
+          groups[category] = [];
+        }
+        groups[category].push(check);
+      });
+      
+      const categoryNames = {
+        business: { name: '业务层检查', icon: 'ri-briefcase-line' },
+        data: { name: '数据层检查', icon: 'ri-database-2-line' },
+        display: { name: '展示层检查', icon: 'ri-eye-line' },
+        other: { name: '其他检查', icon: 'ri-checkbox-circle-line' }
+      };
+      
+      let html = '';
+      Object.entries(groups).forEach(([category, items]) => {
+        const catInfo = categoryNames[category] || categoryNames.other;
+        const failCount = items.filter(i => i.status === 'fail').length;
+        const warnCount = items.filter(i => i.status === 'warn').length;
+        
+        let badgeClass = 'pass';
+        let badgeText = `${items.length} 项全部通过`;
+        if (failCount > 0) {
+          badgeClass = 'fail';
+          badgeText = `${failCount} 项失败`;
+        } else if (warnCount > 0) {
+          badgeClass = 'warn';
+          badgeText = `${warnCount} 项警告`;
+        }
+        
+        html += `
+          <div class="check-section">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-title">
+                <div class="section-icon ${category}"><i class="${catInfo.icon}"></i></div>
+                <span>${catInfo.name}</span>
+                <span class="section-badge ${badgeClass}">${badgeText}</span>
+              </div>
+              <i class="ri-arrow-down-s-line section-toggle"></i>
+            </div>
+            <div class="section-content">
+              ${items.map(item => renderCheckItem(item)).join('')}
+            </div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+    }
+    
+    function renderCheckItem(item) {
+      const statusClass = item.status || 'unknown';
+      const statusText = item.status === 'pass' ? '通过' : 
+                        item.status === 'warn' ? '警告' : 
+                        item.status === 'fail' ? '失败' : item.status;
+      
+      let detailsHtml = '';
+      if (item.details) {
+        detailsHtml = `<div class="check-item-details"><pre>${JSON.stringify(item.details, null, 2)}</pre></div>`;
+      }
+      
+      return `
+        <div class="check-item">
+          <div class="check-item-header">
+            <div class="check-item-name">
+              <i class="ri-checkbox-circle-line"></i>
+              ${item.name}
+            </div>
+            <span class="check-item-status ${statusClass}">${statusText}</span>
+          </div>
+          <div class="check-item-message">${item.message || '-'}</div>
+          ${detailsHtml}
+        </div>
+      `;
+    }
+    
+    function toggleSection(header) {
+      header.classList.toggle('collapsed');
+      header.nextElementSibling.classList.toggle('collapsed');
+    }
+    
+    function showError(message) {
+      document.getElementById('checkResults').innerHTML = `
+        <div class="empty-state">
+          <i class="ri-error-warning-line"></i>
+          <p>${message}</p>
+          <button class="btn btn-secondary" style="margin-top: 16px" onclick="window.location.href='check-records.html'">
+            返回列表
+          </button>
+        </div>
+      `;
+    }
+    
+    function exportReport() {
+      if (!reportData) return;
+      
+      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `check-report-${recordId}.json`;
+      a.click();
+      
+      URL.revokeObjectURL(url);
+    }
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

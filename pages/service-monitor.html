@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务监控中心 - 全面监控解决方案</title>
+    <link href="assets/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/frame.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --purple: #8b5cf6;
+            --cyan: #06b6d4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 主内容区 */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            height: 64px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* 状态标签 */
+        .status-bar {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.healthy {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .status-badge.warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* 监控层级标签 */
+        .layer-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .layer-tab {
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .layer-tab:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .layer-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .layer-tab i {
+            font-size: 16px;
+        }
+
+        /* 统计卡片网格 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-label i {
+            font-size: 18px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-trend {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-trend.up { color: var(--success); }
+        .stat-trend.down { color: var(--danger); }
+
+        /* 进度条 */
+        .progress-container {
+            margin-top: 12px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.success { background: var(--success); }
+        .progress-fill.warning { background: var(--warning); }
+        .progress-fill.danger { background: var(--danger); }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* 服务列表 */
+        .service-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .service-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .service-item:hover {
+            border-color: var(--primary);
+        }
+
+        .service-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background: var(--bg-tertiary);
+        }
+
+        .service-info {
+            flex: 1;
+        }
+
+        .service-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .service-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .service-status {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .service-status.running {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .service-status.stopped {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        /* 网络拓扑 */
+        .network-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .network-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .network-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .network-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--primary);
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        /* 告警列表 */
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--border);
+            border-radius: 4px;
+        }
+
+        .alert-item.critical {
+            border-left-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .alert-item.warning {
+            border-left-color: var(--warning);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .alert-icon {
+            font-size: 18px;
+        }
+
+        .alert-item.critical .alert-icon { color: var(--danger); }
+        .alert-item.warning .alert-icon { color: var(--warning); }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .alert-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* 刷新按钮 */
+        .refresh-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: var(--primary);
+            opacity: 0.9;
+        }
+
+        .refresh-btn i {
+            transition: transform 0.5s;
+        }
+
+        .refresh-btn:hover i {
+            transform: rotate(180deg);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+  <script src="js/auth-guard.js"></script>
+<script src="js/field-tips.js"></script></head>
+<body>
+    <div class="layout">
+        <div id="sidebar-container"></div>
+        
+        <main class="main">
+            <header class="header">
+                <h1>
+                    <i class="ri-dashboard-line"></i>
+                    服务监控中心
+                </h1>
+                <div class="status-bar">
+                    <div class="status-badge healthy">
+                        <span class="status-dot"></span>
+                        <span id="system-status">系统正常</span>
+                    </div>
+                    <button class="refresh-btn" onclick="refreshData()">
+                        <i class="ri-refresh-line"></i>
+                        刷新
+                    </button>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- 层级标签 -->
+                <div class="layer-tabs">
+                    <div class="layer-tab active" data-layer="all">
+                        <i class="ri-apps-line"></i>
+                        全部概览
+                    </div>
+                    <div class="layer-tab" data-layer="hardware">
+                        <i class="ri-cpu-line"></i>
+                        硬件层
+                    </div>
+                    <div class="layer-tab" data-layer="network">
+                        <i class="ri-global-line"></i>
+                        网络层
+                    </div>
+                    <div class="layer-tab" data-layer="service">
+                        <i class="ri-server-line"></i>
+                        服务层
+                    </div>
+                </div>
+
+                <!-- 硬件层监控 -->
+                <div id="hardware-layer" style="display: block;">
+                    <div class="stats-grid">
+                        <!-- CPU -->
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">
+                                    <i class="ri-cpu-line"></i>
+                                    CPU 使用率
+                                </span>
+                            </div>
+                            <div class="stat-value" id="cpu-value">--%</div>
+                            <div class="stat-trend" id="cpu-cores">
+                                <i class="ri-equalizer-line"></i>
+                                <span id="cpu-cores-text">-- 核心</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill success" id="cpu-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 内存 -->
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">
+                                    <i class="ri-stack-line"></i>
+                                    内存使用
+                                </span>
+                            </div>
+                            <div class="stat-value" id="memory-value">-- GB</div>
+                            <div class="stat-trend" id="memory-trend">
+                                使用率 <span id="memory-percent">--%</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill success" id="memory-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 磁盘 -->
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">
+                                    <i class="ri-database-2-line"></i>
+                                    磁盘空间
+                                </span>
+                            </div>
+                            <div class="stat-value" id="disk-value">-- GB</div>
+                            <div class="stat-trend" id="disk-trend">
+                                已用 <span id="disk-percent">--%</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill success" id="disk-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 运行时间 -->
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">
+                                    <i class="ri-time-line"></i>
+                                    运行时间
+                                </span>
+                            </div>
+                            <div class="stat-value" id="uptime-value">--</div>
+                            <div class="stat-trend" id="uptime-trend">
+                                <i class="ri-calendar-line"></i>
+                                系统已运行
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 网络层监控 -->
+                <div id="network-layer" style="display: none;">
+                    <div class="network-grid">
+                        <div class="network-card">
+                            <div class="network-header">
+                                <div class="network-icon">
+                                    <i class="ri-wifi-line"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600;">网络接口</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">eth0</div>
+                                </div>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">IP 地址</span>
+                                <span class="metric-value" id="net-ip">--</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">子网掩码</span>
+                                <span class="metric-value" id="net-mask">--</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">连接数</span>
+                                <span class="metric-value" id="net-connections">--</span>
+                            </div>
+                        </div>
+
+                        <div class="network-card">
+                            <div class="network-header">
+                                <div class="network-icon">
+                                    <i class="ri-speed-line"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600;">带宽使用</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">实时</div>
+                                </div>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">上行速度</span>
+                                <span class="metric-value" id="net-upload">-- Mbps</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">下行速度</span>
+                                <span class="metric-value" id="net-download">-- Mbps</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 服务层监控 -->
+                <div id="service-layer" style="display: none;">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">
+                                    <i class="ri-check-circle-line"></i>
+                                    健康服务
+                                </span>
+                            </div>
+                            <div class="stat-value" id="services-healthy" style="color: var(--success);">--</div>
+                            <div class="stat-trend">
+                                <i class="ri-arrow-up-line"></i>
+                                正常运行中
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">
+                                    <i class="ri-error-warning-line"></i>
+                                    异常服务
+                                </span>
+                            </div>
+                            <div class="stat-value" id="services-unhealthy" style="color: var(--danger);">--</div>
+                            <div class="stat-trend">
+                                <i class="ri-arrow-down-line"></i>
+                                需要关注
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="service-list" id="service-list">
+                        <!-- 服务列表动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 告警列表 -->
+                <div class="stat-card" style="margin-top: 24px;">
+                    <div class="stat-header">
+                        <span class="stat-label">
+                            <i class="ri-alarm-warning-line"></i>
+                            最近告警
+                        </span>
+                    </div>
+                    <div class="alert-list" id="alert-list">
+                        <div class="alert-item warning">
+                            <i class="ri-information-line alert-icon"></i>
+                            <div class="alert-content">
+                                <div class="alert-title">监控系统已启动</div>
+                                <div class="alert-time">刚刚</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 初始化 Sidebar
+        if (typeof Sidebar !== 'undefined') {
+            Sidebar.init({ activePage: 'monitor' });
+        }
+
+        // 格式化字节
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 格式化运行时间
+        function formatUptime(seconds) {
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            return `${days}天 ${hours}小时 ${mins}分钟`;
+        }
+
+        // 获取进度条颜色
+        function getProgressColor(percent) {
+            if (percent < 60) return 'success';
+            if (percent < 80) return 'warning';
+            return 'danger';
+        }
+
+        // 刷新数据
+        async function refreshData() {
+            try {
+                const response = await fetch('/api/monitor/data');
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateUI(result.data);
+                }
+            } catch (error) {
+                console.error('获取监控数据失败:', error);
+                // 使用模拟数据
+                updateUI(getMockData());
+            }
+        }
+
+        // 更新 UI
+        function updateUI(data) {
+            // 硬件层
+            if (data.hardware) {
+                // CPU
+                document.getElementById('cpu-value').textContent = data.hardware.cpu.usage + '%';
+                document.getElementById('cpu-cores-text').textContent = `${data.hardware.cpu.cores} 核心`;
+                document.getElementById('cpu-bar').style.width = data.hardware.cpu.usage + '%';
+                document.getElementById('cpu-bar').className = `progress-fill ${getProgressColor(data.hardware.cpu.usage)}`;
+
+                // 内存
+                const memPercent = data.hardware.memory.percent;
+                document.getElementById('memory-value').textContent = formatBytes(data.hardware.memory.used);
+                document.getElementById('memory-percent').textContent = memPercent + '%';
+                document.getElementById('memory-bar').style.width = memPercent + '%';
+                document.getElementById('memory-bar').className = `progress-fill ${getProgressColor(memPercent)}`;
+
+                // 磁盘
+                if (data.hardware.disk && data.hardware.disk.length > 0) {
+                    const disk = data.hardware.disk[0];
+                    document.getElementById('disk-value').textContent = disk.size;
+                    document.getElementById('disk-percent').textContent = disk.percent + '%';
+                    document.getElementById('disk-bar').style.width = disk.percent + '%';
+                    document.getElementById('disk-bar').className = `progress-fill ${getProgressColor(disk.percent)}`;
+                }
+
+                // 运行时间
+                document.getElementById('uptime-value').textContent = formatUptime(os.uptime());
+            }
+
+            // 网络层
+            if (data.network) {
+                if (data.network.interfaces && data.network.interfaces.length > 0) {
+                    const iface = data.network.interfaces[0];
+                    document.getElementById('net-ip').textContent = iface.address || '--';
+                    document.getElementById('net-mask').textContent = iface.netmask || '--';
+                }
+                document.getElementById('net-connections').textContent = data.network.connections || '--';
+            }
+
+            // 服务层
+            if (data.services) {
+                document.getElementById('services-healthy').textContent = data.services.healthy || 0;
+                document.getElementById('services-unhealthy').textContent = data.services.unhealthy || 0;
+
+                // 服务列表
+                const serviceList = document.getElementById('service-list');
+                serviceList.innerHTML = '';
+                
+                // 添加新监控服务 - 新增功能
+                const monitorServices = [
+                    { name: '任务系统主服务', port: 8081, desc: '任务管理核心 API', icon: '📋' },
+                    { name: '双重保障机制', port: 8082, desc: '幂等性保护', icon: '🔒' },
+                    { name: '执行凭证系统', port: 8083, desc: 'Token 验证', icon: '🎫' },
+                    { name: '协调者确认', port: 8084, desc: '任务确认队列', icon: '✅' },
+                    { name: 'Agent 生命周期', port: 8085, desc: 'Agent 注册与心跳', icon: '🤖' },
+                    { name: '系统健康度', port: 8086, desc: '7维健康度评估', icon: '💚' },
+                    { name: '状态汇总服务', port: 8087, desc: '统一状态报告', icon: '📊' }
+                ];
+                
+                // 检查服务状态
+                for (const svc of monitorServices) {
+                    const status = await checkServiceStatus(svc.port);
+                    const item = document.createElement('div');
+                    item.className = 'service-item';
+                    item.innerHTML = `
+                        <div class="service-icon">${svc.icon}</div>
+                        <div class="service-info">
+                            <div class="service-name">${svc.name}</div>
+                            <div class="service-desc">${svc.desc} (端口 ${svc.port})</div>
+                        </div>
+                        <div class="service-status ${status ? 'running' : 'stopped'}">
+                            ${status ? '运行中' : '已停止'}
+                        </div>
+                    `;
+                    serviceList.appendChild(item);
+                }
+                
+                // 添加原有服务
+                if (data.services && data.services.list && data.services.list.length > 0) {
+                    data.services.list.forEach(svc => {
+                        const item = document.createElement('div');
+                        item.className = 'service-item';
+                        item.innerHTML = `
+                            <div class="service-icon">
+                                <i class="ri-${getServiceIcon(svc.type)}"></i>
+                            </div>
+                            <div class="service-info">
+                                <div class="service-name">${svc.name}</div>
+                                <div class="service-desc">${svc.process}</div>
+                            </div>
+                            <div class="service-status ${svc.status}">
+                                ${svc.status === 'running' ? '运行中' : '已停止'}
+                            </div>
+                        `;
+                        serviceList.appendChild(item);
+                    });
+                }
+            }
+        }
+        
+        // 检查服务状态 - 新增功能
+        async function checkServiceStatus(port) {
+            try {
+                const res = await fetch(`http://localhost:${port}/api/health/current`, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(1000)
+                });
+                return res.ok;
+            } catch {
+                // 尝试其他端点
+                try {
+                    const res = await fetch(`http://localhost:${port}/api/status/full`, {
+                        method: 'GET',
+                        signal: AbortSignal.timeout(1000)
+                    });
+                    return res.ok;
+                } catch {
+                    return false;
+                }
+            }
+        }
+
+        // 获取服务图标
+        function getServiceIcon(type) {
+            const icons = {
+                'system': 'settings-4-line',
+                'application': 'app-2-line',
+                'browser': 'chrome-line',
+                'database': 'database-2-line'
+            };
+            return icons[type] || 'question-line';
+        }
+
+        // 模拟数据（用于演示）
+        function getMockData() {
+            return {
+                hardware: {
+                    cpu: { usage: 23, cores: 8, load: [23, 25, 22, 24] },
+                    memory: { total: 16000000000, used: 8000000000, free: 8000000000, percent: 50 },
+                    disk: [{ size: '231G', percent: 38 }],
+                    temperature: {}
+                },
+                network: {
+                    interfaces: [{ address: '192.168.1.100', netmask: '255.255.255.0' }],
+                    connections: 42,
+                    bandwidth: { upload: 1.2, download: 5.6 }
+                },
+                services: {
+                    list: [
+                        { name: 'OpenClaw Gateway', process: 'openclaw-gateway', type: 'system', status: 'running' },
+                        { name: 'Task System', process: 'node task-system', type: 'application', status: 'running' },
+                        { name: 'Chrome Browser', process: 'chrome', type: 'browser', status: 'running' }
+                    ],
+                    healthy: 3,
+                    unhealthy: 0
+                }
+            };
+        }
+
+        // 层级切换
+        document.querySelectorAll('.layer-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // 更新激活状态
+                document.querySelectorAll('.layer-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // 切换显示内容
+                const layer = tab.dataset.layer;
+                document.getElementById('hardware-layer').style.display = layer === 'all' || layer === 'hardware' ? 'block' : 'none';
+                document.getElementById('network-layer').style.display = layer === 'all' || layer === 'network' ? 'block' : 'none';
+                document.getElementById('service-layer').style.display = layer === 'all' || layer === 'service' ? 'block' : 'none';
+            });
+        });
+
+        // 初始化
+        refreshData();
+        setInterval(refreshData, 5000); // 每 5 秒刷新一次
+    </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

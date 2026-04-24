@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>沟通小组 - Morning 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-content { padding: 24px; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--text-primary); }
+    
+    .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+    
+    .group-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .group-header { padding: 16px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
+    .group-info { flex: 1; }
+    .group-name { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .group-desc { font-size: 13px; color: var(--text-secondary); }
+    .group-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; }
+    .group-badge.feishu { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .group-badge.local { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+    
+    .group-members { padding: 16px; }
+    .section-title { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .member-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .member-badge { display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(0,0,0,0.2); border-radius: 20px; }
+    .member-avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; }
+    .member-name { font-size: 12px; color: var(--text-primary); }
+    .member-role { font-size: 11px; color: var(--text-secondary); }
+    
+    .group-link { padding: 12px 16px; background: rgba(59, 130, 246, 0.05); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .link-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .link-icon.feishu { background: #3370ff; color: white; }
+    .link-icon.dingtalk { background: #0089ff; color: white; }
+    .link-content { flex: 1; }
+    .link-name { font-size: 13px; color: var(--text-primary); }
+    .link-meta { font-size: 11px; color: var(--text-secondary); }
+    .link-status { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+    
+    .group-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .group-stat { font-size: 12px; color: var(--text-secondary); }
+    .group-stat span { color: var(--primary); font-weight: 600; }
+    
+    .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); }
+    .btn-link { background: transparent; color: var(--primary); padding: 4px 8px; }
+    .btn:hover { opacity: 0.9; }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div class="header-left"><div class="breadcrumb"><span>沟通小组</span></div></div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadGroups()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      <div class="content">
+        <div class="page-content">
+          <div class="page-header">
+            <h1 class="page-title"><i class="ri-team-line"></i> 沟通小组</h1>
+            <button class="btn btn-primary" onclick="createGroup()">
+              <i class="ri-add-line"></i> 创建小组
+            </button>
+          </div>
+          
+          <div class="groups-grid" id="groupsGrid"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="js/sidebar.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      Sidebar.init({ activePage: 'chat-groups' });
+      loadGroups();
+    });
+    
+    const groups = [
+      {
+        id: 1,
+        name: '方案评审小组',
+        desc: '负责评审技术方案、架构设计等',
+        type: 'feishu',
+        members: [
+          { name: 'main', role: '架构师' },
+          { name: 'chat', role: '用户体验' },
+          { name: 'deep', role: '深度分析' },
+          { name: 'fast', role: '效率评审' },
+          { name: 'coder', role: '技术实现' },
+          { name: 'test', role: '测试评审' },
+          { name: 'office', role: '产品评审' }
+        ],
+        link: { type: 'feishu', name: 'Morning 方案评审群', members: 15, chatId: 'oc_xxx' },
+        meetings: 24
+      },
+      {
+        id: 2,
+        name: '小说 Review 小组',
+        desc: '负责评审小说章节、情节设计',
+        type: 'feishu',
+        members: [
+          { name: 'office', role: '编辑视角' },
+          { name: 'office-1', role: '读者视角' }
+        ],
+        link: { type: 'feishu', name: '网文创作讨论组', members: 5, chatId: 'oc_yyy' },
+        meetings: 18
+      },
+      {
+        id: 3,
+        name: '开发小组',
+        desc: '负责代码开发、功能实现',
+        type: 'local',
+        members: [
+          { name: 'coder', role: '主力开发' },
+          { name: 'coder-1', role: '开发支持' },
+          { name: 'coder-2', role: '开发支持' }
+        ],
+        link: null,
+        meetings: 45
+      },
+      {
+        id: 4,
+        name: '测试小组',
+        desc: '负责测试用例、验收测试',
+        type: 'feishu',
+        members: [
+          { name: 'test', role: '测试负责' }
+        ],
+        link: { type: 'feishu', name: '测试质量保障群', members: 8, chatId: 'oc_zzz' },
+        meetings: 32
+      },
+      {
+        id: 5,
+        name: '办公自动化小组',
+        desc: '负责办公自动化、文档处理',
+        type: 'local',
+        members: [
+          { name: 'office', role: '负责人' },
+          { name: 'office-1', role: '成员' }
+        ],
+        link: null,
+        meetings: 12
+      }
+    ];
+    
+    function loadGroups() {
+      const grid = document.getElementById('groupsGrid');
+      grid.innerHTML = groups.map(group => `
+        <div class="group-card">
+          <div class="group-header">
+            <div class="group-info">
+              <div class="group-name">${group.name}</div>
+              <div class="group-desc">${group.desc}</div>
+            </div>
+            <span class="group-badge ${group.type}">${group.type === 'feishu' ? '飞书群' : '本地'}</span>
+          </div>
+          
+          <div class="group-members">
+            <div class="section-title">成员 (${group.members.length})</div>
+            <div class="member-list">
+              ${group.members.map(m => `
+                <div class="member-badge">
+                  <div class="member-avatar">${m.name.charAt(0).toUpperCase()}</div>
+                  <div>
+                    <div class="member-name">${m.name}</div>
+                    <div class="member-role">${m.role}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          ${group.link ? `
+            <div class="group-link">
+              <div class="link-icon ${group.link.type}">
+                <i class="ri-${group.link.type === 'feishu' ? 'message-3' : 'wechat'}-line"></i>
+              </div>
+              <div class="link-content">
+                <div class="link-name">${group.link.name}</div>
+                <div class="link-meta">${group.link.members} 成员</div>
+              </div>
+              <div class="link-status"></div>
+              <button class="btn btn-link" onclick="openChat('${group.link.chatId}')">
+                <i class="ri-external-link-line"></i>
+              </button>
+            </div>
+          ` : `
+            <div class="group-link" style="background: transparent;">
+              <div style="flex: 1; color: var(--text-secondary); font-size: 13px;">未关联沟通群</div>
+              <button class="btn btn-secondary" onclick="linkGroup(${group.id})">
+                <i class="ri-link"></i> 关联
+              </button>
+            </div>
+          `}
+          
+          <div class="group-footer">
+            <span class="group-stat">已完成会议: <span>${group.meetings}</span> 次</span>
+            <button class="btn btn-secondary" onclick="viewGroup(${group.id})">查看详情</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function createGroup() {
+      alert('创建小组功能开发中...');
+    }
+    
+    function viewGroup(id) {
+      alert('查看小组详情: ' + id);
+    }
+    
+    function openChat(chatId) {
+      // 打开飞书群聊
+      window.open('https://open.feishu.cn/open-ing/chat/' + chatId, '_blank');
+    }
+    
+    function linkGroup(id) {
+      const group = groups.find(g => g.id === id);
+      if (group) {
+        alert(`关联沟通群\n\n请输入飞书群 ID 关联到 "${group.name}"`);
+      }
+    }
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

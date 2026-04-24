@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>通信渠道 - 任务系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content {
+      padding: 24px;
+    }
+    
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    
+    .tips-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: all 0.2s;
+    }
+    
+    .tips-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    
+    /* Tips 弹窗 */
+    .tips-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+    
+    .tips-modal.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .tips-content {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      max-width: 700px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 24px;
+      transform: translateY(20px);
+      transition: all 0.3s;
+    }
+    
+    .tips-modal.show .tips-content {
+      transform: translateY(0);
+    }
+    
+    .tips-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    
+    .tips-title {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .tips-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: var(--text-secondary);
+      padding: 4px;
+    }
+    
+    .tips-close:hover {
+      color: var(--text-primary);
+    }
+    
+    .tips-section {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+    
+    .tips-section-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .tips-section-content {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    
+    .tips-section-content ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+    
+    .tips-section-content li {
+      margin: 6px 0;
+    }
+    
+    .learn-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    
+    .learn-link:hover {
+      text-decoration: underline;
+    }
+    
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      flex: 1;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    
+    .stat-card.success .stat-value { color: var(--success); }
+    .stat-card.warning .stat-value { color: var(--warning); }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .channels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    
+    .channel-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      transition: all 0.2s;
+    }
+    
+    .channel-card:hover {
+      border-color: var(--primary);
+    }
+    
+    .channel-card.active {
+      border-color: var(--success);
+    }
+    
+    .channel-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .channel-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--bg-tertiary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    
+    .channel-info {
+      flex: 1;
+    }
+    
+    .channel-name {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .channel-type {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .channel-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    
+    .status-dot.online {
+      background: var(--success);
+    }
+    
+    .status-dot.offline {
+      background: var(--danger);
+    }
+    
+    .channel-meta {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .meta-item {
+      text-align: center;
+    }
+    
+    .meta-value {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .meta-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+    
+    .channel-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    /* 账号列表 */
+    .accounts-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .accounts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .account-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+    }
+    
+    .account-avatar {
+      width: 36px;
+      height: 36px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 600;
+    }
+    
+    .account-info {
+      flex: 1;
+    }
+    
+    .account-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .account-id {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-family: monospace;
+    }
+    
+    .account-mode {
+      font-size: 12px;
+      padding: 4px 8px;
+      background: var(--bg-primary);
+      border-radius: 4px;
+      color: var(--text-secondary);
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <a href="tools-list.html">工具</a>
+            <span>/</span>
+            <span>通信渠道</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadChannels()">
+            <i class="ri-refresh-line"></i>
+          </button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <div class="page-content">
+          <div class="page-header">
+            <h1 class="page-title">通信渠道</h1>
+            <button class="tips-btn" onclick="showTips()">
+              <i class="ri-information-line"></i>
+              <span>渠道规范与规则</span>
+            </button>
+          </div>
+          
+          <div class="stats-bar">
+            <div class="stat-card">
+              <div class="stat-value" id="stat-total">0</div>
+              <div class="stat-label">可用渠道</div>
+            </div>
+            <div class="stat-card success">
+              <div class="stat-value" id="stat-online">0</div>
+              <div class="stat-label">已启用</div>
+            </div>
+            <div class="stat-card warning">
+              <div class="stat-value" id="stat-accounts">0</div>
+              <div class="stat-label">账号总数</div>
+            </div>
+          </div>
+          
+          <div class="section-title">
+            <i class="ri-check-double-line" style="color: var(--success);"></i>
+            已启用的渠道
+          </div>
+          <div class="channels-grid" id="enabled-channels">
+            <!-- 由 JS 动态渲染 -->
+          </div>
+          
+          <div class="section-title">
+            <i class="ri-close-circle-line" style="color: var(--text-secondary);"></i>
+            可用的渠道（未启用）
+          </div>
+          <div class="channels-grid" id="available-channels">
+            <!-- 由 JS 动态渲染 -->
+          </div>
+          
+          <div class="section-title" style="margin-top: 24px;">
+            <i class="ri-user-settings-line"></i>
+            已配置账号
+          </div>
+          <div class="accounts-section">
+            <div class="accounts-list" id="accounts-list">
+              <!-- 由 JS 动态渲染 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Tips 弹窗 -->
+  <div class="tips-modal" id="tips-modal" onclick="hideTips(event)">
+    <div class="tips-content" onclick="event.stopPropagation()">
+      <div class="tips-header">
+        <div class="tips-title">
+          <i class="ri-broadcast-line"></i>
+          通信渠道规范与规则
+        </div>
+        <button class="tips-close" onclick="hideTips()">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      
+      <div class="tips-section">
+        <div class="tips-section-title">
+          <i class="ri-settings-3-line"></i>
+          1. 渠道配置规则
+        </div>
+        <div class="tips-section-content">
+          <ul>
+            <li><strong>连接模式</strong>：支持 websocket 和 webhook 两种模式</li>
+            <li><strong>认证配置</strong>：正确配置 App ID 和 App Secret</li>
+            <li><strong>权限申请</strong>：在开发者后台申请必要的 API 权限</li>
+            <li><strong>回调地址</strong>：webhook 模式需要配置公网可访问的 HTTPS 地址</li>
+            <li><strong>长连接</strong>：websocket 模式需要在开发者后台开启长连接</li>
+          </ul>
+          <a href="learning-path.html?id=channel-configuration" class="learn-link">
+            <i class="ri-external-link-line"></i>
+            学习渠道配置规范
+          </a>
+        </div>
+      </div>
+      
+      <div class="tips-section">
+        <div class="tips-section-title">
+          <i class="ri-shield-check-line"></i>
+          2. 消息安全规范
+        </div>
+        <div class="tips-section-content">
+          <ul>
+            <li><strong>消息验证</strong>：验证消息来源和签名</li>
+            <li><strong>敏感信息</strong>：不在消息中传递敏感信息</li>
+            <li><strong>权限隔离</strong>：不同渠道使用不同的账号配置</li>
+            <li><strong>消息去重</strong>：处理消息重复推送的情况</li>
+            <li><strong>审计日志</strong>：记录所有消息收发日志</li>
+          </ul>
+          <a href="learning-path.html?id=channel-security" class="learn-link">
+            <i class="ri-external-link-line"></i>
+            学习消息安全规范
+          </a>
+        </div>
+      </div>
+      
+      <div class="tips-section">
+        <div class="tips-section-title">
+          <i class="ri-user-line"></i>
+          3. Agent 分配规则
+        </div>
+        <div class="tips-section-content">
+          <ul>
+            <li><strong>默认 Agent</strong>：为每个渠道配置默认处理 Agent</li>
+            <li><strong>私聊策略</strong>：dmPolicy 控制私聊消息的处理方式</li>
+            <li><strong>群聊策略</strong>：groupPolicy 控制群聊消息的处理方式</li>
+            <li><strong>提及要求</strong>：requireMention 控制是否需要 @机器人</li>
+            <li><strong>来源限制</strong>：allowFrom 限制消息来源</li>
+          </ul>
+          <a href="learning-path.html?id=channel-agent" class="learn-link">
+            <i class="ri-external-link-line"></i>
+            学习 Agent 分配规则
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 真实渠道数据（基于 openclaw.json 配置和已安装插件）
+    let enabledChannels = [
+      {
+        id: 'feishu',
+        name: '飞书',
+        icon: '🪽',
+        type: 'IM',
+        status: 'online',
+        accounts: ['default', 'bot2', 'bot3'],
+        connectionMode: 'websocket',
+        defaultAgent: 'chat',
+        dmPolicy: 'open',
+        groupPolicy: 'open',
+        requireMention: true
+      }
+    ];
+    
+    const availableChannels = [
+      { id: 'discord', name: 'Discord', icon: '🎮', type: 'IM', installed: true },
+      { id: 'telegram', name: 'Telegram', icon: '✈️', type: 'IM', installed: true },
+      { id: 'signal', name: 'Signal', icon: '🔒', type: 'IM', installed: true },
+      { id: 'whatsapp', name: 'WhatsApp', icon: '💬', type: 'IM', installed: true },
+      { id: 'slack', name: 'Slack', icon: '💼', type: 'IM', installed: true },
+      { id: 'imessage', name: 'iMessage', icon: '🍎', type: 'IM', installed: true },
+      { id: 'googlechat', name: 'Google Chat', icon: '🌐', type: 'IM', installed: true },
+      { id: 'irc', name: 'IRC', icon: '💬', type: 'IM', installed: true },
+      { id: 'matrix', name: 'Matrix', icon: '🔗', type: 'IM', installed: true },
+      { id: 'mattermost', name: 'Mattermost', icon: '📱', type: 'IM', installed: true },
+      { id: 'msteams', name: 'MS Teams', icon: '👥', type: 'IM', installed: true },
+      { id: 'line', name: 'LINE', icon: '📱', type: 'IM', installed: true },
+      { id: 'twitch', name: 'Twitch', icon: '📺', type: 'IM', installed: true },
+      { id: 'nostr', name: 'Nostr', icon: '⚡', type: 'IM', installed: true },
+      { id: 'zalo', name: 'Zalo', icon: '📱', type: 'IM', installed: true }
+    ];
+    
+    // 加载联邦通信渠道
+    async function loadFederationChannel() {
+      try {
+        const res = await fetch('/api/federation/channel');
+        const data = await res.json();
+        
+        if (data.success && data.channel) {
+          // 添加联邦通信到已启用渠道
+          const federationChannel = {
+            id: data.channel.id,
+            name: data.channel.name,
+            icon: data.channel.icon,
+            type: data.channel.type,
+            status: data.channel.status,
+            description: data.channel.description,
+            accounts: data.channel.accounts,
+            connectionMode: data.channel.connectionMode,
+            defaultAgent: data.channel.defaultAgent,
+            dmPolicy: data.channel.dmPolicy,
+            groupPolicy: data.channel.groupPolicy,
+            requireMention: data.channel.requireMention,
+            agents: data.channel.agents,
+            remoteInstances: data.channel.remoteInstances,
+            isFederation: true
+          };
+          
+          // 检查是否已存在
+          const existingIndex = enabledChannels.findIndex(c => c.id === 'federation');
+          if (existingIndex >= 0) {
+            enabledChannels[existingIndex] = federationChannel;
+          } else {
+            enabledChannels.push(federationChannel);
+          }
+        }
+      } catch (err) {
+        console.warn('加载联邦通信渠道失败:', err);
+      }
+    }
+    
+    // 加载渠道列表
+    async function loadChannels() {
+      // 先加载联邦通信渠道
+      await loadFederationChannel();
+      
+      const enabledContainer = document.getElementById('enabled-channels');
+      const availableContainer = document.getElementById('available-channels');
+      const accountsContainer = document.getElementById('accounts-list');
+      
+      let onlineCount = 0;
+      let totalAccounts = 0;
+      
+      // 渲染已启用渠道
+      enabledContainer.innerHTML = enabledChannels.map(channel => {
+        onlineCount++;
+        totalAccounts += channel.accounts.length;
+        
+        // 联邦通信特殊显示
+        if (channel.isFederation) {
+          const agentCount = channel.agents?.length || 0;
+          const remoteCount = channel.remoteInstances?.length || 0;
+          
+          return `
+            <div class="channel-card active" style="border-color: var(--primary);">
+              <div class="channel-header">
+                <div class="channel-icon" style="background: linear-gradient(135deg, var(--primary), #00c6ff);">${channel.icon}</div>
+                <div class="channel-info">
+                  <div class="channel-name">${channel.name} <span style="font-size: 11px; color: var(--primary);">★</span></div>
+                  <div class="channel-type">${channel.type} · ${channel.description || '跨实例 Agent 协作'}</div>
+                </div>
+                <div class="channel-status">
+                  <span class="status-dot online"></span>
+                  在线
+                </div>
+              </div>
+              
+              <div class="channel-meta">
+                <div class="meta-item">
+                  <div class="meta-value">${agentCount}</div>
+                  <div class="meta-label">本地 Agent</div>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-value">${remoteCount}</div>
+                  <div class="meta-label">远程实例</div>
+                </div>
+              </div>
+              
+              ${channel.agents && channel.agents.length > 0 ? `
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+                  <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">启用 Agent:</div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    ${channel.agents.slice(0, 5).map(a => `
+                      <span style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                        ${a.icon} ${a.name}
+                      </span>
+                    `).join('')}
+                    ${channel.agents.length > 5 ? `<span style="color: var(--text-secondary); font-size: 12px;">+${channel.agents.length - 5}</span>` : ''}
+                  </div>
+                </div>
+              ` : ''}
+              
+              <div class="channel-actions">
+                <button class="btn btn-primary" onclick="enterFederationChat()">
+                  <i class="ri-chat-3-line"></i> 进入聊天
+                </button>
+                <button class="btn btn-secondary" onclick="viewFederationConfig()">
+                  <i class="ri-settings-3-line"></i> Agent 配置
+                </button>
+              </div>
+            </div>
+          `;
+        }
+        
+        // 普通渠道
+        return `
+          <div class="channel-card active">
+            <div class="channel-header">
+              <div class="channel-icon">${channel.icon}</div>
+              <div class="channel-info">
+                <div class="channel-name">${channel.name}</div>
+                <div class="channel-type">${channel.type} · ${channel.connectionMode}</div>
+              </div>
+              <div class="channel-status">
+                <span class="status-dot online"></span>
+                在线
+              </div>
+            </div>
+            
+            <div class="channel-meta">
+              <div class="meta-item">
+                <div class="meta-value">${channel.accounts.length}</div>
+                <div class="meta-label">账号数</div>
+              </div>
+              <div class="meta-item">
+                <div class="meta-value">${channel.defaultAgent}</div>
+                <div class="meta-label">默认 Agent</div>
+              </div>
+            </div>
+            
+            <div class="channel-actions">
+              <button class="btn btn-secondary" onclick="viewChannelConfig('${channel.id}')">
+                <i class="ri-settings-3-line"></i> 配置
+              </button>
+              <button class="btn btn-secondary">
+                <i class="ri-pause-line"></i> 禁用
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // 渲染可用渠道
+      availableContainer.innerHTML = availableChannels.map(channel => {
+        return `
+          <div class="channel-card">
+            <div class="channel-header">
+              <div class="channel-icon">${channel.icon}</div>
+              <div class="channel-info">
+                <div class="channel-name">${channel.name}</div>
+                <div class="channel-type">${channel.type}</div>
+              </div>
+              <div class="channel-status">
+                <span class="status-dot offline"></span>
+                未启用
+              </div>
+            </div>
+            
+            <div class="channel-actions">
+              <button class="btn btn-secondary">
+                <i class="ri-information-line"></i> 详情
+              </button>
+              <button class="btn btn-primary" onclick="enableChannel('${channel.id}')">
+                <i class="ri-play-line"></i> 启用
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // 渲染账号列表
+      accountsContainer.innerHTML = enabledChannels.flatMap(channel => 
+        channel.accounts.map(accountId => `
+          <div class="account-item">
+            <div class="account-avatar">${accountId.charAt(0).toUpperCase()}</div>
+            <div class="account-info">
+              <div class="account-name">${accountId === 'default' ? '主账号' : accountId}</div>
+              <div class="account-id">${channel.name} · ${accountId}</div>
+            </div>
+            <span class="account-mode">${channel.connectionMode}</span>
+          </div>
+        `)
+      ).join('');
+      
+      // 更新统计
+      document.getElementById('stat-total').textContent = enabledChannels.length + availableChannels.length;
+      document.getElementById('stat-online').textContent = onlineCount;
+      document.getElementById('stat-accounts').textContent = totalAccounts;
+    }
+    
+    // 查看渠道配置
+    function viewChannelConfig(channelId) {
+      const channel = enabledChannels.find(c => c.id === channelId);
+      if (channel) {
+        alert(`渠道配置\n\nID: ${channel.id}\n名称: ${channel.name}\n连接模式: ${channel.connectionMode}\n默认 Agent: ${channel.defaultAgent}\n账号: ${channel.accounts.join(', ')}\n私聊策略: ${channel.dmPolicy}\n群聊策略: ${channel.groupPolicy}`);
+      }
+    }
+    
+    // 查看联邦通信配置
+    function viewFederationConfig() {
+      window.location.href = 'federation-config.html';
+    }
+    
+    // 进入联邦通信聊天
+    function enterFederationChat() {
+      window.location.href = 'agent-chat-room.html';
+    }
+    
+    // 查看远程实例
+    function viewRemoteInstances() {
+      window.location.href = 'federation-config.html#instances';
+    }
+    
+    // 启用渠道
+    function enableChannel(channelId) {
+      const channel = availableChannels.find(c => c.id === channelId);
+      if (channel) {
+        alert(`启用渠道: ${channel.name}\n\n需要在 openclaw.json 中配置 ${channel.id} 渠道信息。`);
+      }
+    }
+    
+    // 显示 Tips
+    function showTips() {
+      document.getElementById('tips-modal').classList.add('show');
+    }
+    
+    // 隐藏 Tips
+    function hideTips(event) {
+      if (!event || event.target === document.getElementById('tips-modal')) {
+        document.getElementById('tips-modal').classList.remove('show');
+      }
+    }
+    
+    // 初始化
+    loadChannels();
+  </script>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'channels' });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

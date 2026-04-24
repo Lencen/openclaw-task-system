@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="deep-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>War Room - 实时指挥中心</title>
+  
+  <!-- 统一框架 -->
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/components.css">
+  
+  <!-- 页面框架（包含 .layout, .sidebar, .main 等基础布局） -->
+  <link rel="stylesheet" href="css/frame.css">
+  
+  <!-- 侧边栏 -->
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <!-- 图标库 -->
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  
+  <style>
+    /* ===================================
+       War Room 特定样式
+       =================================== */
+    
+    /* 页面容器 */
+    .war-room-container {
+      min-height: 100vh;
+      background: var(--bg);
+      padding: var(--spacing-md);
+    }
+    
+    /* 修复侧边栏容器 - 让 sidebar 直接成为 layout 的子元素 */
+    #sidebar-container {
+      display: contents;
+    }
+    
+    /* 强制 flex 布局 - 确保侧边栏和主内容水平排列 */
+    .layout {
+      display: flex !important;
+    }
+    
+    .main {
+      flex: 1 !important;
+    }
+    
+    /* 页面头部 */
+    .war-room-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-lg);
+      padding-bottom: var(--spacing-md);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .war-room-title {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .war-room-title h1 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 500;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    
+    .war-room-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .last-updated {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    /* 统计卡片行 */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-lg);
+    }
+    
+    @media (max-width: 1200px) {
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+    }
+    
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-md);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+    
+    .stat-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .stat-icon {
+      font-size: 16px;
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    
+    .stat-card.success .stat-value { color: var(--success); }
+    .stat-card.warning .stat-value { color: var(--warning); }
+    .stat-card.danger .stat-value { color: var(--danger); }
+    .stat-card.primary .stat-value { color: var(--primary); }
+    .stat-card.purple .stat-value { color: #8b5cf6; }
+    
+    .stat-trend {
+      font-size: 11px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    /* 主内容区 */
+    .main-content-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: var(--spacing-lg);
+      flex: 1;
+    }
+    
+    @media (max-width: 1200px) {
+      .main-content-grid { grid-template-columns: 1fr; }
+      .side-panel { display: none; }
+    }
+    
+    .main-panel {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-lg);
+    }
+    
+    /* 卡片 */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    
+    .card-header {
+      padding: var(--spacing-md);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .card-action {
+      font-size: 12px;
+      color: var(--primary);
+      text-decoration: none;
+      cursor: pointer;
+      transition: color var(--transition);
+    }
+    
+    .card-action:hover {
+      color: #06b6d4;
+    }
+    
+    .card-body {
+      padding: var(--spacing-md);
+    }
+    
+    .card-body.no-padding {
+      padding: 0;
+    }
+    
+    /* Agent 网格 */
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--spacing-md);
+    }
+    
+    .agent-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      transition: all var(--transition);
+      cursor: pointer;
+    }
+    
+    .agent-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .agent-card.offline {
+      opacity: 0.6;
+    }
+    
+    .agent-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-sm);
+    }
+    
+    .agent-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .agent-emoji { font-size: 16px; }
+    
+    .agent-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 500;
+    }
+    
+    .agent-status.online { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .agent-status.busy { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .agent-status.idle { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .agent-status.offline { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    
+    .agent-info {
+      font-size: 11px;
+      color: var(--text-secondary);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    .agent-task {
+      color: var(--primary);
+      font-weight: 500;
+    }
+    
+    .agent-progress {
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-top: var(--spacing-sm);
+      overflow: hidden;
+    }
+    
+    .agent-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #8b5cf6);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+    
+    /* 任务列表 */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+    
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      padding: var(--spacing-md);
+      background: rgba(51, 65, 85, 0.5);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    
+    .task-item:hover {
+      background: rgba(51, 65, 85, 0.8);
+    }
+    
+    .task-priority {
+      width: 4px;
+      height: 32px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    
+    .task-priority.high { background: var(--danger); }
+    .task-priority.medium { background: var(--warning); }
+    .task-priority.low { background: var(--primary); }
+    
+    .task-content { flex: 1; min-width: 0; }
+    
+    .task-title {
+      font-size: 13px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .task-meta {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      display: flex;
+      gap: var(--spacing-md);
+    }
+    
+    .task-status {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+    }
+    
+    .task-status.doing { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .task-status.pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .task-status.completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    
+    /* 侧边面板 */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+    
+    /* 资源监控 */
+    .metrics-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+    
+    .metric-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .metric-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      min-width: 60px;
+    }
+    
+    .metric-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .metric-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    
+    .metric-fill.success { background: var(--success); }
+    .metric-fill.warning { background: var(--warning); }
+    .metric-fill.danger { background: var(--danger); }
+    
+    .metric-value {
+      font-size: 11px;
+      color: var(--text);
+      min-width: 40px;
+      text-align: right;
+    }
+    
+    /* 日志流 */
+    .log-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-family: 'Fira Code', 'Consolas', monospace;
+      font-size: 11px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .log-item {
+      display: flex;
+      gap: var(--spacing-sm);
+      padding: 6px var(--spacing-sm);
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      border-left: 3px solid var(--border);
+    }
+    
+    .log-item.info { border-left-color: var(--primary); }
+    .log-item.warn { border-left-color: var(--warning); }
+    .log-item.error { border-left-color: var(--danger); }
+    .log-item.success { border-left-color: var(--success); }
+    
+    .log-time {
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    
+    .log-level {
+      font-weight: 600;
+      min-width: 40px;
+    }
+    
+    .log-level.info { color: var(--primary); }
+    .log-level.warn { color: var(--warning); }
+    .log-level.error { color: var(--danger); }
+    .log-level.success { color: var(--success); }
+    
+    .log-message {
+      color: var(--text);
+      flex: 1;
+      word-break: break-all;
+    }
+    
+    /* 快捷操作 */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-sm);
+    }
+    
+    .quick-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: var(--spacing-md) var(--spacing-sm);
+      background: rgba(51, 65, 85, 0.5);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 12px;
+      transition: all var(--transition);
+      cursor: pointer;
+    }
+    
+    .quick-btn:hover {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    
+    .quick-btn-icon { font-size: 20px; }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: var(--spacing-xl);
+      color: var(--text-secondary);
+    }
+    
+    .empty-state-icon { font-size: 32px; margin-bottom: var(--spacing-sm); opacity: 0.5; }
+    
+    /* 按钮 */
+    .btn-icon {
+      height: 32px;
+      width: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    
+    .btn-icon:hover {
+      background: var(--card-bg);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+    
+    .btn-icon.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+    
+    .btn-icon.primary:hover {
+      background: #2563eb;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <!-- 侧边栏容器 -->
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <div class="war-room-container">
+    <!-- 页面头部 -->
+    <header class="war-room-header">
+      <div class="war-room-title">
+        <h1>🚀 War Room</h1>
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          <span>实时</span>
+        </div>
+      </div>
+      <div class="war-room-actions">
+        <span class="last-updated" id="lastUpdated">最后更新: --:--:--</span>
+        <button class="btn-icon" onclick="recoverAgents()" id="recoverBtn" title="恢复 Agents">
+          <i class="ri-refresh-line"></i>
+        </button>
+        <button class="btn-icon primary" onclick="loadData()" title="刷新数据">
+          <i class="ri-restart-line"></i>
+        </button>
+      </div>
+    </header>
+    
+    <!-- 统计卡片行 -->
+    <div class="stats-row">
+      <div class="stat-card success">
+        <div class="stat-card-header">
+          <span class="stat-label">在线 Agent</span>
+          <i class="stat-icon ri-checkbox-blank-circle-fill"></i>
+        </div>
+        <div class="stat-value" id="onlineAgents">--</div>
+        <div class="stat-trend" id="onlineAgentsDetail">-- / -- 总计</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-card-header">
+          <span class="stat-label">忙碌 Agent</span>
+          <i class="stat-icon ri-checkbox-blank-circle-fill"></i>
+        </div>
+        <div class="stat-value" id="busyAgents">--</div>
+        <div class="stat-trend">正在执行任务</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="stat-card-header">
+          <span class="stat-label">离线 Agent</span>
+          <i class="stat-icon ri-checkbox-blank-circle-fill"></i>
+        </div>
+        <div class="stat-value" id="offlineAgents">--</div>
+        <div class="stat-trend">需要恢复</div>
+      </div>
+      <div class="stat-card primary">
+        <div class="stat-card-header">
+          <span class="stat-label">进行中任务</span>
+          <i class="stat-icon ri-file-list-3-line"></i>
+        </div>
+        <div class="stat-value" id="activeTasks">--</div>
+        <div class="stat-trend">正在执行</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-card-header">
+          <span class="stat-label">Token 用量</span>
+          <i class="stat-icon ri-vip-diamond-line"></i>
+        </div>
+        <div class="stat-value" id="tokenUsage">--</div>
+        <div class="stat-trend">今日消耗</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span class="stat-label">系统状态</span>
+          <i class="stat-icon ri-computer-line"></i>
+        </div>
+        <div class="stat-value" id="systemStatus" style="color: var(--success);">正常</div>
+        <div class="stat-trend" id="cpuMemInfo">CPU --% | MEM --%</div>
+      </div>
+    </div>
+    
+    <!-- 主内容区 -->
+    <div class="main-content-grid">
+      <!-- 主面板 -->
+      <div class="main-panel">
+        <!-- Agent 状态 -->
+        <div class="card" style="flex: 1;">
+          <div class="card-header">
+            <span class="card-title">
+              <span>🤖</span>
+              Agent 状态
+            </span>
+            <a href="agents-new.html" class="card-action">查看全部 →</a>
+          </div>
+          <div class="card-body no-padding" style="padding: var(--spacing-md);">
+            <div class="agents-grid" id="agentsGrid">
+              <div class="empty-state">
+                <div class="empty-state-icon">⏳</div>
+                <div>加载中...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 进行中任务 -->
+        <div class="card" style="flex: 1;">
+          <div class="card-header">
+            <span class="card-title">
+              <span>📋</span>
+              进行中任务
+            </span>
+            <a href="tasks-v2.html" class="card-action">查看全部 →</a>
+          </div>
+          <div class="card-body no-padding" style="padding: var(--spacing-md); max-height: 300px; overflow-y: auto;">
+            <div class="task-list" id="tasksList">
+              <div class="empty-state">
+                <div class="empty-state-icon">⏳</div>
+                <div>加载中...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 侧边面板 -->
+      <div class="side-panel">
+        <!-- 系统资源 -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              <span>💻</span>
+              系统资源
+            </span>
+          </div>
+          <div class="card-body">
+            <div class="metrics-list" id="systemMetrics">
+              <div class="metric-item">
+                <span class="metric-label">CPU</span>
+                <div class="metric-bar"><div class="metric-fill success" style="width: 0%;"></div></div>
+                <span class="metric-value">--%</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">内存</span>
+                <div class="metric-bar"><div class="metric-fill success" style="width: 0%;"></div></div>
+                <span class="metric-value">--%</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">磁盘</span>
+                <div class="metric-bar"><div class="metric-fill success" style="width: 0%;"></div></div>
+                <span class="metric-value">--%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Agent 资源 -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              <span>🤖</span>
+              Agent 资源
+            </span>
+          </div>
+          <div class="card-body">
+            <div class="metrics-list" id="agentMetrics">
+              <div class="metric-item">
+                <span class="metric-label">Token</span>
+                <div class="metric-bar"><div class="metric-fill warning" style="width: 0%;"></div></div>
+                <span class="metric-value">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">API</span>
+                <div class="metric-bar"><div class="metric-fill success" style="width: 0%;"></div></div>
+                <span class="metric-value">--</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">成功率</span>
+                <div class="metric-bar"><div class="metric-fill success" style="width: 89%;"></div></div>
+                <span class="metric-value">89%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 实时日志 -->
+        <div class="card" style="flex: 1;">
+          <div class="card-header">
+            <span class="card-title">
+              <span>📜</span>
+              实时日志
+            </span>
+            <span class="card-action" onclick="clearLogs()">清空</span>
+          </div>
+          <div class="card-body no-padding" style="padding: var(--spacing-sm); overflow-y: auto; max-height: 200px;">
+            <div class="log-stream" id="logStream">
+              <div class="log-item info">
+                <span class="log-time">--:--:--</span>
+                <span class="log-level info">INFO</span>
+                <span class="log-message">War Room 初始化中...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 快捷操作 -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              <span>⚡</span>
+              快捷操作
+            </span>
+          </div>
+          <div class="card-body">
+            <div class="quick-actions">
+              <a href="tasks-v2.html?action=new" class="quick-btn">
+                <span class="quick-btn-icon">➕</span>
+                <span>新建任务</span>
+              </a>
+              <a href="agents-new.html" class="quick-btn">
+                <span class="quick-btn-icon">🤖</span>
+                <span>管理 Agent</span>
+              </a>
+              <a href="unified-monitor.html" class="quick-btn">
+                <span class="quick-btn-icon">📈</span>
+                <span>系统监控</span>
+              </a>
+              <a href="settings-new.html" class="quick-btn">
+                <span class="quick-btn-icon">⚙️</span>
+                <span>系统设置</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== 配置 ==========
+    const API_BASE = '';
+    let pollInterval;
+    let logPollInterval;
+    
+    // ========== 初始化 ==========
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('[War Room] 初始化');
+      loadData();
+      fetchSystemStats();
+      
+      // 5秒轮询数据
+      pollInterval = setInterval(loadData, 5000);
+      logPollInterval = setInterval(fetchSystemStats, 10000);
+    });
+    
+    // ========== 数据加载 ==========
+    async function loadData() {
+      try {
+        const fetchOptions = { cache: 'no-store' };
+        
+        const [agentsRes, tasksRes, tokenRes] = await Promise.all([
+          fetch(`${API_BASE}/api/agents/status`, fetchOptions),
+          fetch(`${API_BASE}/api/tasks?showCompleted=false`, fetchOptions),
+          fetch(`${API_BASE}/api/monitor/token-usage`, fetchOptions).catch(() => null)
+        ]);
+        
+        const agentsData = await agentsRes.json();
+        const tasksData = await tasksRes.json();
+        let tokenData = { usage: null };
+        if (tokenRes && tokenRes.ok) {
+          try {
+            tokenData = await tokenRes.json();
+          } catch (e) {
+            console.log('[War Room] token API 返回非 JSON');
+          }
+        }
+        
+        if (agentsData.success || agentsData.agents || (agentsData.data && agentsData.data.agents)) {
+          const agents = agentsData.agents || agentsData.data?.agents || [];
+          renderAgents(agents);
+          updateAgentStats(agents);
+        }
+        
+        const tasks = tasksData.data?.tasks || tasksData.tasks || [];
+        renderTasks(tasks);
+        
+        updateTokenStats(tokenData.usage || generateMockTokenData());
+        updateLastUpdated();
+        
+      } catch (e) {
+        console.error('[War Room] 数据加载失败:', e);
+        addLog('error', '数据加载失败: ' + e.message);
+      }
+    }
+    
+    // ========== 系统状态 ==========
+    async function fetchSystemStats() {
+      try {
+        const res = await fetch(`${API_BASE}/api/system/stats`);
+        const data = await res.json();
+        
+        if (data.success) {
+          updateSystemMetrics(data);
+          updateSystemStatus(data);
+        }
+      } catch (e) {
+        console.error('[War Room] 系统状态获取失败:', e);
+      }
+    }
+    
+    // ========== Agent 渲染 ==========
+    function renderAgents(agents) {
+      const grid = document.getElementById('agentsGrid');
+      
+      if (!agents || agents.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🤖</div>
+            <div>暂无 Agent 数据</div>
+          </div>
+        `;
+        return;
+      }
+      
+      grid.innerHTML = agents.map(agent => {
+        const status = agent.status || 'offline';
+        const statusText = {
+          'online': '在线',
+          'idle': '空闲',
+          'busy': '忙碌',
+          'working': '工作中',
+          'offline': '离线',
+          'analyzing': '分析中'
+        }[status] || status;
+        
+        const emoji = {
+          'main': '🎯',
+          'chat': '💬',
+          'deep': '💻',
+          'fast': '⚡',
+          'coder': '👨‍💻'
+        }[agent.id] || '🤖';
+        
+        const taskInfo = agent.currentTask ? 
+          `<span class="agent-task">${truncate(agent.currentTask.title || agent.currentTask.id, 30)}</span>` : 
+          '无任务';
+        
+        const progress = agent.currentTask?.progress || 0;
+        
+        return `
+          <div class="agent-card ${status === 'offline' ? 'offline' : ''}" onclick="window.location.href='agent-detail.html?id=${agent.id}'">
+            <div class="agent-header">
+              <div class="agent-name">
+                <span class="agent-emoji">${emoji}</span>
+                ${agent.name || agent.id}
+              </div>
+              <span class="agent-status ${status}">${statusText}</span>
+            </div>
+            <div class="agent-info">
+              <div>模型: ${agent.model || 'unknown'}</div>
+              <div>任务: ${taskInfo}</div>
+              <div>心跳: ${formatTime(agent.lastHeartbeat)}</div>
+            </div>
+            ${progress > 0 ? `
+              <div class="agent-progress">
+                <div class="agent-progress-fill" style="width: ${progress}%;"></div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+    
+    // ========== 任务渲染 ==========
+    function renderTasks(tasks) {
+      const list = document.getElementById('tasksList');
+      
+      const activeTasks = tasks.filter(t => 
+        t.status === 'doing' || t.status === 'pending' || t.status === 'analyzing'
+      ).slice(0, 10);
+      
+      if (activeTasks.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <div>暂无进行中任务</div>
+          </div>
+        `;
+        return;
+      }
+      
+      list.innerHTML = activeTasks.map(task => {
+        const priority = task.priority || 'medium';
+        const statusText = {
+          'doing': '进行中',
+          'pending': '待处理',
+          'analyzing': '分析中'
+        }[task.status] || task.status;
+        
+        return `
+          <div class="task-item" onclick="window.location.href='task-detail.html?id=${task.id}'">
+            <div class="task-priority ${priority}"></div>
+            <div class="task-content">
+              <div class="task-title">${task.title}</div>
+              <div class="task-meta">
+                <span>${task.assigned_agent || '未分配'}</span>
+                <span>${task.deadline ? '截止 ' + task.deadline.split('T')[0] : ''}</span>
+              </div>
+            </div>
+            <span class="task-status ${task.status}">${statusText}</span>
+          </div>
+        `;
+      }).join('');
+      
+      document.getElementById('activeTasks').textContent = activeTasks.length;
+    }
+    
+    // ========== 统计更新 ==========
+    function updateAgentStats(agents) {
+      const total = agents.length;
+      const online = agents.filter(a => ['online', 'idle', 'busy', 'working', 'analyzing'].includes(a.status)).length;
+      const busy = agents.filter(a => ['busy', 'working', 'analyzing'].includes(a.status)).length;
+      const offline = agents.filter(a => a.status === 'offline').length;
+      
+      document.getElementById('onlineAgents').textContent = online;
+      document.getElementById('onlineAgentsDetail').textContent = `${online} / ${total} 总计`;
+      document.getElementById('busyAgents').textContent = busy;
+      document.getElementById('offlineAgents').textContent = offline;
+    }
+    
+    function updateSystemMetrics(data) {
+      const metricsList = document.getElementById('systemMetrics');
+      if (!metricsList || !data.cpu) return;
+      
+      const items = metricsList.querySelectorAll('.metric-item');
+      
+      if (items[0] && data.cpu) {
+        const percent = data.cpu.usagePercent;
+        const fill = items[0].querySelector('.metric-fill');
+        const value = items[0].querySelector('.metric-value');
+        fill.style.width = percent + '%';
+        fill.className = 'metric-fill ' + getStatusClass(percent);
+        value.textContent = percent + '%';
+      }
+      
+      if (items[1] && data.memory) {
+        const percent = data.memory.percent;
+        const fill = items[1].querySelector('.metric-fill');
+        const value = items[1].querySelector('.metric-value');
+        fill.style.width = percent + '%';
+        fill.className = 'metric-fill ' + getStatusClass(percent);
+        value.textContent = percent + '%';
+      }
+      
+      if (items[2] && data.disk?.main) {
+        const percent = data.disk.main.percent;
+        const fill = items[2].querySelector('.metric-fill');
+        const value = items[2].querySelector('.metric-value');
+        fill.style.width = percent + '%';
+        fill.className = 'metric-fill ' + getStatusClass(percent);
+        value.textContent = percent + '%';
+      }
+      
+      document.getElementById('cpuMemInfo').textContent = 
+        `CPU ${data.cpu?.usagePercent || '--'}% | MEM ${data.memory?.percent || '--'}%`;
+    }
+    
+    function updateSystemStatus(data) {
+      const statusEl = document.getElementById('systemStatus');
+      if (!data.health) return;
+      
+      const statusMap = {
+        'healthy': { text: '正常', color: 'var(--success)' },
+        'warning': { text: '警告', color: 'var(--warning)' },
+        'danger': { text: '异常', color: 'var(--danger)' }
+      };
+      
+      const status = statusMap[data.health.status] || statusMap.healthy;
+      statusEl.textContent = status.text;
+      statusEl.style.color = status.color;
+    }
+    
+    function updateTokenStats(data) {
+      if (!data) return;
+      
+      document.getElementById('tokenUsage').textContent = formatTokens(data.today || 0);
+      
+      const agentMetrics = document.getElementById('agentMetrics');
+      if (!agentMetrics) return;
+      
+      const items = agentMetrics.querySelectorAll('.metric-item');
+      
+      if (items[0]) {
+        const percent = Math.min(100, Math.round((data.today || 0) / 100000 * 100));
+        const fill = items[0].querySelector('.metric-fill');
+        const value = items[0].querySelector('.metric-value');
+        fill.style.width = percent + '%';
+        fill.className = 'metric-fill ' + getStatusClass(percent);
+        value.textContent = formatTokens(data.today || 0);
+      }
+    }
+    
+    // ========== Agent 恢复 ==========
+    async function recoverAgents() {
+      const btn = document.getElementById('recoverBtn');
+      
+      try {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i>';
+        
+        const response = await fetch(`${API_BASE}/api/agents/startup/recover`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          const recovered = data.data?.recovered || 0;
+          addLog('success', `成功恢复 ${recovered} 个 Agent`);
+          setTimeout(loadData, 1000);
+        } else {
+          addLog('error', '恢复失败: ' + (data.error || '未知错误'));
+        }
+      } catch (e) {
+        addLog('error', '恢复失败: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-refresh-line"></i>';
+      }
+    }
+    
+    // ========== 日志管理 ==========
+    function addLog(level, message) {
+      const stream = document.getElementById('logStream');
+      const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+      
+      const logItem = document.createElement('div');
+      logItem.className = `log-item ${level}`;
+      logItem.innerHTML = `
+        <span class="log-time">${time}</span>
+        <span class="log-level ${level}">${level.toUpperCase()}</span>
+        <span class="log-message">${message}</span>
+      `;
+      
+      stream.insertBefore(logItem, stream.firstChild);
+      
+      while (stream.children.length > 50) {
+        stream.removeChild(stream.lastChild);
+      }
+    }
+    
+    function clearLogs() {
+      const stream = document.getElementById('logStream');
+      stream.innerHTML = '';
+      addLog('info', '日志已清空');
+    }
+    
+    // ========== 工具函数 ==========
+    function formatTime(iso) {
+      if (!iso) return '-';
+      const date = new Date(iso);
+      const now = new Date();
+      const diff = now - date;
+      const minutes = Math.floor(diff / 60000);
+      
+      if (minutes < 1) return '刚刚';
+      if (minutes < 60) return `${minutes}分钟前`;
+      if (minutes < 1440) return `${Math.floor(minutes / 60)}小时前`;
+      return date.toLocaleDateString('zh-CN');
+    }
+    
+    function formatTokens(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+      return num.toString();
+    }
+    
+    function getStatusClass(percent) {
+      if (percent < 60) return 'success';
+      if (percent < 85) return 'warning';
+      return 'danger';
+    }
+    
+    function truncate(str, len) {
+      if (!str) return '';
+      return str.length > len ? str.substring(0, len) + '...' : str;
+    }
+    
+    function updateLastUpdated() {
+      const now = new Date();
+      document.getElementById('lastUpdated').textContent = 
+        '最后更新: ' + now.toLocaleTimeString('zh-CN', { hour12: false });
+    }
+    
+    function generateMockTokenData() {
+      return {
+        total: 2567890,
+        today: 45678,
+        week: 234567,
+        month: 890123
+      };
+    }
+  </script>
+  
+  </div> <!-- war-room-container -->
+  </main>
+</div> <!-- layout -->
+  
+  <!-- 侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'war-room' });
+  </script>
+  
+  <style>
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

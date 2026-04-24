@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenClaw 模块导航</title>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      width: 100%;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .header h1 {
+      font-size: 2.5rem;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #a0aec0;
+      font-size: 1.1rem;
+    }
+    
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    
+    .module-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 32px;
+      text-decoration: none;
+      color: #fff;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .module-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .module-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--accent-color, #10b981);
+    }
+    
+    .module-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+    
+    .module-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .module-desc {
+      color: #a0aec0;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    
+    .module-stats {
+      display: flex;
+      gap: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .stat {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--accent-color, #10b981);
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      color: #718096;
+    }
+    
+    .module-arrow {
+      position: absolute;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.5rem;
+      color: #718096;
+      transition: all 0.3s ease;
+    }
+    
+    .module-card:hover .module-arrow {
+      color: var(--accent-color, #10b981);
+      transform: translateY(-50%) translateX(4px);
+    }
+    
+    /* 模块特定颜色 */
+    .module-tasks {
+      --accent-color: #8b5cf6;
+    }
+    
+    .module-deploy {
+      --accent-color: #10b981;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #718096;
+      font-size: 0.9rem;
+    }
+    
+    .footer a {
+      color: #a0aec0;
+      text-decoration: none;
+    }
+    
+    .footer a:hover {
+      color: #fff;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🧩 OpenClaw 模块中心</h1>
+      <p>选择要访问的服务模块</p>
+    </div>
+    
+    <div class="modules-grid">
+      <!-- 任务管理系统 -->
+      <a href="dashboard-new.html" class="module-card module-tasks">
+        <div class="module-icon">📋</div>
+        <h2 class="module-title">任务管理系统</h2>
+        <p class="module-desc">
+          任务创建、分配、执行、监控的完整生命周期管理。
+          支持 Agent 协作、自动化流程、项目跟踪。
+        </p>
+        <div class="module-stats" id="tasks-stats">
+          <div class="stat">
+            <div class="stat-value" id="tasks-count">-</div>
+            <div class="stat-label">活跃任务</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="agents-count">-</div>
+            <div class="stat-label">在线 Agent</div>
+          </div>
+        </div>
+        <i class="ri-arrow-right-line module-arrow"></i>
+      </a>
+      
+      <!-- 部署服务 -->
+      <a href="deploy.html" class="module-card module-deploy">
+        <div class="module-icon">🚀</div>
+        <h2 class="module-title">远程部署服务</h2>
+        <p class="module-desc">
+          远程安装 OpenClaw 到目标服务器。
+          支持 SSH 连接、自动化部署、进度跟踪。
+        </p>
+        <div class="module-stats" id="deploy-stats">
+          <div class="stat">
+            <div class="stat-value" id="deploy-pending">-</div>
+            <div class="stat-label">待部署</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="deploy-quota">5</div>
+            <div class="stat-label">今日配额</div>
+          </div>
+        </div>
+        <i class="ri-arrow-right-line module-arrow"></i>
+      </a>
+    </div>
+    
+    <div class="footer">
+      <p>
+        <a href="settings-new.html">⚙️ 系统设置</a> · 
+        <a href="api-catalog.html">🔌 API 目录</a> · 
+        <a href="system-guide.html">📖 系统说明</a>
+      </p>
+    </div>
+  </div>
+  
+  <script>
+    // 加载统计数据
+    async function loadStats() {
+      try {
+        // 任务统计
+        const tasksRes = await fetch('/api/tasks');
+        if (tasksRes.ok) {
+          const data = await tasksRes.json();
+          const tasks = data.tasks || [];
+          const activeTasks = tasks.filter(t => t.status === 'pending' || t.status === 'doing').length;
+          document.getElementById('tasks-count').textContent = activeTasks;
+        }
+        
+        // Agent 统计
+        const agentsRes = await fetch('/api/agents/list');
+        if (agentsRes.ok) {
+          const data = await agentsRes.json();
+          const onlineAgents = (data.agents || []).filter(a => a.status === 'online' || a.status === 'active').length;
+          document.getElementById('agents-count').textContent = onlineAgents;
+        }
+        
+        // 部署统计
+        const deployRes = await fetch('/api/deploy/all');
+        if (deployRes.ok) {
+          const data = await deployRes.json();
+          const pending = (data.tasks || []).filter(t => t.status === 'pending').length;
+          document.getElementById('deploy-pending').textContent = pending;
+        }
+        
+        // 配额
+        const quotaRes = await fetch('/api/deploy/quota');
+        if (quotaRes.ok) {
+          const data = await quotaRes.json();
+          document.getElementById('deploy-quota').textContent = data.remaining;
+        }
+      } catch (e) {
+        console.error('加载统计失败:', e);
+      }
+    }
+    
+    loadStats();
+    // 每 30 秒刷新
+    setInterval(loadStats, 30000);
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

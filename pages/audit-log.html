@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>审计日志 - 任务管理系统</title>
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .page-title { font-size: 24px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 12px; }
+    .page-title i { color: var(--warning-color); }
+    .header-actions { display: flex; gap: 10px; }
+    
+    .stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; text-align: center; }
+    .stat-value { font-size: 28px; font-weight: 700; }
+    .stat-label { color: var(--text-secondary); margin-top: 4px; font-size: 13px; }
+    .stat-card.primary .stat-value { color: var(--primary-color); }
+    .stat-card.success .stat-value { color: var(--success-color); }
+    .stat-card.warning .stat-value { color: var(--warning-color); }
+    .stat-card.danger .stat-value { color: var(--danger-color); }
+    
+    .source-distribution { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+    .section-title { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; }
+    .source-items { display: flex; gap: 8px; flex-wrap: wrap; }
+    .source-item { display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--bg-secondary); border-radius: 6px; font-size: 12px; }
+    .source-count { font-weight: 600; color: var(--primary-color); }
+    
+    .filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-group { display: flex; align-items: center; gap: 8px; }
+    .filter-group label { font-size: 13px; color: var(--text-secondary); }
+    .filter-group select { padding: 6px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 13px; }
+    
+    .table-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+    .data-table th { background: var(--bg-secondary); font-weight: 600; color: var(--text-secondary); }
+    .data-table tr:hover { background: var(--hover-bg); }
+    .data-table tr:last-child td { border-bottom: none; }
+    
+    .source-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-family: monospace; }
+    .source-badge.api { background: rgba(59, 130, 246, 0.15); color: var(--primary-color); }
+    .source-badge.script { background: rgba(245, 158, 11, 0.15); color: var(--warning-color); }
+    .source-badge.unknown { background: rgba(148, 163, 184, 0.15); color: var(--text-secondary); }
+    
+    .size-badge { font-family: monospace; font-size: 12px; }
+    .size-badge.large { color: var(--warning-color); }
+    
+    code { background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+    
+    .expand-btn { background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 12px; padding: 4px 8px; }
+    .expand-btn:hover { text-decoration: underline; }
+    
+    .log-detail { background: var(--bg-primary); padding: 12px; border-radius: 6px; margin-top: 8px; font-family: monospace; font-size: 11px; color: var(--text-secondary); white-space: pre-wrap; word-break: break-all; max-height: 150px; overflow-y: auto; }
+    
+    .pagination { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 16px; }
+    .page-info { font-size: 13px; color: var(--text-secondary); }
+    
+    .btn { padding: 6px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+    .btn-default { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
+    .btn-primary { background: var(--primary-color); color: white; }
+    .btn-danger { background: var(--danger-color); color: white; }
+    
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="app-container">
+    <div id="sidebar-container"></div>
+    
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title"><i class="ri-shield-check-line"></i> 审计日志</h1>
+        <div class="header-actions">
+          <button class="btn btn-default" onclick="loadLogs()"><i class="ri-refresh-line"></i> 刷新</button>
+          <button class="btn btn-danger" onclick="clearLogs()"><i class="ri-delete-bin-line"></i> 清空</button>
+          <a href="system-monitor-v3.html" class="btn btn-default"><i class="ri-arrow-left-line"></i> 返回监控</a>
+        </div>
+      </div>
+      
+      <div class="stats-cards" id="statsCards">
+        <div class="stat-card primary">
+          <div class="stat-value" id="totalLogs">-</div>
+          <div class="stat-label">总记录数</div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-value" id="apiWrites">-</div>
+          <div class="stat-label">API 写入</div>
+        </div>
+        <div class="stat-card warning">
+          <div class="stat-value" id="scriptWrites">-</div>
+          <div class="stat-label">脚本写入</div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-value" id="unknownWrites">-</div>
+          <div class="stat-label">未知来源</div>
+        </div>
+      </div>
+      
+      <div class="source-distribution">
+        <div class="section-title">来源分布</div>
+        <div class="source-items" id="sourceDistribution">加载中...</div>
+      </div>
+      
+      <div class="filters">
+        <div class="filter-group">
+          <label>来源:</label>
+          <select id="filterSource" onchange="loadLogs()">
+            <option value="">全部</option>
+            <option value="api">API</option>
+            <option value="script">脚本</option>
+            <option value="unknown">未知</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>文件:</label>
+          <select id="filterFile" onchange="loadLogs()">
+            <option value="">全部</option>
+            <option value="tasks.json">tasks.json</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>显示:</label>
+          <select id="pageSize" onchange="loadLogs()">
+            <option value="50">50 条</option>
+            <option value="100" selected>100 条</option>
+            <option value="200">200 条</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>时间</th>
+              <th>来源</th>
+              <th>文件</th>
+              <th>数据大小</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody">
+            <tr>
+              <td colspan="5" class="empty-state">
+                <i class="ri-file-list-3-line"></i>
+                <div>加载中...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="pagination">
+        <button class="btn btn-default" onclick="prevPage()"><i class="ri-arrow-left-line"></i> 上一页</button>
+        <span class="page-info" id="pageInfo">第 1 页</span>
+        <button class="btn btn-default" onclick="nextPage()">下一页 <i class="ri-arrow-right-line"></i></button>
+      </div>
+    </main>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    // 初始化侧边栏
+    Sidebar.init({ activePage: 'audit-log' });
+    
+    const API_BASE = '/api';
+    let currentPage = 0;
+    let totalCount = 0;
+    let pageSize = 100;
+
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API_BASE}/audit/stats`);
+        const data = await res.json();
+        
+        if (data.success) {
+          document.getElementById('totalLogs').textContent = data.stats.total;
+          
+          let apiCount = 0, scriptCount = 0, unknownCount = 0;
+          for (const [source, count] of Object.entries(data.stats.bySource)) {
+            if (source.includes('api')) apiCount += count;
+            else if (source.includes('script')) scriptCount += count;
+            else unknownCount += count;
+          }
+          
+          document.getElementById('apiWrites').textContent = apiCount;
+          document.getElementById('scriptWrites').textContent = scriptCount;
+          document.getElementById('unknownWrites').textContent = unknownCount;
+          
+          const distHtml = Object.entries(data.stats.bySource)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10)
+            .map(([source, count]) => `
+              <div class="source-item">
+                <span>${source}</span>
+                <span class="source-count">${count}</span>
+              </div>
+            `).join('');
+          document.getElementById('sourceDistribution').innerHTML = distHtml || '暂无数据';
+        }
+      } catch (e) {
+        console.error('加载统计失败:', e);
+      }
+    }
+
+    async function loadLogs() {
+      const source = document.getElementById('filterSource').value;
+      const file = document.getElementById('filterFile').value;
+      pageSize = parseInt(document.getElementById('pageSize').value);
+      
+      const params = new URLSearchParams({
+        limit: pageSize,
+        offset: currentPage * pageSize,
+        ...(source && { source }),
+        ...(file && { file })
+      });
+      
+      try {
+        const res = await fetch(`${API_BASE}/audit/write-log?${params}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          totalCount = data.total;
+          renderLogs(data.logs);
+          updatePageInfo();
+        }
+      } catch (e) {
+        console.error('加载日志失败:', e);
+        document.getElementById('logTableBody').innerHTML = `
+          <tr><td colspan="5" class="empty-state">
+            <i class="ri-error-warning-line"></i>
+            <div>加载失败: ${e.message}</div>
+          </td></tr>
+        `;
+      }
+    }
+
+    function renderLogs(logs) {
+      if (logs.length === 0) {
+        document.getElementById('logTableBody').innerHTML = `
+          <tr><td colspan="5" class="empty-state">
+            <i class="ri-file-list-3-line"></i>
+            <div>暂无审计日志</div>
+          </td></tr>
+        `;
+        return;
+      }
+      
+      const html = logs.map((log, index) => {
+        const time = new Date(log.timestamp).toLocaleString('zh-CN');
+        const sourceClass = log.source?.includes('api') ? 'api' : 
+                           log.source?.includes('script') ? 'script' : 'unknown';
+        const sizeClass = log.dataSize > 500000 ? 'large' : '';
+        const sizeStr = formatSize(log.dataSize);
+        
+        return `
+          <tr>
+            <td>${time}</td>
+            <td><span class="source-badge ${sourceClass}">${log.source || 'unknown'}</span></td>
+            <td><code>${log.file || '-'}</code></td>
+            <td><span class="size-badge ${sizeClass}">${sizeStr}</span></td>
+            <td>
+              <button class="expand-btn" onclick="toggleDetail(${index})">
+                <i class="ri-code-line"></i> 详情
+              </button>
+              <div id="detail-${index}" class="log-detail" style="display: none;">
+                ${log.stackTrace || '无调用栈信息'}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+      document.getElementById('logTableBody').innerHTML = html;
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+    }
+
+    function toggleDetail(index) {
+      const detail = document.getElementById(`detail-${index}`);
+      detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function prevPage() {
+      if (currentPage > 0) {
+        currentPage--;
+        loadLogs();
+      }
+    }
+
+    function nextPage() {
+      if ((currentPage + 1) * pageSize < totalCount) {
+        currentPage++;
+        loadLogs();
+      }
+    }
+
+    function updatePageInfo() {
+      const totalPages = Math.ceil(totalCount / pageSize);
+      document.getElementById('pageInfo').textContent = 
+        `第 ${currentPage + 1} / ${totalPages || 1} 页 (共 ${totalCount} 条)`;
+    }
+
+    async function clearLogs() {
+      if (!confirm('确定要清空审计日志吗？会自动备份。')) return;
+      
+      try {
+        const res = await fetch(`${API_BASE}/audit/write-log`, { method: 'DELETE' });
+        const data = await res.json();
+        
+        if (data.success) {
+          alert(data.message);
+          loadStats();
+          loadLogs();
+        }
+      } catch (e) {
+        alert('清空失败: ' + e.message);
+      }
+    }
+
+    // 初始化
+    loadStats();
+    loadLogs();
+    setInterval(loadStats, 30000);
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

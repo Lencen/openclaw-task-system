@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>项目监控 - 任务系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-layout {
+      padding: 24px;
+    }
+
+    /* 返回导航 */
+    .back-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      margin-bottom: 16px;
+    }
+    .back-nav:hover { color: var(--text-primary); }
+
+    /* 页面标题 */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .project-name {
+      color: var(--primary);
+    }
+
+    /* 统计卡片 */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 1000px) {
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .stat-value.blue { color: #3b82f6; }
+    .stat-value.green { color: #10b981; }
+    .stat-value.orange { color: #f59e0b; }
+    .stat-value.purple { color: #8b5cf6; }
+    .stat-value.red { color: #ef4444; }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* 内容网格 */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 1200px) {
+      .content-grid { grid-template-columns: 1fr; }
+    }
+
+    .section {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-body {
+      padding: 16px 20px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    /* 标签页 */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+
+    .tab {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+
+    .tab:hover { color: var(--text-primary); }
+    .tab.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* 执行流程时间线 */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 16px;
+      padding: 12px 0;
+      border-left: 2px solid var(--border);
+      margin-left: 12px;
+      padding-left: 24px;
+      position: relative;
+    }
+
+    .timeline-item::before {
+      content: '';
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border);
+      position: absolute;
+      left: -7px;
+      top: 16px;
+    }
+
+    .timeline-item.running::before {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+    }
+
+    .timeline-item.completed::before {
+      background: #10b981;
+      border-color: #10b981;
+    }
+
+    .timeline-item.failed::before {
+      background: #ef4444;
+      border-color: #ef4444;
+    }
+
+    .timeline-time {
+      min-width: 100px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .timeline-content {
+      flex: 1;
+    }
+
+    .timeline-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .timeline-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* 日志列表 */
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+    }
+
+    .log-item {
+      display: flex;
+      gap: 12px;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      border-left: 3px solid var(--border);
+    }
+
+    .log-item.info { border-left-color: #3b82f6; }
+    .log-item.success { border-left-color: #10b981; }
+    .log-item.warning { border-left-color: #f59e0b; }
+    .log-item.error { border-left-color: #ef4444; }
+
+    .log-time {
+      color: var(--text-tertiary);
+      min-width: 70px;
+    }
+
+    .log-level {
+      min-width: 50px;
+      font-weight: 500;
+    }
+
+    .log-level.info { color: #3b82f6; }
+    .log-level.success { color: #10b981; }
+    .log-level.warning { color: #f59e0b; }
+    .log-level.error { color: #ef4444; }
+
+    .log-message {
+      color: var(--text-primary);
+      flex: 1;
+    }
+
+    /* 问题列表 */
+    .issue-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .issue-item {
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      border-left: 3px solid #ef4444;
+    }
+
+    .issue-item.warning { border-left-color: #f59e0b; }
+    .issue-item.info { border-left-color: #3b82f6; }
+
+    .issue-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .issue-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .issue-status {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .issue-status.open { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .issue-status.resolved { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .issue-status.ignoring { background: rgba(100, 116, 139, 0.15); color: #94a3b8; }
+
+    .issue-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    .issue-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    /* 任务状态分布 */
+    .status-chart {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .status-bar {
+      height: 8px;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    .status-bar.pending { background: #94a3b8; }
+    .status-bar.doing { background: #3b82f6; }
+    .status-bar.completed { background: #10b981; }
+    .status-bar.failed { background: #ef4444; }
+
+    .status-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 11px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* Agent 活动 */
+    .agent-activity {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .agent-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+
+    .agent-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .agent-info {
+      flex: 1;
+    }
+
+    .agent-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .agent-task {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    .agent-status {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .agent-status.online { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .agent-status.busy { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .agent-status.offline { background: rgba(100, 116, 139, 0.15); color: #94a3b8; }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-tertiary);
+      font-size: 13px;
+    }
+
+    /* 加载状态 */
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: var(--text-tertiary);
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <a href="projects-new.html">项目管理</a>
+            <span>/</span>
+            <span id="breadcrumbProject">项目</span>
+            <span>/</span>
+            <span>监控</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="btn btn-secondary" onclick="refreshData()">
+            <i class="ri-refresh-line"></i> 刷新
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-layout" id="pageContent">
+          <div class="loading">
+            <i class="ri-loader-4-line" style="font-size: 32px; animation: spin 1s linear infinite;"></i>
+            <p style="margin-top: 12px;">加载中...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let projectId = null;
+    let project = null;
+    let tasks = [];
+    let logs = [];
+    let issues = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+      Sidebar.init({ activePage: 'projects' });
+      projectId = getProjectId();
+      if (projectId) {
+        loadData();
+      } else {
+        showError('未指定项目ID');
+      }
+    });
+
+    function getProjectId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    async function loadData() {
+      try {
+        const [projRes, taskRes] = await Promise.all([
+          fetch(`${API_BASE}/api/devops/projects/${projectId}`),
+          fetch(`${API_BASE}/api/tasks?limit=500`)
+        ]);
+
+        const projData = await projRes.json();
+        const taskData = await taskRes.json();
+
+        if (!projData.success || !projData.data) {
+          showError('项目不存在');
+          return;
+        }
+
+        project = projData.data;
+        tasks = taskData.success && taskData.data 
+          ? (taskData.data.tasks || []).filter(t => t.project_id === projectId || t.projectId === projectId)
+          : [];
+
+        // 提取日志和问题
+        extractLogsAndIssues();
+
+        renderPage();
+      } catch (error) {
+        console.error('加载失败:', error);
+        showError('加载失败: ' + error.message);
+      }
+    }
+
+    function extractLogsAndIssues() {
+      logs = [];
+      issues = [];
+
+      tasks.forEach(task => {
+        // 提取执行日志
+        if (task.execution_log && task.execution_log.length > 0) {
+          task.execution_log.forEach(log => {
+            logs.push({
+              time: log.time,
+              level: log.action === 'ERROR' ? 'error' : 
+                     log.action === 'COMPLETE' ? 'success' : 
+                     log.action === 'CREATE' ? 'info' : 'info',
+              message: `[${task.title}] ${log.detail}`,
+              agent: log.agent,
+              taskTitle: task.title
+            });
+          });
+        }
+
+        // 提取问题
+        if (task.issues && task.issues.length > 0) {
+          task.issues.forEach(issue => {
+            issues.push({
+              id: issue.id || `${task.id}-${Date.now()}`,
+              title: issue.title || '执行问题',
+              type: issue.type || 'error',
+              status: issue.status || 'open',
+              desc: issue.desc || issue.message || '',
+              taskTitle: task.title,
+              time: issue.time || new Date().toISOString()
+            });
+          });
+        }
+
+        // 检查失败任务
+        if (task.status === 'failed') {
+          issues.push({
+            id: `${task.id}-failed`,
+            title: `任务执行失败: ${task.title}`,
+            type: 'error',
+            status: 'open',
+            desc: task.error_message || '任务执行过程中发生错误',
+            taskTitle: task.title,
+            time: task.updated_at || new Date().toISOString()
+          });
+        }
+      });
+
+      // 按时间排序
+      logs.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+      issues.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+    }
+
+    function renderPage() {
+      const stats = getTaskStats();
+
+      document.getElementById('breadcrumbProject').textContent = project.name;
+
+      const html = `
+        <div class="back-nav" onclick="goBack()">
+          <i class="ri-arrow-left-line"></i>
+          返回项目详情
+        </div>
+
+        <div class="page-header">
+          <h1 class="page-title">
+            <i class="ri-dashboard-3-line"></i>
+            <span class="project-name">${escapeHtml(project.name)}</span>
+            <span>项目监控</span>
+          </h1>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-value">${stats.total}</div>
+            <div class="stat-label">任务总数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value blue">${stats.doing}</div>
+            <div class="stat-label">执行中</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value green">${stats.completed}</div>
+            <div class="stat-label">已完成</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value orange">${stats.failed}</div>
+            <div class="stat-label">失败</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value red">${issues.length}</div>
+            <div class="stat-label">问题数</div>
+          </div>
+        </div>
+
+        <!-- 内容网格 -->
+        <div class="content-grid">
+          <!-- 执行流程 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title"><i class="ri-flow-chart"></i> 执行流程</span>
+              <div class="tabs">
+                <div class="tab active" onclick="switchTab('timeline', this)">时间线</div>
+                <div class="tab" onclick="switchTab('logs', this)">日志</div>
+              </div>
+            </div>
+            <div class="section-body" id="timelineContent">
+              ${renderTimeline()}
+            </div>
+          </div>
+
+          <!-- 右侧面板 -->
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <!-- 任务状态分布 -->
+            <div class="section">
+              <div class="section-header">
+                <span class="section-title"><i class="ri-pie-chart-line"></i> 任务状态</span>
+              </div>
+              <div class="section-body">
+                <div class="status-chart">
+                  <div class="status-bar pending" style="width: ${stats.pendingPercent}%"></div>
+                  <div class="status-bar doing" style="width: ${stats.doingPercent}%"></div>
+                  <div class="status-bar completed" style="width: ${stats.completedPercent}%"></div>
+                  <div class="status-bar failed" style="width: ${stats.failedPercent}%"></div>
+                </div>
+                <div class="status-legend">
+                  <div class="legend-item">
+                    <div class="legend-dot" style="background: #94a3b8;"></div>
+                    <span>待处理 ${stats.pending}</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-dot" style="background: #3b82f6;"></div>
+                    <span>进行中 ${stats.doing}</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-dot" style="background: #10b981;"></div>
+                    <span>已完成 ${stats.completed}</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-dot" style="background: #ef4444;"></div>
+                    <span>失败 ${stats.failed}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 问题记录 -->
+            <div class="section">
+              <div class="section-header">
+                <span class="section-title"><i class="ri-error-warning-line"></i> 问题记录</span>
+                <span style="font-size: 12px; color: ${issues.length > 0 ? '#ef4444' : 'var(--text-tertiary)'};">
+                  ${issues.length} 个问题
+                </span>
+              </div>
+              <div class="section-body">
+                ${issues.length > 0 ? `
+                  <div class="issue-list">
+                    ${issues.slice(0, 5).map(issue => `
+                      <div class="issue-item ${issue.type}">
+                        <div class="issue-header">
+                          <span class="issue-title">${escapeHtml(issue.title)}</span>
+                          <span class="issue-status ${issue.status}">${getIssueStatusText(issue.status)}</span>
+                        </div>
+                        <div class="issue-meta">
+                          <i class="ri-task-line"></i> ${escapeHtml(issue.taskTitle)}
+                        </div>
+                        ${issue.desc ? `<div class="issue-desc">${escapeHtml(issue.desc)}</div>` : ''}
+                      </div>
+                    `).join('')}
+                    ${issues.length > 5 ? `
+                      <div class="empty-state">还有 ${issues.length - 5} 个问题...</div>
+                    ` : ''}
+                  </div>
+                ` : `
+                  <div class="empty-state">
+                    <i class="ri-check-line" style="font-size: 32px; color: #10b981; margin-bottom: 8px; display: block;"></i>
+                    暂无问题
+                  </div>
+                `}
+              </div>
+            </div>
+
+            <!-- Agent 活动 -->
+            <div class="section">
+              <div class="section-header">
+                <span class="section-title"><i class="ri-robot-line"></i> Agent 活动</span>
+              </div>
+              <div class="section-body">
+                ${renderAgentActivity()}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('pageContent').innerHTML = html;
+    }
+
+    function renderTimeline() {
+      if (tasks.length === 0) {
+        return `<div class="empty-state">暂无任务执行记录</div>`;
+      }
+
+      // 按时间排序任务
+      const sortedTasks = [...tasks].sort((a, b) => 
+        (a.created_at || '').localeCompare(b.created_at || '')
+      );
+
+      return `
+        <div class="timeline">
+          ${sortedTasks.map(task => `
+            <div class="timeline-item ${task.status}">
+              <div class="timeline-time">${formatTime(task.updated_at || task.created_at)}</div>
+              <div class="timeline-content">
+                <div class="timeline-title">${escapeHtml(task.title)}</div>
+                <div class="timeline-desc">
+                  <span style="color: ${getStatusColor(task.status)}">${getStatusText(task.status)}</span>
+                  ${task.assignedAgent ? ` · ${task.assignedAgent}` : ''}
+                  ${task.priority ? ` · ${task.priority}` : ''}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderLogs() {
+      if (logs.length === 0) {
+        return `<div class="empty-state">暂无执行日志</div>`;
+      }
+
+      return `
+        <div class="log-list">
+          ${logs.slice(0, 50).map(log => `
+            <div class="log-item ${log.level}">
+              <span class="log-time">${log.time}</span>
+              <span class="log-level ${log.level}">${log.level.toUpperCase()}</span>
+              <span class="log-message">${escapeHtml(log.message)}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderAgentActivity() {
+      const agentTasks = new Map();
+
+      tasks.forEach(task => {
+        if (task.assignedAgent) {
+          if (!agentTasks.has(task.assignedAgent)) {
+            agentTasks.set(task.assignedAgent, []);
+          }
+          agentTasks.get(task.assignedAgent).push(task);
+        }
+      });
+
+      if (agentTasks.size === 0) {
+        return `<div class="empty-state">暂无 Agent 活动</div>`;
+      }
+
+      return `
+        <div class="agent-activity">
+          ${Array.from(agentTasks.entries()).map(([agent, agentTaskList]) => {
+            const runningTasks = agentTaskList.filter(t => t.status === 'doing');
+            const status = runningTasks.length > 0 ? 'busy' : 'online';
+
+            return `
+              <div class="agent-item">
+                <div class="agent-avatar">${agent.charAt(0).toUpperCase()}</div>
+                <div class="agent-info">
+                  <div class="agent-name">${agent}</div>
+                  <div class="agent-task">
+                    ${runningTasks.length > 0 
+                      ? runningTasks[0].title 
+                      : `${agentTaskList.length} 个任务`}
+                  </div>
+                </div>
+                <span class="agent-status ${status}">${status === 'busy' ? '忙碌' : '在线'}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function switchTab(tab, element) {
+      // 更新标签样式
+      element.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      element.classList.add('active');
+
+      // 更新内容
+      const content = document.getElementById('timelineContent');
+      if (tab === 'timeline') {
+        content.innerHTML = renderTimeline();
+      } else if (tab === 'logs') {
+        content.innerHTML = renderLogs();
+      }
+    }
+
+    function getTaskStats() {
+      const total = tasks.length;
+      const pending = tasks.filter(t => t.status === 'pending').length;
+      const doing = tasks.filter(t => t.status === 'doing').length;
+      const completed = tasks.filter(t => t.status === 'completed').length;
+      const failed = tasks.filter(t => t.status === 'failed').length;
+
+      return {
+        total,
+        pending,
+        doing,
+        completed,
+        failed,
+        pendingPercent: total > 0 ? Math.round((pending / total) * 100) : 0,
+        doingPercent: total > 0 ? Math.round((doing / total) * 100) : 0,
+        completedPercent: total > 0 ? Math.round((completed / total) * 100) : 0,
+        failedPercent: total > 0 ? Math.round((failed / total) * 100) : 0
+      };
+    }
+
+    function getStatusText(status) {
+      const map = {
+        'pending': '待处理',
+        'doing': '执行中',
+        'completed': '已完成',
+        'failed': '失败',
+        'paused': '已暂停',
+        'cancelled': '已取消'
+      };
+      return map[status] || status;
+    }
+
+    function getStatusColor(status) {
+      const map = {
+        'pending': '#94a3b8',
+        'doing': '#3b82f6',
+        'completed': '#10b981',
+        'failed': '#ef4444',
+        'paused': '#f59e0b',
+        'cancelled': '#94a3b8'
+      };
+      return map[status] || 'var(--text-secondary)';
+    }
+
+    function getIssueStatusText(status) {
+      const map = {
+        'open': '待处理',
+        'resolved': '已解决',
+        'ignoring': '已忽略'
+      };
+      return map[status] || status;
+    }
+
+    function formatTime(dateStr) {
+      if (!dateStr) return '--:--';
+      const date = new Date(dateStr);
+      return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function goBack() {
+      window.location.href = `project-detail.html?id=${encodeURIComponent(projectId)}`;
+    }
+
+    function refreshData() {
+      document.getElementById('pageContent').innerHTML = `
+        <div class="loading">
+          <i class="ri-loader-4-line" style="font-size: 32px; animation: spin 1s linear infinite;"></i>
+          <p style="margin-top: 12px;">刷新中...</p>
+        </div>
+      `;
+      loadData();
+    }
+
+    function showError(message) {
+      document.getElementById('pageContent').innerHTML = `
+        <div class="empty-state" style="padding: 60px;">
+          <i class="ri-error-warning-line" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+          <p>${escapeHtml(message)}</p>
+          <button onclick="goBack()" style="margin-top: 16px; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer;">
+            返回项目
+          </button>
+        </div>
+      `;
+    }
+  </script>
+
+  <script src="js/sidebar.js"></script>
+<script>FieldTips.init({pageType:"project"});</script></body>
+</html>

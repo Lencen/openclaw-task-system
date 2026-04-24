@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>发布管理 - Morning 任务管理系统</title>
+  
+  <!-- Remix Icon -->
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <!-- 页面专用样式 -->
+  <style>
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    
+    /* 统计卡片 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    
+    .stat-icon.products { background: rgba(59, 130, 246, 0.15); }
+    .stat-icon.releases { background: rgba(16, 185, 129, 0.15); }
+    .stat-icon.pending { background: rgba(245, 158, 11, 0.15); }
+    .stat-icon.success { background: rgba(34, 197, 94, 0.15); }
+    
+    .stat-info h3 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .stat-info p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    
+    /* 工具栏 */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .search-box {
+      position: relative;
+      flex: 1;
+      max-width: 400px;
+    }
+    
+    .search-box input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .search-box i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+    }
+    
+    .toolbar-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+      border-color: var(--primary);
+    }
+    
+    /* 发布列表 */
+    .release-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .release-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .release-item:hover {
+      border-color: var(--primary);
+      transform: translateX(4px);
+    }
+    
+    .release-status {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    
+    .release-status.success { background: rgba(34, 197, 94, 0.15); }
+    .release-status.pending { background: rgba(245, 158, 11, 0.15); }
+    .release-status.failed { background: rgba(239, 68, 68, 0.15); }
+    .release-status.running { background: rgba(59, 130, 246, 0.15); }
+    
+    .release-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .release-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    
+    .release-meta {
+      font-size: 13px;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .release-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .tag-success { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+    .tag-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .tag-failed { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .tag-running { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    
+    .release-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .action-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    
+    .action-btn:hover {
+      color: var(--primary);
+      background: var(--bg-primary);
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-tertiary);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    /* 加载状态 */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+    
+    .loading i {
+      font-size: 24px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div>
+          <h1 class="page-title">🚀 发布管理</h1>
+          <p class="page-subtitle">产品版本发布与部署管理</p>
+        </div>
+      </header>
+      <div class="content">
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon products">📦</div>
+            <div class="stat-info">
+              <h3 id="productCount">-</h3>
+              <p>产品数量</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon releases">🚀</div>
+            <div class="stat-info">
+              <h3 id="releaseCount">-</h3>
+              <p>发布次数</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon pending">⏳</div>
+            <div class="stat-info">
+              <h3 id="pendingCount">-</h3>
+              <p>待发布</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <i class="stat-icon ri-checkbox-circle-line"></i>
+            <div class="stat-info">
+              <h3 id="successRate">-</h3>
+              <p>成功率</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 工具栏 -->
+        <div class="toolbar">
+          <div class="search-box">
+            <i class="ri-search-line"></i>
+            <input type="text" id="searchInput" placeholder="搜索发布记录..." />
+          </div>
+          <div class="toolbar-actions">
+            <button class="btn btn-secondary" onclick="refreshReleases()">
+              <i class="ri-refresh-line"></i> 刷新
+            </button>
+            <button class="btn btn-primary" onclick="showCreateModal()">
+              <i class="ri-add-line"></i> 新建发布
+            </button>
+          </div>
+        </div>
+        
+        <!-- 发布列表 -->
+        <div class="release-list" id="releaseList">
+          <div class="loading"><i class="ri-loader-4-line"></i><p>加载中...</p></div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 侧边栏 -->
+  <script src="js/sidebar.js"></script>
+  <script>Sidebar.init({ activePage: 'release-management' });</script>
+  
+  <!-- 页面逻辑 -->
+  <script>
+    const API_BASE = window.location.origin;
+    let releases = [];
+    let products = [];
+    
+    // 加载统计数据
+    async function loadStats() {
+      try {
+        // 加载产品列表
+        const productsRes = await fetch(`${API_BASE}/api/devops/products`);
+        const productsData = await productsRes.json();
+        
+        if (productsData.success) {
+          products = productsData.data || [];
+          document.getElementById('productCount').textContent = products.length;
+        }
+        
+        // 统计发布数据
+        let totalReleases = 0;
+        let pendingReleases = 0;
+        let successReleases = 0;
+        
+        for (const product of products) {
+          try {
+            const res = await fetch(`${API_BASE}/api/devops/products/${product.id}/releases`);
+            const data = await res.json();
+            if (data.success && data.releases) {
+              totalReleases += data.releases.length;
+              data.releases.forEach(r => {
+                if (r.status === 'pending') pendingReleases++;
+                if (r.status === 'success') successReleases++;
+              });
+            }
+          } catch (e) {
+            // 忽略单个产品的错误
+          }
+        }
+        
+        document.getElementById('releaseCount').textContent = totalReleases;
+        document.getElementById('pendingCount').textContent = pendingReleases;
+        document.getElementById('successRate').textContent = totalReleases > 0 
+          ? Math.round(successReleases / totalReleases * 100) + '%' 
+          : '0%';
+          
+      } catch (error) {
+        console.error('加载统计失败:', error);
+      }
+    }
+    
+    // 加载发布列表
+    async function loadReleases() {
+      const container = document.getElementById('releaseList');
+      container.innerHTML = '<div class="loading"><i class="ri-loader-4-line"></i><p>加载中...</p></div>';
+      
+      try {
+        const allReleases = [];
+        
+        for (const product of products) {
+          try {
+            const res = await fetch(`${API_BASE}/api/devops/products/${product.id}/releases`);
+            const data = await res.json();
+            if (data.success && data.releases) {
+              data.releases.forEach(r => {
+                allReleases.push({
+                  ...r,
+                  productName: product.name,
+                  productId: product.id
+                });
+              });
+            }
+          } catch (e) {
+            // 忽略
+          }
+        }
+        
+        releases = allReleases;
+        renderReleases(releases);
+        
+      } catch (error) {
+        container.innerHTML = `<div class="empty-state"><i class="ri-rocket-line"></i><h3>加载失败</h3><p>${error.message}</p></div>`;
+      }
+    }
+    
+    // 渲染发布列表
+    function renderReleases(data) {
+      const container = document.getElementById('releaseList');
+      
+      if (!data || data.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="ri-rocket-line"></i>
+            <h3>暂无发布记录</h3>
+            <p>点击"新建发布"创建第一个发布</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = data.map(release => {
+        const statusIcon = getStatusIcon(release.status);
+        const statusClass = release.status || 'pending';
+        
+        return `
+          <div class="release-item" onclick="viewRelease('${release.productId}', '${release.id || release.version}')">
+            <div class="release-status ${statusClass}">
+              ${statusIcon}
+            </div>
+            <div class="release-info">
+              <div class="release-title">${escapeHtml(release.productName)} - ${release.version}</div>
+              <div class="release-meta">
+                <span><i class="ri-calendar-line"></i> ${formatDate(release.released_at)}</span>
+                <span><i class="ri-user-line"></i> ${release.released_by || '-'}</span>
+                ${release.notes ? `<span><i class="ri-file-text-line"></i> ${escapeHtml(release.notes)}</span>` : ''}
+              </div>
+            </div>
+            <span class="release-tag tag-${statusClass}">${getStatusText(release.status)}</span>
+            <div class="release-actions">
+              <button class="action-btn" onclick="event.stopPropagation(); viewLogs('${release.id}')" title="查看日志">
+                <i class="ri-file-list-line"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    // 搜索
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const filtered = releases.filter(r => 
+        r.productName.toLowerCase().includes(query) ||
+        r.version.toLowerCase().includes(query) ||
+        (r.notes && r.notes.toLowerCase().includes(query))
+      );
+      renderReleases(filtered);
+    });
+    
+    // 刷新
+    async function refreshReleases() {
+      await loadStats();
+      await loadReleases();
+    }
+    
+    // 辅助函数
+    function getStatusIcon(status) {
+      const icons = {
+        'success': '✅',
+        'pending': '⏳',
+        'failed': '❌',
+        'running': '🔄'
+      };
+      return icons[status] || '⏳';
+    }
+    
+    function getStatusText(status) {
+      const texts = {
+        'success': '发布成功',
+        'pending': '待发布',
+        'failed': '发布失败',
+        'running': '发布中'
+      };
+      return texts[status] || '未知';
+    }
+    
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('zh-CN');
+    }
+    
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // 操作函数
+    function viewRelease(productId, releaseId) {
+      window.location.href = `devops-product-detail.html?id=${productId}`;
+    }
+    
+    function viewLogs(releaseId) {
+      alert('查看发布日志: ' + releaseId);
+    }
+    
+    function showCreateModal() {
+      alert('新建发布功能开发中...');
+    }
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadStats();
+      await loadReleases();
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

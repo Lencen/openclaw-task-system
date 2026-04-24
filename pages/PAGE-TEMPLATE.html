@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{PAGE_TITLE}} - Task System V2</title>
+  
+  <!-- 全局样式 -->
+      <link rel="stylesheet" href="css/sidebar.css">
+  
+  <!-- 图标库 -->
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  
+  <!-- 页面特定样式 -->
+  <style>
+    /* 页面特定样式放在这里 */
+  </style>
+  <link rel="stylesheet" href="css/frame.css">
+  <script src="js/field-tips.js"></script></head>
+<body>
+  <!-- 侧边栏容器 -->
+  <div id="sidebar-container"></div>
+  
+  <!-- 主内容区 -->
+  <main class="main-content" id="main-content">
+    <!-- 页面内容放在这里 -->
+    <div class="container">
+      <h1>{{PAGE_TITLE}}</h1>
+    </div>
+  </main>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: '{{ACTIVE_PAGE}}' });
+  </script>
+  
+  <!-- 页面特定脚本 -->
+  <script>
+    // 页面特定逻辑放在这里
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

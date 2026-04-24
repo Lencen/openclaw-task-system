@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>产品详情 - DevOps</title>
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .back-btn:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .product-info-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .product-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    
+    .product-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    
+    .product-meta {
+      display: flex;
+      gap: 16px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    
+    .product-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .status-active {
+      background: rgba(34, 197, 94, 0.1);
+      color: #22c55e;
+    }
+    
+    .status-inactive {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .info-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+    
+    .info-value {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+    
+    .tabs-container {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .tabs-header {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-tertiary);
+    }
+    
+    .tab-btn {
+      padding: 12px 24px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+    
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    
+    .tab-content {
+      display: none;
+      padding: 24px;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+    
+    .version-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .version-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .version-item:hover {
+      background: var(--bg-primary);
+    }
+    
+    .version-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .version-number {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .version-tag {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    
+    .tag-latest {
+      background: rgba(34, 197, 94, 0.1);
+      color: #22c55e;
+    }
+    
+    .tag-released {
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+    }
+    
+    .tag-dev {
+      background: rgba(251, 191, 36, 0.1);
+      color: #fbbf24;
+    }
+    
+    .version-meta {
+      display: flex;
+      gap: 16px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    
+    .release-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .release-item {
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      border-left: 3px solid var(--primary);
+    }
+    
+    .release-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .release-version {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .release-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .status-success {
+      background: rgba(34, 197, 94, 0.1);
+      color: #22c55e;
+    }
+    
+    .status-pending {
+      background: rgba(251, 191, 36, 0.1);
+      color: #fbbf24;
+    }
+    
+    .status-failed {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+    
+    .release-info {
+      display: flex;
+      gap: 24px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: var(--text-secondary);
+    }
+    
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--bg-primary);
+    }
+    
+    /* 功能特性卡片 */
+    .feature-card {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    
+    .feature-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    
+    .feature-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 12px;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <span>资源</span> / <span>产品</span> / <span id="breadcrumbName">详情</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadProduct()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <div class="page-content">
+      
+      <!-- 产品信息卡片 -->
+      <div class="product-info-card">
+        <div class="product-header">
+          <div>
+            <h2 class="product-title" id="productName">加载中...</h2>
+            <div class="product-meta">
+              <span id="productCode">-</span>
+              <span id="productOwner">-</span>
+            </div>
+          </div>
+          <div>
+            <span class="product-status status-active" id="productStatus">
+              <i class="ri-check-line"></i> 运行中
+            </span>
+          </div>
+        </div>
+        
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">创建时间</span>
+            <span class="info-value" id="createdAt">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">最新版本</span>
+            <span class="info-value" id="latestVersion">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">版本总数</span>
+            <span class="info-value" id="versionCount">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">发布次数</span>
+            <span class="info-value" id="releaseCount">-</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 标签页 -->
+      <div class="tabs-container">
+        <div class="tabs-header">
+          <button class="tab-btn active" data-tab="overview">📋 概览</button>
+          <button class="tab-btn" data-tab="versions">📦 版本管理</button>
+          <button class="tab-btn" data-tab="releases">🚀 发布记录</button>
+          <button class="tab-btn" data-tab="settings">⚙️ 设置</button>
+        </div>
+        
+        <!-- 概览 -->
+        <div class="tab-content active" id="tab-overview">
+          <h3 class="section-title">产品描述</h3>
+          <p id="productDescription" style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 24px;">-</p>
+          
+          <h3 class="section-title">核心功能</h3>
+          <div class="feature-list" id="featureList">
+            <!-- 动态填充 -->
+          </div>
+        </div>
+        
+        <!-- 版本管理 -->
+        <div class="tab-content" id="tab-versions">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 class="section-title">版本列表</h3>
+            <button class="btn btn-primary">
+              <i class="ri-add-line"></i> 创建版本
+            </button>
+          </div>
+          <div class="version-list" id="versionList">
+            <div class="empty-state">
+              <div class="empty-icon">📦</div>
+              <p>暂无版本数据</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 发布记录 -->
+        <div class="tab-content" id="tab-releases">
+          <h3 class="section-title">发布历史</h3>
+          <div class="release-list" id="releaseList">
+            <div class="empty-state">
+              <div class="empty-icon">🚀</div>
+              <p>暂无发布记录</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 设置 -->
+        <div class="tab-content" id="tab-settings">
+          <h3 class="section-title">产品设置</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">产品名称</span>
+              <span class="info-value" id="settingName">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">产品代码</span>
+              <span class="info-value" id="settingCode">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">负责人</span>
+              <span class="info-value" id="settingOwner">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">状态</span>
+              <span class="info-value" id="settingStatus">-</span>
+            </div>
+          </div>
+          <div style="margin-top: 24px;">
+            <button class="btn btn-secondary">编辑产品</button>
+            <button class="btn btn-secondary" style="color: #ef4444; border-color: #ef4444;">删除产品</button>
+          </div>
+        </div>
+      </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script>
+    const API_BASE = window.location.origin;
+    let productId = null;
+    
+    // 任务管理系统预设数据
+    const TASK_SYSTEM_DATA = {
+      id: 'prod-001',
+      name: '任务管理平台',
+      code: 'TASK-PLATFORM',
+      description: '企业级任务管理与Agent协作平台，支持自动化任务识别、智能分析拆解、多Agent协作执行、实时监控与自动恢复。',
+      owner: '顾良晨',
+      status: 'active',
+      created_at: '2026-03-15',
+      features: [
+        { title: '自动任务识别', desc: '从对话中自动识别任务意图，创建任务实例' },
+        { title: '智能分析拆解', desc: 'AI自动分析任务需求，生成执行步骤' },
+        { title: '多Agent协作', desc: '支持多个Agent并行执行任务，提高效率' },
+        { title: '实时监控', desc: '自动化监控任务状态，异常自动告警' },
+        { title: '自动恢复', desc: '卡点任务自动检测和恢复机制' },
+        { title: '知识库集成', desc: '三层记忆架构，支持知识检索与进化' }
+      ],
+      versions: [
+        { id: 'v3', version: 'v3.0.0', is_latest: true, status: 'released', created_at: '2026-03-19', desc: '场景切换、模块化架构、统一认证' },
+        { id: 'v2', version: 'v2.0.0', is_latest: false, status: 'released', created_at: '2026-03-18', desc: '新增自动化监控与恢复' },
+        { id: 'v1', version: 'v1.5.0', is_latest: false, status: 'released', created_at: '2026-03-15', desc: '新增Agent协作功能' },
+        { id: 'v0', version: 'v1.0.0', is_latest: false, status: 'released', created_at: '2026-03-10', desc: '基础任务管理' }
+      ],
+      releases: [
+        { version: 'v3.0.0', status: 'success', released_at: '2026-03-19', released_by: '顾良晨', notes: 'V3.0.0 场景切换、模块化架构、统一认证' },
+        { version: 'v2.0.0', status: 'success', released_at: '2026-03-18', released_by: '顾良晨', notes: '自动化监控与恢复机制上线' },
+        { version: 'v1.5.0', status: 'success', released_at: '2026-03-15', released_by: '顾良晨', notes: 'Agent协作功能上线' },
+        { version: 'v1.0.0', status: 'success', released_at: '2026-03-10', released_by: '顾良晨', notes: '首个版本发布' }
+      ]
+    };
+    
+    // 获取URL参数
+    function getUrlParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+    
+    // 初始化
+    async function init() {
+      productId = getUrlParam('id');
+      if (!productId) {
+        alert('产品ID不存在');
+        window.location.href = 'devops-products.html';
+        return;
+      }
+      
+      await loadProductInfo();
+      initTabs();
+    }
+    
+    // 加载产品信息
+    async function loadProductInfo() {
+      try {
+        const res = await fetch(`${API_BASE}/api/devops/products/${productId}`);
+        const data = await res.json();
+        
+        if (data.success && data.data) {
+          const product = data.data;
+          // 合并预设数据
+          if (productId === 'prod-001' || productId === TASK_SYSTEM_DATA.id) {
+            renderProduct({ ...TASK_SYSTEM_DATA, ...product });
+          } else {
+            renderProduct(product);
+          }
+        } else {
+          // 使用预设数据
+          if (productId === 'prod-001' || productId === TASK_SYSTEM_DATA.id) {
+            renderProduct(TASK_SYSTEM_DATA);
+          } else {
+            loadMockData();
+          }
+        }
+      } catch (error) {
+        console.error('加载产品信息失败:', error);
+        // 使用预设数据
+        if (productId === 'prod-001' || productId === TASK_SYSTEM_DATA.id) {
+          renderProduct(TASK_SYSTEM_DATA);
+        } else {
+          loadMockData();
+        }
+      }
+    }
+    
+    // 渲染产品信息
+    function renderProduct(product) {
+      document.getElementById('productName').textContent = product.name || '未命名产品';
+      document.getElementById('productCode').textContent = product.code || '-';
+      document.getElementById('productOwner').textContent = product.owner || '-';
+      document.getElementById('createdAt').textContent = formatDate(product.created_at);
+      document.getElementById('productDescription').textContent = product.description || '暂无描述';
+      
+      // 功能特性
+      if (product.features && product.features.length > 0) {
+        document.getElementById('featureList').innerHTML = product.features.map(f => `
+          <div class="feature-card">
+            <div class="feature-title">${escapeHtml(f.title)}</div>
+            <div class="feature-desc">${escapeHtml(f.desc)}</div>
+          </div>
+        `).join('');
+      }
+      
+      // 版本
+      if (product.versions && product.versions.length > 0) {
+        document.getElementById('versionCount').textContent = product.versions.length;
+        document.getElementById('latestVersion').textContent = product.versions[0].version;
+        renderVersions(product.versions);
+      } else {
+        document.getElementById('versionCount').textContent = '0';
+        document.getElementById('latestVersion').textContent = '-';
+      }
+      
+      // 发布记录
+      if (product.releases && product.releases.length > 0) {
+        document.getElementById('releaseCount').textContent = product.releases.length;
+        renderReleases(product.releases);
+      } else {
+        document.getElementById('releaseCount').textContent = '0';
+      }
+      
+      // 状态
+      const statusEl = document.getElementById('productStatus');
+      if (product.status === 'active') {
+        statusEl.innerHTML = '<i class="ri-check-line"></i> 运行中';
+        statusEl.className = 'product-status status-active';
+      } else {
+        statusEl.innerHTML = '<i class="ri-close-line"></i> 已停止';
+        statusEl.className = 'product-status status-inactive';
+      }
+      
+      // 设置页面
+      document.getElementById('settingName').textContent = product.name || '-';
+      document.getElementById('settingCode').textContent = product.code || '-';
+      document.getElementById('settingOwner').textContent = product.owner || '-';
+      document.getElementById('settingStatus').textContent = product.status === 'active' ? '运行中' : '已停止';
+      
+      document.title = `${product.name || '产品详情'} - DevOps`;
+    }
+    
+    // 渲染版本列表
+    function renderVersions(versions) {
+      const container = document.getElementById('versionList');
+      container.innerHTML = versions.map(v => `
+        <div class="version-item">
+          <div class="version-info">
+            <span class="version-number">${v.version}</span>
+            <span class="version-tag ${v.is_latest ? 'tag-latest' : v.status === 'released' ? 'tag-released' : 'tag-dev'}">
+              ${v.is_latest ? '最新' : v.status === 'released' ? '已发布' : '开发中'}
+            </span>
+          </div>
+          <div class="version-meta">
+            <span><i class="ri-calendar-line"></i> ${formatDate(v.created_at)}</span>
+            ${v.desc ? `<span>${escapeHtml(v.desc)}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // 渲染发布记录
+    function renderReleases(releases) {
+      const container = document.getElementById('releaseList');
+      container.innerHTML = releases.map(r => `
+        <div class="release-item">
+          <div class="release-header">
+            <span class="release-version">${r.version}</span>
+            <span class="release-status status-${r.status}">${getStatusText(r.status)}</span>
+          </div>
+          <div class="release-info">
+            <span><i class="ri-calendar-line"></i> ${formatDate(r.released_at)}</span>
+            <span><i class="ri-user-line"></i> ${r.released_by || '-'}</span>
+            <span><i class="ri-message-line"></i> ${r.notes || '无备注'}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // 获取状态文本
+    function getStatusText(status) {
+      const map = {
+        'success': '成功',
+        'pending': '待发布',
+        'failed': '失败'
+      };
+      return map[status] || status;
+    }
+    
+    // 格式化日期
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('zh-CN');
+    }
+    
+    // HTML转义
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // 模拟数据
+    function loadMockData() {
+      renderProduct({
+        name: '示例产品',
+        code: 'PROD-001',
+        description: '这是一个示例产品',
+        owner: 'admin',
+        status: 'active',
+        created_at: '2026-03-18',
+        features: [
+          { title: '核心功能', desc: '产品核心功能描述' }
+        ],
+        versions: [
+          { version: 'v1.0.0', is_latest: true, status: 'released', created_at: '2026-03-18' }
+        ],
+        releases: [
+          { version: 'v1.0.0', status: 'success', released_at: '2026-03-18', released_by: 'admin', notes: '首次发布' }
+        ]
+      });
+    }
+    
+    // 初始化标签页
+    function initTabs() {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabId = btn.dataset.tab;
+          
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          document.getElementById(`tab-${tabId}`).classList.add('active');
+        });
+      });
+    }
+    
+    // 启动
+    init();
+  </script>
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'devops-products' });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>项目详情 - 任务系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    /* 移除固定宽度限制，自适应页面 */
+    .page-layout {
+      padding: 24px;
+    }
+
+    /* 返回导航 */
+    .back-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      margin-bottom: 16px;
+    }
+
+    .back-nav:hover { color: var(--text-primary); }
+
+    /* 项目头部 */
+    .project-header {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .project-icon-large {
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary), #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      flex-shrink: 0;
+    }
+
+    .header-info { flex: 1; }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .project-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .status-badge {
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .status-badge.active { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .status-badge.developing { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .status-badge.paused { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .status-badge.completed { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+    .status-badge.planning { background: rgba(100, 116, 139, 0.15); color: #94a3b8; }
+
+    .project-meta-row {
+      display: flex;
+      gap: 24px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 统计卡片 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 1000px) {
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .stat-value.blue { color: #3b82f6; }
+    .stat-value.green { color: #10b981; }
+    .stat-value.orange { color: #f59e0b; }
+    .stat-value.purple { color: #8b5cf6; }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* 内容网格 */
+    .content-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 1200px) {
+      .content-grid { grid-template-columns: 1fr; }
+    }
+
+    .section {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .section-full {
+      grid-column: 1 / -1;
+    }
+
+    .section-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-body {
+      padding: 16px 20px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    /* 信息列表 */
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    .info-label { color: var(--text-secondary); }
+    .info-value { color: var(--text-primary); }
+
+    /* 任务列表 */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task-item {
+      padding: 12px 14px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .task-item:hover {
+      border-left-color: var(--primary);
+    }
+
+    .task-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .task-item-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .task-priority {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+
+    .task-priority.P0 { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .task-priority.P1 { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .task-priority.P2 { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .task-priority.P3 { background: rgba(100, 116, 139, 0.15); color: #94a3b8; }
+
+    .task-item-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      display: flex;
+      gap: 12px;
+    }
+
+    /* 进度条 */
+    .progress-bar-container {
+      margin-bottom: 16px;
+    }
+
+    .progress-bar-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    /* 版本信息 */
+    .version-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .version-item {
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+
+    .version-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-bottom: 4px;
+    }
+
+    .version-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    /* 文档列表 */
+    .doc-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .doc-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .doc-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .doc-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .doc-icon.markdown { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .doc-icon.spec { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .doc-icon.design { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+
+    .doc-info { flex: 1; }
+
+    .doc-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .doc-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    /* 成员列表 */
+    .member-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .member-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .member-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .member-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .member-role {
+      font-size: 10px;
+      color: var(--text-tertiary);
+    }
+
+    .member-agent {
+      font-size: 9px;
+      color: var(--primary);
+      margin-top: 2px;
+    }
+
+    /* 规范列表 */
+    .spec-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .spec-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .spec-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .spec-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .spec-icon.blue { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .spec-icon.green { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .spec-icon.purple { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+
+    .spec-info { flex: 1; }
+
+    .spec-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .spec-desc {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    /* 里程碑时间线 */
+    .milestone-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .milestone-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .milestone-item.completed { border-left-color: #10b981; }
+    .milestone-item.in-progress { border-left-color: #3b82f6; }
+    .milestone-item.pending { border-left-color: #94a3b8; }
+
+    .milestone-date {
+      min-width: 80px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .milestone-content {
+      flex: 1;
+    }
+
+    .milestone-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .milestone-desc {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    .milestone-env {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+      margin-top: 6px;
+      display: inline-block;
+    }
+
+    .milestone-env.staging { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .milestone-env.production { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+
+    /* 环境流程图 */
+    .env-flow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .env-step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .env-step i { font-size: 14px; }
+
+    .env-arrow {
+      color: var(--text-tertiary);
+      font-size: 16px;
+    }
+
+    /* 项目范围 */
+    .scope-content {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .scope-content ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+
+    .scope-content li {
+      margin: 4px 0;
+    }
+
+    .scope-tag {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+
+    .scope-tag.in { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .scope-tag.out { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-tertiary);
+      font-size: 13px;
+    }
+
+    /* 加载状态 */
+    .loading-state {
+      text-align: center;
+      padding: 60px;
+      color: var(--text-tertiary);
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <a href="projects-new.html">项目管理</a>
+            <span>/</span>
+            <span id="breadcrumbTitle">详情</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="btn btn-secondary" onclick="editProject()">
+            <i class="ri-edit-line"></i> 编辑
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-layout" id="pageContent">
+          <div class="loading-state">
+            <i class="ri-loader-4-line" style="font-size: 32px; animation: spin 1s linear infinite;"></i>
+            <p style="margin-top: 12px;">加载中...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let projectId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      Sidebar.init({ activePage: 'projects' });
+      projectId = getProjectId();
+      if (projectId) {
+        loadProject();
+      } else {
+        showError('未指定项目ID');
+      }
+    });
+
+    function getProjectId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    async function loadProject() {
+      try {
+        const [projRes, taskRes, productRes] = await Promise.all([
+          fetch(`${API_BASE}/api/devops/projects/${projectId}`),
+          fetch(`${API_BASE}/api/tasks?limit=100&showCompleted=true`),
+          fetch(`${API_BASE}/api/devops/products`)
+        ]);
+
+        const projData = await projRes.json();
+        const taskData = await taskRes.json();
+        const productData = await productRes.json();
+
+        if (!projData.success || !projData.data) {
+          showError('项目不存在');
+          return;
+        }
+
+        const project = projData.data;
+        
+        // 调试日志
+        console.log('Project ID:', projectId);
+        console.log('Task data:', taskData);
+        console.log('Task data.data:', taskData.data);
+        console.log('Total tasks in response:', taskData.data?.tasks?.length);
+        
+        // 修复：API 返回的是 { code, data }，没有 success 字段
+        const tasks = taskData.data?.tasks 
+          ? taskData.data.tasks.filter(t => {
+              const match = t.project_id === projectId || t.projectId === projectId;
+              console.log('Task:', t.title, 'project_id:', t.project_id, 'projectId:', t.projectId, 'match:', match);
+              return match;
+            })
+          : [];
+        
+        console.log('Filtered tasks count:', tasks.length);
+        console.log('Filtered tasks:', tasks.map(t => t.title));
+        
+        const products = productData.success ? productData.data : [];
+        const product = products.find(p => p.id === project.product_id);
+
+        renderProject(project, tasks, product);
+      } catch (error) {
+        console.error('加载失败:', error);
+        showError('加载失败: ' + error.message);
+      }
+    }
+
+    function renderProject(project, tasks, product) {
+      const taskStats = getTaskStats(tasks);
+      
+      // 智能状态：如果所有任务都完成，项目显示已完成
+      const smartStatus = (taskStats.total > 0 && taskStats.completed >= taskStats.total) 
+        ? 'completed' 
+        : project.status;
+      const statusText = getStatusText(smartStatus);
+
+      document.getElementById('breadcrumbTitle').textContent = project.name;
+
+      // 项目关联数据
+      const documents = getProjectDocuments(project);
+      const members = getProjectMembers(project);
+      const specifications = getProjectSpecifications(project);
+      const milestones = getProjectMilestones(project);
+      const scope = getProjectScope(project);
+
+      const html = `
+        <!-- 返回导航 -->
+        <div class="back-nav" onclick="goBack()">
+          <i class="ri-arrow-left-line"></i>
+          返回项目列表
+        </div>
+
+        <!-- 项目头部 -->
+        <div class="project-header">
+          <div class="header-top">
+            <div class="project-icon-large">${getIcon(project.name)}</div>
+            <div class="header-info">
+              <div class="title-row">
+                <h1 class="project-title">${escapeHtml(project.name)}</h1>
+                <span class="status-badge ${smartStatus}">${statusText}</span>
+              </div>
+              <div class="project-meta-row">
+                <div class="meta-item">
+                  <i class="ri-calendar-line"></i>
+                  <span>创建于 ${formatDate(project.created_at)}</span>
+                </div>
+                ${project.product_id ? `
+                <div class="meta-item">
+                  <i class="ri-product-hunt-line"></i>
+                  <span>产品: ${product ? escapeHtml(product.name) : '未知'}</span>
+                </div>
+                ` : ''}
+                <div class="meta-item">
+                  <i class="ri-server-line"></i>
+                  <span>${getEnvText(project.environment)}</span>
+                </div>
+                <div class="meta-item">
+                  <i class="ri-git-branch-line"></i>
+                  <span>v${project.version || '1.0.0'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value">${taskStats.total}</div>
+            <div class="stat-label">任务总数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value orange">${taskStats.inProgress}</div>
+            <div class="stat-label">进行中</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value blue">${taskStats.pending}</div>
+            <div class="stat-label">待开始</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value green">${taskStats.completed}</div>
+            <div class="stat-label">已完成</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value purple">${taskStats.percentage}%</div>
+            <div class="stat-label">完成率</div>
+          </div>
+        </div>
+
+        <!-- 内容网格 -->
+        <div class="content-grid">
+          <!-- 项目范围 -->
+          <div class="section section-full">
+            <div class="section-header">
+              <span class="section-title"><i class="ri-focus-3-line"></i> 项目范围</span>
+            </div>
+            <div class="section-body">
+              <div class="scope-content">
+                ${scope}
+              </div>
+            </div>
+          </div>
+
+          <!-- 项目描述 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title"><i class="ri-file-text-line"></i> 项目描述</span>
+            </div>
+            <div class="section-body">
+              <p style="color: var(--text-secondary); line-height: 1.6;">
+                ${escapeHtml(project.description || '暂无描述')}
+              </p>
+            </div>
+          </div>
+
+          <!-- 版本信息 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title"><i class="ri-git-branch-line"></i> 版本信息</span>
+            </div>
+            <div class="section-body">
+              <div class="version-grid">
+                <div class="version-item">
+                  <div class="version-label">项目版本</div>
+                  <div class="version-value">${project.version || '1.0.0'}</div>
+                </div>
+                <div class="version-item">
+                  <div class="version-label">代码版本</div>
+                  <div class="version-value">${project.code_version || '-'}</div>
+                </div>
+                <div class="version-item">
+                  <div class="version-label">文档版本</div>
+                  <div class="version-value">${project.doc_version || '-'}</div>
+                </div>
+                <div class="version-item">
+                  <div class="version-label">当前环境</div>
+                  <div class="version-value">${getEnvText(project.environment)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 项目成员 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title"><i class="ri-team-line"></i> 项目成员</span>
+              <span style="font-size: 12px; color: var(--text-tertiary);">${members.length} 人</span>
+            </div>
+            <div class="section-body">
+              <div class="member-grid">
+                ${members.map(member => `
+                  <div class="member-item">
+                    <div class="member-avatar">${(member.name || '?').charAt(0)}</div>
+                    <div class="member-name">${escapeHtml(member.name || '未知')}</div>
+                    <div class="member-role">${member.role || '-'}</div>
+                    ${member.agent ? `<div class="member-agent">${member.agent}</div>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- 里程碑 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title"><i class="ri-flag-2-line"></i> 里程碑</span>
+            </div>
+            <div class="section-body">
+              <!-- 环境流程图 -->
+              <div class="env-flow">
+                <div class="env-step"><i class="ri-code-line"></i> 开发</div>
+                <i class="ri-arrow-right-line env-arrow"></i>
+                <div class="env-step"><i class="ri-flask-line"></i> 单元测试</div>
+                <i class="ri-arrow-right-line env-arrow"></i>
+                <div class="env-step"><i class="ri-links-line"></i> 集成测试</div>
+                <i class="ri-arrow-right-line env-arrow"></i>
+                <div class="env-step"><i class="ri-check-double-line"></i> 验收</div>
+                <i class="ri-arrow-right-line env-arrow"></i>
+                <div class="env-step"><i class="ri-rocket-line"></i> 发布</div>
+              </div>
+              
+              <div class="milestone-timeline">
+                ${milestones.map(m => `
+                  <div class="milestone-item ${m.status}">
+                    <div class="milestone-date">${m.date}</div>
+                    <div class="milestone-content">
+                      <div class="milestone-title">${escapeHtml(m.title)}</div>
+                      <div class="milestone-desc">${escapeHtml(m.desc)}</div>
+                      ${m.env ? `<span class="milestone-env ${m.envClass}">${m.env}</span>` : ''}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- 项目文档 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title"><i class="ri-book-2-line"></i> 项目文档</span>
+              <a href="#" style="font-size: 12px; color: var(--primary);">查看全部</a>
+            </div>
+            <div class="section-body">
+              <div class="doc-list">
+                ${documents.map(doc => `
+                  <div class="doc-item" onclick="openDoc('${doc.path}')">
+                    <div class="doc-icon ${doc.type}"><i class="${getDocIcon(doc.type)}"></i></div>
+                    <div class="doc-info">
+                      <div class="doc-title">${escapeHtml(doc.name)}</div>
+                      <div class="doc-meta">${doc.updated || '刚刚更新'}</div>
+                    </div>
+                    <i class="ri-external-link-line" style="color: var(--text-tertiary);"></i>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- 项目规范 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title"><i class="ri-file-list-3-line"></i> 项目规范</span>
+            </div>
+            <div class="section-body">
+              <div class="spec-list">
+                ${specifications.map(spec => `
+                  <div class="spec-item" onclick="openSpec('${spec.path || ''}')">
+                    <div class="spec-icon ${spec.color || ''}"><i class="${spec.icon}"></i></div>
+                    <div class="spec-info">
+                      <div class="spec-title">${escapeHtml(spec.title)}</div>
+                      <div class="spec-desc">${escapeHtml(spec.desc)}</div>
+                    </div>
+                    <i class="ri-arrow-right-s-line" style="color: var(--text-tertiary);"></i>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- 项目监控 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title"><i class="ri-dashboard-3-line"></i> 项目监控</span>
+              <a href="project-monitor.html?id=${projectId}" style="font-size: 12px; color: var(--primary);">查看详情</a>
+            </div>
+            <div class="section-body">
+              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">
+                <div style="text-align: center; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                  <div style="font-size: 20px; font-weight: 700; color: var(--text-primary);">${taskStats.total}</div>
+                  <div style="font-size: 10px; color: var(--text-tertiary);">任务总数</div>
+                </div>
+                <div style="text-align: center; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                  <div style="font-size: 20px; font-weight: 700; color: #3b82f6;">${taskStats.inProgress}</div>
+                  <div style="font-size: 10px; color: var(--text-tertiary);">执行中</div>
+                </div>
+                <div style="text-align: center; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                  <div style="font-size: 20px; font-weight: 700; color: #10b981;">${taskStats.completed}</div>
+                  <div style="font-size: 10px; color: var(--text-tertiary);">已完成</div>
+                </div>
+                <div style="text-align: center; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                  <div style="font-size: 20px; font-weight: 700; color: #ef4444;">${taskStats.failed}</div>
+                  <div style="font-size: 10px; color: var(--text-tertiary);">失败</div>
+                </div>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-header">
+                  <span>整体进度</span>
+                  <span>${taskStats.percentage}%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${taskStats.percentage}%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 问题记录 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title"><i class="ri-error-warning-line"></i> 问题记录</span>
+              <span style="font-size: 12px; color: ${getProjectIssues(tasks).length > 0 ? '#ef4444' : 'var(--text-tertiary)'};">
+                ${getProjectIssues(tasks).length} 个问题
+              </span>
+            </div>
+            <div class="section-body">
+              ${renderProjectIssues(tasks)}
+            </div>
+          </div>
+
+          <!-- 项目任务 -->
+          <div class="section section-full">
+            <div class="section-header">
+              <span class="section-title"><i class="ri-task-line"></i> 项目任务</span>
+              <span style="font-size: 12px; color: var(--text-tertiary);">${taskStats.total} 个任务</span>
+            </div>
+            <div class="section-body">
+              <div class="progress-bar-container">
+                <div class="progress-bar-header">
+                  <span>整体进度</span>
+                  <span>${taskStats.completed}/${taskStats.total} 完成</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${taskStats.percentage}%;"></div>
+                </div>
+              </div>
+
+              ${tasks.length > 0 ? `
+                <div class="task-list">
+                  ${tasks.slice(0, 15).map(task => `
+                    <div class="task-item" onclick="goToTask('${task.id}')">
+                      <div class="task-item-header">
+                        <span class="task-item-title">${escapeHtml(task.title)}</span>
+                        <span class="task-priority ${task.priority || 'P2'}">${task.priority || 'P2'}</span>
+                      </div>
+                      <div class="task-item-meta">
+                        <span><i class="ri-flag-line"></i> ${getStatusText(task.status)}</span>
+                        <span><i class="ri-user-line"></i> ${task.assignedAgent || '未分配'}</span>
+                        ${task.deadline ? `<span><i class="ri-calendar-line"></i> ${formatDate(task.deadline)}</span>` : ''}
+                      </div>
+                    </div>
+                  `).join('')}
+                  ${tasks.length > 15 ? `
+                    <div class="empty-state">还有 ${tasks.length - 15} 个任务...</div>
+                  ` : ''}
+                </div>
+              ` : `
+                <div class="empty-state">
+                  <i class="ri-inbox-line" style="font-size: 32px; margin-bottom: 8px; display: block;"></i>
+                  暂无关联的任务
+                </div>
+              `}
+            </div>
+          </div>
+
+          <!-- 时间线 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title"><i class="ri-time-line"></i> 时间线</span>
+            </div>
+            <div class="section-body">
+              <div class="info-list">
+                <div class="info-item">
+                  <span class="info-label">创建时间</span>
+                  <span class="info-value">${formatDateTime(project.created_at)}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">更新时间</span>
+                  <span class="info-value">${formatDateTime(project.updated_at)}</span>
+                </div>
+                ${project.start_date ? `
+                <div class="info-item">
+                  <span class="info-label">开始日期</span>
+                  <span class="info-value">${formatDate(project.start_date)}</span>
+                </div>
+                ` : ''}
+                ${project.plan_release_date ? `
+                <div class="info-item">
+                  <span class="info-label">计划发布</span>
+                  <span class="info-value">${formatDate(project.plan_release_date)}</span>
+                </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+
+          <!-- 相关链接 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title"><i class="ri-link"></i> 相关链接</span>
+            </div>
+            <div class="section-body">
+              <div class="info-list">
+                <div class="info-item">
+                  <span class="info-label">代码仓库</span>
+                  <span class="info-value"><a href="#" style="color: var(--primary);">GitHub</a></span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">文档中心</span>
+                  <span class="info-value"><a href="#" style="color: var(--primary);">飞书文档</a></span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">CI/CD</span>
+                  <span class="info-value"><a href="#" style="color: var(--primary);">Jenkins</a></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('pageContent').innerHTML = html;
+    }
+
+    // 项目范围
+    function getProjectScope(project) {
+      if (!project || !project.scope) {
+        return '<p style="color: var(--text-tertiary);">暂无范围信息</p>';
+      }
+      
+      const scope = project.scope;
+      let html = '';
+      
+      if (scope.in_scope && scope.in_scope.length > 0) {
+        html += '<p><strong>范围内</strong></p><ul>';
+        scope.in_scope.forEach(item => {
+          html += `<li>${escapeHtml(item)} <span class="scope-tag in">范围内</span></li>`;
+        });
+        html += '</ul>';
+      }
+      
+      if (scope.out_of_scope && scope.out_of_scope.length > 0) {
+        html += '<p><strong>范围外</strong></p><ul>';
+        scope.out_of_scope.forEach(item => {
+          html += `<li>${escapeHtml(item)} <span class="scope-tag out">范围外</span></li>`;
+        });
+        html += '</ul>';
+      }
+      
+      return html || '<p style="color: var(--text-tertiary);">暂无范围信息</p>';
+    }
+
+    // 项目成员（完整角色）
+    function getProjectMembers(project) {
+      if (project && project.members) {
+        return project.members;
+      }
+      return [
+        { name: '顾良晨', role: '项目负责人', agent: null }
+      ];
+    }
+
+    // 里程碑（与环境对应）
+    function getProjectMilestones(project) {
+      if (!project || !project.milestones) {
+        return [];
+      }
+      
+      return project.milestones.map(m => ({
+        date: m.due_date || m.id,
+        title: m.name,
+        desc: m.acceptance_criteria || '',
+        status: m.status || 'pending',
+        completed_at: m.completed_at
+      }));
+    }
+
+    // 项目规范（从项目 tech_stack 获取）
+    function getProjectSpecifications(project) {
+      const specs = [];
+      
+      // 1. 从 tech_stack 获取技术栈信息
+      if (project && project.tech_stack) {
+        const ts = project.tech_stack;
+        if (ts.language) {
+          specs.push({ title: '编程语言', desc: ts.language, icon: 'ri-code-line', color: 'blue' });
+        }
+        if (ts.runtime) {
+          specs.push({ title: '运行环境', desc: ts.runtime, icon: 'ri-cpu-line', color: 'green' });
+        }
+        if (ts.framework) {
+          specs.push({ title: '框架', desc: ts.framework, icon: 'ri-layout-line', color: 'purple' });
+        }
+        if (ts.storage) {
+          specs.push({ title: '存储', desc: ts.storage, icon: 'ri-database-2-line', color: 'orange' });
+        }
+      }
+      
+      // 2. 从 specifications 获取项目规范文档
+      if (project && project.specifications) {
+        const specIcons = {
+          'development': 'ri-code-line',
+          'framework': 'ri-layout-grid-line',
+          'automation': 'ri-robot-line',
+          'test': 'ri-test-tube-line',
+          'api': 'ri-plug-line',
+          'checklist': 'ri-checkbox-line'
+        };
+        const specColors = {
+          'development': 'blue',
+          'framework': 'green',
+          'automation': 'purple',
+          'test': 'orange',
+          'api': 'cyan',
+          'checklist': 'pink'
+        };
+        
+        project.specifications.forEach(spec => {
+          specs.push({
+            title: spec.title,
+            desc: spec.type || '规范',
+            icon: specIcons[spec.type] || 'ri-file-text-line',
+            color: specColors[spec.type] || 'gray',
+            path: spec.path
+          });
+        });
+      }
+      
+      return specs;
+    }
+
+    // 项目文档（从项目 related_docs 获取）
+    function getProjectDocuments(project) {
+      if (!project || !project.related_docs) {
+        return [];
+      }
+      
+      return project.related_docs.map(doc => ({
+        name: doc.title || doc.name,
+        type: doc.type || 'markdown',
+        path: doc.path,
+        updated: doc.updated || '最近更新'
+      }));
+    }
+
+    function getTaskStats(tasks) {
+      const total = tasks.length;
+      const completed = tasks.filter(t => t.status === 'completed').length;
+      const inProgress = tasks.filter(t => t.status === 'doing').length;
+      const pending = tasks.filter(t => t.status === 'pending').length;
+      const failed = tasks.filter(t => t.status === 'failed').length;
+      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      return { total, completed, inProgress, pending, failed, percentage };
+    }
+
+    // 获取项目问题
+    function getProjectIssues(tasks) {
+      const issues = [];
+      tasks.forEach(task => {
+        // 从任务的 issues 字段提取
+        if (task.issues && task.issues.length > 0) {
+          task.issues.forEach(issue => {
+            issues.push({
+              title: issue.title || '执行问题',
+              type: issue.type || 'error',
+              status: issue.status || 'open',
+              desc: issue.desc || issue.message || '',
+              taskTitle: task.title,
+              time: issue.time
+            });
+          });
+        }
+        // 检查失败任务
+        if (task.status === 'failed') {
+          issues.push({
+            title: `任务执行失败: ${task.title}`,
+            type: 'error',
+            status: 'open',
+            desc: task.error_message || '任务执行过程中发生错误',
+            taskTitle: task.title,
+            time: task.updated_at
+          });
+        }
+      });
+      return issues;
+    }
+
+    // 渲染项目问题
+    function renderProjectIssues(tasks) {
+      const issues = getProjectIssues(tasks);
+      
+      if (issues.length === 0) {
+        return `
+          <div style="text-align: center; padding: 20px; color: var(--text-tertiary);">
+            <i class="ri-check-line" style="font-size: 32px; color: #10b981; margin-bottom: 8px; display: block;"></i>
+            暂无问题
+          </div>
+        `;
+      }
+
+      return `
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          ${issues.slice(0, 5).map(issue => `
+            <div style="padding: 10px; background: var(--bg-tertiary); border-radius: 8px; border-left: 3px solid ${issue.type === 'error' ? '#ef4444' : issue.type === 'warning' ? '#f59e0b' : '#3b82f6'};">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 12px; font-weight: 500; color: var(--text-primary);">${escapeHtml(issue.title)}</span>
+                <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: ${issue.status === 'open' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)'}; color: ${issue.status === 'open' ? '#ef4444' : '#10b981'};">${issue.status === 'open' ? '待处理' : '已解决'}</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-tertiary);">
+                <i class="ri-task-line"></i> ${escapeHtml(issue.taskTitle)}
+              </div>
+              ${issue.desc ? `<div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">${escapeHtml(issue.desc)}</div>` : ''}
+            </div>
+          `).join('')}
+          ${issues.length > 5 ? `<div style="text-align: center; padding: 8px; color: var(--text-tertiary); font-size: 12px;">还有 ${issues.length - 5} 个问题...</div>` : ''}
+        </div>
+      `;
+    }
+
+    function getStatusText(status) {
+      const map = {
+        'pending': '待处理',
+        'doing': '进行中',
+        'completed': '已完成',
+        'failed': '失败',
+        'paused': '已暂停',
+        'cancelled': '已取消',
+        'active': '进行中',
+        'developing': '开发中',
+        'planning': '规划中',
+        'released': '已发布'
+      };
+      return map[status] || status || '未知';
+    }
+
+    function getEnvText(env) {
+      const map = {
+        'develop': '开发环境',
+        'staging': '测试环境',
+        'production': '生产环境'
+      };
+      return map[env] || env || '开发环境';
+    }
+
+    function getIcon(name) {
+      const icons = ['🎯', '📱', '⚡', '🤖', '📊', '🔧', '🌐', '💾', '🚀', '💡'];
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = ((hash << 5) - hash) + name.charCodeAt(i);
+      }
+      return icons[Math.abs(hash) % icons.length];
+    }
+
+    function getDocIcon(type) {
+      const icons = {
+        'markdown': 'ri-markdown-line',
+        'spec': 'ri-file-list-3-line',
+        'design': 'ri-pencil-ruler-2-line'
+      };
+      return icons[type] || 'ri-file-line';
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      return dateStr.split('T')[0];
+    }
+
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '-';
+      return dateStr.replace('T', ' ').substring(0, 16);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function goBack() {
+      window.location.href = 'projects-new.html';
+    }
+
+    function goToTask(id) {
+      window.location.href = `task-detail.html?id=${encodeURIComponent(id)}`;
+    }
+
+    function openDoc(path) {
+      window.open(`doc-detail.html?path=${encodeURIComponent(path)}`, '_blank');
+    }
+
+    function openSpec(path) {
+      if (path) {
+        window.open(`doc-detail.html?path=${encodeURIComponent(path)}`, '_blank');
+      }
+    }
+
+    function editProject() {
+      alert('编辑功能开发中');
+    }
+
+    function showError(message) {
+      document.getElementById('pageContent').innerHTML = `
+        <div class="empty-state" style="padding: 60px;">
+          <i class="ri-error-warning-line" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+          <p>${escapeHtml(message)}</p>
+          <button onclick="goBack()" style="margin-top: 16px; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer;">
+            返回列表
+          </button>
+        </div>
+      `;
+    }
+  </script>
+
+  <script src="js/sidebar.js"></script>
+<script>FieldTips.init({pageType:"project"});</script></body>
+</html>

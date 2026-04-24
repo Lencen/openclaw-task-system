@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>菜单权限测试 - 基于角色的菜单控制</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --border: #334155;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    
+    .card h3 {
+      font-size: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .role-selector {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .role-selector select {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      width: 100%;
+      cursor: pointer;
+    }
+    
+    .menu-list {
+      list-style: none;
+    }
+    
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+    
+    .menu-item:last-child {
+      border-bottom: none;
+    }
+    
+    .menu-item:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .menu-item.visible {
+      opacity: 1;
+    }
+    
+    .menu-item.hidden {
+      opacity: 0.3;
+      background: rgba(0,0,0,0.2);
+    }
+    
+    .menu-icon {
+      font-size: 18px;
+    }
+    
+    .menu-label {
+      flex: 1;
+    }
+    
+    .permission-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+    
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    
+    .status.allowed {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .status.denied {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+    
+    .stats {
+      display: flex;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    
+    .stat {
+      flex: 1;
+      background: var(--bg-tertiary);
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+  </style>
+  <script src="js/auth-guard.js"></script>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><i class="ri-shield-keyhole-line"></i> 菜单权限测试</h1>
+      <p>基于角色的菜单显示控制测试页面</p>
+    </div>
+    
+    <div class="role-selector">
+      <label style="display:block;margin-bottom:8px;color:var(--text-secondary);font-size:13px;">选择角色:</label>
+      <select id="roleSelect">
+        <option value="admin">管理员 (admin)</option>
+        <option value="main" selected>主 Agent (main)</option>
+        <option value="coder">开发 Agent (coder)</option>
+        <option value="deep">分析 Agent (deep)</option>
+        <option value="fast">快速 Agent (fast)</option>
+        <option value="chat">对话 Agent (chat)</option>
+        <option value="test">测试 Agent (test)</option>
+        <option value="office">办公 Agent (office)</option>
+        <option value="guest">访客 (guest)</option>
+      </select>
+    </div>
+    
+    <div class="grid">
+      <div class="card">
+        <h3><i class="ri-navigation-line"></i> 主导航菜单</h3>
+        <ul class="menu-list" id="primaryMenu"></ul>
+        <div class="stats" id="primaryStats"></div>
+      </div>
+      
+      <div class="card">
+        <h3><i class="ri-book-open-line"></i> 资源菜单</h3>
+        <ul class="menu-list" id="resourcesMenu"></ul>
+        <div class="stats" id="resourcesStats"></div>
+      </div>
+      
+      <div class="card">
+        <h3><i class="ri-settings-line"></i> 系统菜单</h3>
+        <ul class="menu-list" id="systemMenu"></ul>
+        <div class="stats" id="systemStats"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="js/sidebar-menu-permission.js"></script>
+  <script>
+    // 菜单配置
+    const menuConfig = {
+      primary: [
+        { id: 'warroom', label: 'War Room', icon: '🎮' },
+        { id: 'dashboard', label: '仪表盘', icon: '📊' },
+        { id: 'tasks', label: '任务管理', icon: '📋' },
+        { id: 'execution-queue', label: '执行队列', icon: '⚡' },
+        { id: 'tasks-list', label: '列表视图', icon: '📝' },
+        { id: 'quadrant', label: '四象限', icon: '🎯' },
+        { id: 'calendar', label: '日历视图', icon: '📅' },
+        { id: 'agents', label: 'Agent', icon: '🤖' },
+        { id: 'projects', label: '项目', icon: '📦' }
+      ],
+      resources: [
+        { id: 'docs', label: '文档', icon: '📚' },
+        { id: 'skills', label: '技能', icon: '🛠️' },
+        { id: 'knowledge', label: '知识库', icon: '🧠' },
+        { id: 'devops-products', label: '产品管理', icon: '📦' },
+        { id: 'release-management', label: '发布管理', icon: '🚀' }
+      ],
+      system: [
+        { id: 'monitor', label: '监控', icon: '📈' },
+        { id: 'business-monitor', label: '业务监控', icon: '📊' },
+        { id: 'organization', label: '组织架构', icon: '🏛️' },
+        { id: 'guide', label: '系统说明', icon: '📖' },
+        { id: 'faq', label: 'FAQ', icon: '❓' },
+        { id: 'automation-guide', label: '自动化机制', icon: '⚙️' },
+        { id: 'api-catalog', label: 'API 目录', icon: '🔌' },
+        { id: 'notifications', label: '通知中心', icon: '🔔' },
+        { id: 'settings', label: '设置', icon: '🔧' }
+      ]
+    };
+    
+    function renderMenu(roleId) {
+      // 更新当前角色
+      SidebarPermission.currentRole = roleId;
+      
+      // 主导航
+      const primaryList = document.getElementById('primaryMenu');
+      primaryList.innerHTML = menuConfig.primary.map(item => {
+        const permission = SidebarPermission.menuPermissions[item.id];
+        const visible = SidebarPermission.hasPermission(roleId, permission);
+        return `
+          <li class="menu-item ${visible ? 'visible' : 'hidden'}">
+            <span class="menu-icon">${item.icon}</span>
+            <span class="menu-label">${item.label}</span>
+            <span class="permission-badge">${permission}</span>
+            <span class="status ${visible ? 'allowed' : 'denied'}">
+              ${visible ? '✅' : '❌'}
+            </span>
+          </li>
+        `;
+      }).join('');
+      
+      // 资源菜单
+      const resourcesList = document.getElementById('resourcesMenu');
+      resourcesList.innerHTML = menuConfig.resources.map(item => {
+        const permission = SidebarPermission.menuPermissions[item.id];
+        const visible = SidebarPermission.hasPermission(roleId, permission);
+        return `
+          <li class="menu-item ${visible ? 'visible' : 'hidden'}">
+            <span class="menu-icon">${item.icon}</span>
+            <span class="menu-label">${item.label}</span>
+            <span class="permission-badge">${permission}</span>
+            <span class="status ${visible ? 'allowed' : 'denied'}">
+              ${visible ? '✅' : '❌'}
+            </span>
+          </li>
+        `;
+      }).join('');
+      
+      // 系统菜单
+      const systemList = document.getElementById('systemMenu');
+      systemList.innerHTML = menuConfig.system.map(item => {
+        const permission = SidebarPermission.menuPermissions[item.id];
+        const visible = SidebarPermission.hasPermission(roleId, permission);
+        return `
+          <li class="menu-item ${visible ? 'visible' : 'hidden'}">
+            <span class="menu-icon">${item.icon}</span>
+            <span class="menu-label">${item.label}</span>
+            <span class="permission-badge">${permission}</span>
+            <span class="status ${visible ? 'allowed' : 'denied'}">
+              ${visible ? '✅' : '❌'}
+            </span>
+          </li>
+        `;
+      }).join('');
+      
+      // 更新统计
+      updateStats('primary', roleId);
+      updateStats('resources', roleId);
+      updateStats('system', roleId);
+    }
+    
+    function updateStats(type, roleId) {
+      const items = menuConfig[type];
+      const visible = items.filter(item => {
+        const permission = SidebarPermission.menuPermissions[item.id];
+        return SidebarPermission.hasPermission(roleId, permission);
+      }).length;
+      
+      const total = items.length;
+      const hidden = total - visible;
+      
+      const statsEl = document.getElementById(`${type}Stats`);
+      statsEl.innerHTML = `
+        <div class="stat">
+          <div class="stat-value">${visible}</div>
+          <div class="stat-label">可见</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">${hidden}</div>
+          <div class="stat-label">隐藏</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">${total}</div>
+          <div class="stat-label">总计</div>
+        </div>
+      `;
+    }
+    
+    // 初始化
+    document.getElementById('roleSelect').addEventListener('change', (e) => {
+      renderMenu(e.target.value);
+    });
+    
+    // 初始渲染
+    renderMenu('main');
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

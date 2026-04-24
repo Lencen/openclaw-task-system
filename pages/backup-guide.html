@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ========== 统一设计系统 ========== -->
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles/design-system.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/backup-config.css">
+
+  <title>备份指南 - OpenClaw</title>
+  <script src="js/auth-guard.js"></script>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-title" style="background: linear-gradient(135deg, var(--ds-accent-primary), #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">💾 OpenClaw 备份系统指南</div>
+      <a href="settings-new.html" class="nav-link" style="display: flex; align-items: center; gap: 8px;">
+        <i class="ri-arrow-left-line"></i> 返回设置
+      </a>
+    </div>
+
+    <!-- 备份概览 -->
+    <div class="card" style="border-left: 3px solid var(--ds-accent-primary);">
+      <div class="card-header">
+        <div class="card-title">📋 备份系统概览</div>
+      </div>
+      <div class="card-body">
+        <p style="color: var(--ds-text-secondary); margin-bottom: 16px;">
+          OpenClaw 升级版自动备份系统 v2.0 采用多层次备份策略，确保数据安全和快速恢复。
+        </p>
+        <div class="flex" style="gap: 24px; flex-wrap: wrap;">
+          <div>
+            <div style="font-size: 24px; font-weight: var(--ds-font-bold); color: var(--ds-accent-primary);">7</div>
+            <div style="font-size: 12px; color: var(--ds-text-secondary);">自动备份任务</div>
+          </div>
+          <div>
+            <div style="font-size: 24px; font-weight: var(--ds-font-bold); color: var(--ds-accent-success);">30天</div>
+            <div style="font-size: 12px; color: var(--ds-text-secondary);">最长保留周期</div>
+          </div>
+          <div>
+            <div style="font-size: 24px; font-weight: var(--ds-font-bold); color: var(--ds-accent-warning);">每小时</div>
+            <div style="font-size: 12px; color: var(--ds-text-secondary);">最细备份粒度</div>
+          </div>
+          <div>
+            <div style="font-size: 24px; font-weight: var(--ds-font-bold); color: var(--ds-accent-primary);">15G</div>
+            <div style="font-size: 12px; color: var(--ds-text-secondary);">当前总备份数量</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 备份类型 -->
+    <div class="card-title">📦 备份类型</div>
+    <div class="backup-guide-grid">
+      <div class="backup-type-card">
+        <div class="backup-type-header">
+          <div class="backup-type-icon">🧠</div>
+          <div>
+            <div class="backup-type-name">记忆小时级备份</div>
+            <div class="backup-type-frequency">每小时一次 • 保留7天</div>
+          </div>
+        </div>
+        <div class="backup-type-description">
+          快速回溯当日的重要学习内容，每小时自动备份记忆系统。
+        </div>
+      </div>
+
+      <div class="backup-type-card">
+        <div class="backup-type-header">
+          <div class="backup-type-icon">🧠</div>
+          <div>
+            <div class="backup-type-name">记忆每日归档</div>
+            <div class="backup-type-frequency">每天 02:00 • 保留30天</div>
+          </div>
+        </div>
+        <div class="backup-type-description">
+          长期保存完整的记忆系统快照，支持月度回顾和长期学习总结。
+        </div>
+      </div>
+
+      <div class="backup-type-card">
+        <div class="backup-type-header">
+          <div class="backup-type-icon">🎯</div>
+          <div>
+            <div class="backup-type-name">任务系统迁移备份</div>
+            <div class="backup-type-frequency">手动触发 • 保留14天</div>
+          </div>
+        </div>
+        <div class="backup-type-description">
+          完整迁移包（~8.7M），包含源代码、数据、配置，可直接迁移到新环境启用。
+        </div>
+      </div>
+
+      <div class="backup-type-card">
+        <div class="backup-type-header">
+          <div class="backup-type-icon">💬</div>
+          <div>
+            <div class="backup-type-name">会话备份</div>
+            <div class="backup-type-frequency">每10分钟 • 保留30天</div>
+          </div>
+        </div>
+        <div class="backup-type-description">
+          所有Agent的会话记录实时备份，覆盖完整的对话历史。
+        </div>
+      </div>
+
+      <div class="backup-type-card">
+        <div class="backup-type-header">
+          <div class="backup-type-icon">⚙️</div>
+          <div>
+            <div class="backup-type-name">配置备份</div>
+            <div class="backup-type-frequency">每天 03:00 • 保留30天</div>
+          </div>
+        </div>
+        <div class="backup-type-description">
+          OpenClaw核心配置、文档、记忆系统的完整备份。
+        </div>
+      </div>
+
+      <div class="backup-type-card">
+        <div class="backup-type-header">
+          <div class="backup-type-icon">📦</div>
+          <div>
+            <div class="backup-type-name">完整系统备份</div>
+            <div class="backup-type-frequency">每3天 04:00 • 保留30天</div>
+          </div>
+        </div>
+        <div class="backup-type-description">
+          包含源代码、数据、配置的完整系统备份。
+        </div>
+      </div>
+    </div>
+
+    <!-- 自动化任务列表 -->
+    <div class="card">
+      <div class="card-title">🤖 自动化备份任务（Crontab）</div>
+      <table>
+        <thead>
+          <tr>
+            <th>备份类型</th>
+            <th>执行频率</th>
+            <th>保留周期</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>🧠 记忆小时级备份</td>
+            <td>每小时一次</td>
+            <td>7天</td>
+            <td><span class="status-badge active">运行中</span></td>
+          </tr>
+          <tr>
+            <td>🧠 记忆每日归档</td>
+            <td>每天 02:00</td>
+            <td>30天</td>
+            <td><span class="status-badge active">运行中</span></td>
+          </tr>
+          <tr>
+            <td>💬 会话备份</td>
+            <td>每10分钟</td>
+            <td>30天</td>
+            <td><span class="status-badge active">运行中</span></td>
+          </tr>
+          <tr>
+            <td>🎯 任务数据备份</td>
+            <td>每12小时 (00:00/12:00)</td>
+            <td>30天</td>
+            <td><span class="status-badge active">运行中</span></td>
+          </tr>
+          <tr>
+            <td>⚙️ 配置备份</td>
+            <td>每天 03:00</td>
+            <td>30天</td>
+            <td><span class="status-badge active">运行中</span></td>
+          </tr>
+          <tr>
+            <td>📦 完整系统备份</td>
+            <td>每3天 (04:00)</td>
+            <td>30天</td>
+            <td><span class="status-badge active">运行中</span></td>
+          </tr>
+          <tr>
+            <td>🧹 旧备份清理</td>
+            <td>每天 05:00</td>
+            <td>自动清理</td>
+            <td><span class="status-badge active">运行中</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 任务系统迁移指南 -->
+    <div class="card">
+      <div class="card-title">🎯 任务系统迁移指南</div>
+      <p style="color: var(--text-secondary); margin-bottom: 16px;">
+        任务系统迁移备份包含完整的源代码、数据、配置，可直接迁移到新环境启用。
+      </p>
+
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-title">触发迁移备份</div>
+          <div class="step-desc">
+            在系统设置页面中，点击"任务系统迁移备份"的"生成迁移包"按钮。
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-title">下载迁移包</div>
+          <div class="step-desc">
+            备份完成后，迁移包将保存到<br>
+            <code>/media/morning/数据/openclaw-auto-backup/task-system-migration/</code>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-title">解压迁移包</div>
+          <div class="step-desc">
+            在目标机器上解压迁移包：
+            <div class="code-block">tar -xzf task-system-migration-*.tar.gz
+cd task-system-*/</div>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-title">部署文件</div>
+          <div class="step-desc">
+            <div class="code-block"># 部署源代码
+cp -r task-system-v2 ~/.openclaw/workspace/
+cd ~/.openclaw/workspace/task-system-v2
+
+# 安装依赖
+chmod +x ../install-dependencies.sh
+../install-dependencies.sh
+
+# 解压数据和配置
+tar -xzf ../data-config-*.tar.gz
+
+# 解压记忆系统
+mkdir -p ~/.openclaw/workspace/memory
+tar -xzf memory-backup/memory-*.tar.gz -C ~/.openclaw/workspace/memory/</div>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-title">启动服务</div>
+          <div class="step-desc">
+            <div class="code-block"># 启动主服务
+node server.js &
+
+# 启动核心服务（按顺序）
+node scripts/task-dispatcher-v2.js &
+node scripts/agent-queue-executor.js &
+node scripts/automation-monitor.js &
+node scripts/auto-recovery.js &</div>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-title">验证部署</div>
+          <div class="step-desc">
+            检查服务是否正常运行：<br>
+            <div class="code-block"># 检查进程
+ps aux | grep "node.*task-system" | grep -v grep
+
+# 检查端口
+lsof -i :8081
+
+# 检查HTTP服务
+curl http://localhost:8081/api/health</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 常见问题 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">❓ 常见问题</div>
+      </div>
+      <div class="card-body">
+
+        <div class="faq-item">
+          <div class="faq-question">Q: 记忆小时级备份会占用太多空间吗？</div>
+          <div class="faq-answer">
+            A: 不会。每个备份约500K，7天共91个文件，总大小约45M，完全在可控范围内。
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">Q: 如何手动触发备份？</div>
+          <div class="faq-answer">
+            A: 在系统设置的"系统备份"页面中，可以手动触发"记忆备份"、"任务系统迁移备份"或"完整系统备份"。
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">Q: 旧备份会自动清理吗？</div>
+          <div class="faq-answer">
+            A: 会。每天凌晨5点会自动清理超过保留期的旧备份，避免磁盘空间被填满。
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">Q: 如何查看备份历史？</div>
+          <div class="faq-answer">
+            A: 在系统设置的"系统备份"页面中，可以查看最近执行的备份记录。
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">Q: 停机通知与计划性停机时，可以手动备份吗？</div>
+          <div class="faq-answer">
+            A: 在停机通知与计划性停机后，可查看停机通知或计划性停机时，根据停机原因（如网络中断、设备故障、电源异常、计划性维护等），选择合适的手动备份时机或备份方式。关键是要在停机前后分别进行备份，在停机前先完成全量/关键数据备份，在停机后检查数据的一致性并根据需要做差异/增量备份。执行前记得仔细查看系统页面备份指南和通知要求。
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 备份目录位置 -->
+    <div class="card">
+      <div class="card-title">📂 备份目录位置</div>
+      <div class="code-block">/media/morning/数据/openclaw-auto-backup/
+├── memory-hourly/           # 记忆小时级备份
+├── memory-daily/            # 记忆每日归档
+├── task-system-migration/   # 任务系统迁移备份
+├── task-system/             # 任务数据备份
+├── config/                  # 配置备份
+├── full/                    # 完整备份
+├── sessions/                # 会话备份
+└── logs/                    # 备份日志</div>
+    </div>
+  </div>
+
+  <script src="assets/fonts/remixicon.css"></script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

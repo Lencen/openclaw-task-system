@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>版本发布 - Morning 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-content { padding: 24px; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--text-primary); }
+    
+    /* 统计卡片 */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+    .stat-value { font-size: 32px; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
+    
+    /* 发布列表 */
+    .release-list { display: flex; flex-direction: column; gap: 12px; }
+    .release-card { 
+      background: var(--bg-secondary); 
+      border: 1px solid var(--border); 
+      border-radius: 12px; 
+      padding: 16px 20px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      transition: all 0.2s;
+    }
+    .release-card:hover { border-color: var(--primary); }
+    
+    .release-info h4 { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .release-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+    .release-meta span { display: flex; align-items: center; gap: 4px; }
+    
+    .release-actions { display: flex; align-items: center; gap: 16px; }
+    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+    .status-pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .status-completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .status-failed { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .status-running { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    
+    .env-flow { display: flex; align-items: center; gap: 8px; }
+    .env-badge { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+    .env-dev { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .env-staging { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .env-prod { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .flow-arrow { color: var(--text-secondary); }
+    
+    .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn:hover { opacity: 0.9; }
+    
+    /* 模态框 */
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; padding: 24px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 18px; font-weight: 600; }
+    .modal-close { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: var(--text-primary); }
+    .form-group input, .form-group select, .form-group textarea { 
+      width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); 
+      background: var(--bg-tertiary); color: var(--text-primary); font-size: 14px; 
+    }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div class="header-left"><div class="breadcrumb"><span>资源</span> / <span>版本发布</span></div></div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadReleases()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      <div class="content">
+        <div class="page-content">
+          <div class="page-header">
+            <h1 class="page-title"><i class="ri-rocket-line"></i> 版本发布</h1>
+            <button class="btn btn-primary" onclick="openModal()">
+              <i class="ri-add-line"></i> 新建发布
+            </button>
+          </div>
+          
+          <!-- 统计 -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value" id="totalReleases">0</div>
+              <div class="stat-label">总发布次数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="successRate">-</div>
+              <div class="stat-label">成功率</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="pendingCount">0</div>
+              <div class="stat-label">待发布</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="thisMonth">0</div>
+              <div class="stat-label">本月发布</div>
+            </div>
+          </div>
+          
+          <!-- 发布列表 -->
+          <div class="release-list" id="releaseList">
+            <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+              <i class="ri-loader-4-line" style="font-size: 24px;"></i>
+              <p style="margin-top: 8px;">加载中...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 新建发布模态框 -->
+  <div class="modal" id="releaseModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="ri-rocket-line"></i> 新建发布</h3>
+        <button class="modal-close" onclick="closeModal()"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="releaseForm">
+        <div class="form-group">
+          <label>产品</label>
+          <select id="productSelect" required>
+            <option value="">选择产品</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>发布流程</label>
+          <select id="flowSelect" required onchange="updateFlowInfo()">
+            <option value="dev_to_staging">开发 → 测试</option>
+            <option value="staging_to_prod">测试 → 正式</option>
+          </select>
+          <small style="color: var(--text-secondary); margin-top: 4px; display: block;" id="flowInfo">将代码从开发环境发布到测试环境</small>
+        </div>
+        <div class="form-group">
+          <label>版本号</label>
+          <input type="text" id="versionInput" placeholder="例如: v1.0.0" required>
+        </div>
+        <div class="form-group">
+          <label>发布说明</label>
+          <textarea id="notesInput" placeholder="本次发布内容..."></textarea>
+        </div>
+      </form>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+        <button class="btn btn-success" onclick="submitRelease()">
+          <i class="ri-rocket-line"></i> 执行发布
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      Sidebar.init({ activePage: 'releases' });
+      loadReleases();
+      loadProducts();
+    });
+    
+    const API_BASE = '/api/devops';
+    
+    // 加载发布列表
+    async function loadReleases() {
+      try {
+        const res = await fetch(`${API_BASE}/releases`);
+        const json = await res.json();
+        const releases = json.data || [];
+        
+        // 更新统计
+        document.getElementById('totalReleases').textContent = releases.length;
+        const completed = releases.filter(r => r.status === 'completed').length;
+        document.getElementById('successRate').textContent = releases.length > 0 ? Math.round(completed / releases.length * 100) + '%' : '-';
+        document.getElementById('pendingCount').textContent = releases.filter(r => r.status === 'pending').length;
+        
+        const thisMonth = releases.filter(r => {
+          const d = new Date(r.created_at);
+          const now = new Date();
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }).length;
+        document.getElementById('thisMonth').textContent = thisMonth;
+        
+        // 渲染列表
+        const list = document.getElementById('releaseList');
+        if (releases.length === 0) {
+          list.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+              <i class="ri-inbox-line" style="font-size: 48px;"></i>
+              <p style="margin-top: 12px;">暂无发布记录</p>
+            </div>
+          `;
+          return;
+        }
+        
+        list.innerHTML = releases.map(r => `
+          <div class="release-card">
+            <div class="release-info">
+              <h4>${r.product_name || '未知产品'} ${r.version || ''}</h4>
+              <div class="release-meta">
+                <span><i class="ri-time-line"></i> ${formatDate(r.created_at)}</span>
+                <span><i class="ri-user-line"></i> ${r.created_by || '系统'}</span>
+              </div>
+            </div>
+            <div class="release-actions">
+              <div class="env-flow">
+                <span class="env-badge ${r.flow === 'dev_to_staging' ? 'env-dev' : 'env-staging'}">${r.flow === 'dev_to_staging' ? 'DEV' : 'STAGING'}</span>
+                <i class="ri-arrow-right-line flow-arrow"></i>
+                <span class="env-badge ${r.flow === 'dev_to_staging' ? 'env-staging' : 'env-prod'}">${r.flow === 'dev_to_staging' ? 'STAGING' : 'PROD'}</span>
+              </div>
+              <span class="status-badge status-${r.status}">${getStatusText(r.status)}</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('加载失败:', err);
+        document.getElementById('releaseList').innerHTML = `
+          <div style="text-align: center; padding: 40px; color: var(--danger);">
+            <i class="ri-error-warning-line" style="font-size: 24px;"></i>
+            <p style="margin-top: 8px;">加载失败</p>
+          </div>
+        `;
+      }
+    }
+    
+    // 加载产品列表
+    async function loadProducts() {
+      try {
+        const res = await fetch(`${API_BASE}/products`);
+        const json = await res.json();
+        const products = json.data || [];
+        
+        const select = document.getElementById('productSelect');
+        select.innerHTML = '<option value="">选择产品</option>' + 
+          products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+      } catch (err) {
+        console.error('加载产品失败:', err);
+      }
+    }
+    
+    function openModal() {
+      document.getElementById('releaseModal').classList.add('active');
+    }
+    
+    function closeModal() {
+      document.getElementById('releaseModal').classList.remove('active');
+      document.getElementById('releaseForm').reset();
+    }
+    
+    function updateFlowInfo() {
+      const flow = document.getElementById('flowSelect').value;
+      const info = {
+        dev_to_staging: '将代码从开发环境发布到测试环境',
+        staging_to_prod: '将代码从测试环境发布到正式环境（需要产品负责人审批）'
+      };
+      document.getElementById('flowInfo').textContent = info[flow] || '';
+    }
+    
+    async function submitRelease() {
+      const btn = event.target;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="ri-loader-4-line"></i> 发布中...';
+      
+      try {
+        const res = await fetch(`${API_BASE}/releases`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_id: document.getElementById('productSelect').value,
+            flow: document.getElementById('flowSelect').value,
+            version: document.getElementById('versionInput').value,
+            notes: document.getElementById('notesInput').value
+          })
+        });
+        
+        const json = await res.json();
+        if (json.success) {
+          alert('发布创建成功！');
+          closeModal();
+          loadReleases();
+        } else {
+          alert('发布失败: ' + json.error);
+        }
+      } catch (err) {
+        alert('发布失败: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-rocket-line"></i> 执行发布';
+      }
+    }
+    
+    function getStatusText(status) {
+      const map = { pending: '待发布', completed: '已完成', failed: '失败', running: '进行中' };
+      return map[status] || status;
+    }
+    
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

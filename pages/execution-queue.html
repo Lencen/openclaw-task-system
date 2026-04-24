@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>执行队列 v2 - Morning 任务管理系统</title>
+  
+  <!-- 图标库 -->
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ===== 页面专用样式 ===== */
+    
+    /* 队列概览卡片 */
+    .queue-overview {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    
+    .stat-icon.pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .stat-icon.running { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .stat-icon.completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .stat-icon.agents { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+    
+    .stat-info h3 {
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    
+    .stat-info span {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    /* 四栏布局 */
+    .queue-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 280px;
+      gap: 16px;
+      height: calc(100vh - 280px);
+    }
+    
+    .queue-layout.four-columns {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    
+    /* 修复卡片样式 */
+    .fix-card {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(239, 68, 68, 0.05) 100%);
+    }
+    
+    .fix-card:hover {
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(239, 68, 68, 0.1) 100%);
+    }
+    
+    .queue-column {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .column-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-tertiary);
+    }
+    
+    .column-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .column-badge {
+      background: var(--bg-primary);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .column-actions {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .column-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    
+    .column-btn:hover {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    .column-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    
+    /* 任务卡片 */
+    .task-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .task-card:hover {
+      border-color: var(--primary);
+      transform: translateX(2px);
+    }
+    
+    .task-card.dragging {
+      opacity: 0.5;
+      border: 2px dashed var(--primary);
+    }
+    
+    .task-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    
+    .task-id {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-family: monospace;
+    }
+    
+    .task-priority {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    
+    .task-priority.p1 { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .task-priority.p2 { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .task-priority.p3 { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .task-priority.p4 { background: rgba(100, 116, 139, 0.15); color: var(--text-tertiary); }
+    
+    .task-title {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+    
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    
+    .task-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    /* 执行中任务特有 */
+    .task-progress {
+      margin-top: 8px;
+    }
+    
+    .progress-bar {
+      height: 4px;
+      background: var(--bg-tertiary);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+    
+    /* Agent 状态卡片 */
+    .agent-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+    
+    .agent-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    
+    .agent-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      background: var(--bg-tertiary);
+    }
+    
+    .agent-info {
+      flex: 1;
+    }
+    
+    .agent-name {
+      font-size: 13px;
+      font-weight: 500;
+    }
+    
+    .agent-type {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    
+    .agent-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    
+    .agent-status.idle { background: var(--success); }
+    .agent-status.busy { background: var(--warning); animation: pulse 1s infinite; }
+    .agent-status.offline { background: var(--text-tertiary); }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .agent-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      font-size: 11px;
+    }
+    
+    .agent-stat {
+      text-align: center;
+      padding: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+    }
+    
+    .agent-stat-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .agent-stat-label {
+      color: var(--text-tertiary);
+      font-size: 10px;
+    }
+    
+    .agent-current-task {
+      margin-top: 8px;
+      padding: 8px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    
+    .agent-current-task-title {
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    
+    .agent-current-task-name {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-tertiary);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    .empty-state p {
+      font-size: 13px;
+    }
+    
+    /* 加载动画 */
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--bg-tertiary);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* 工具提示 */
+    .tooltip {
+      position: relative;
+    }
+    
+    .tooltip::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 8px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 11px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+    }
+    
+    .tooltip:hover::after {
+      opacity: 1;
+    }
+    
+    /* 响应式 */
+    @media (max-width: 1200px) {
+      .queue-layout {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+      }
+      
+      .queue-column:last-child {
+        grid-column: span 2;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .queue-overview {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .queue-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      
+      .queue-column {
+        max-height: 400px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="css/page-tips.css">
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <!-- 统一侧边栏容器 -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容区 -->
+    <main class="main">
+      <!-- 顶部栏 -->
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <span>执行队列</span>
+          </div>
+          <div id="tipsContainer"></div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="refreshQueue()">
+            <i class="ri-refresh-line"></i>
+          </button>
+          <button class="header-btn" title="设置">
+            <i class="ri-settings-3-line"></i>
+          </button>
+        </div>
+      </header>
+      
+      <!-- 内容区 -->
+      <div class="content">
+        <!-- 队列概览 -->
+        <div class="queue-overview">
+          <div class="stat-card">
+            <div class="stat-icon pending">
+              <i class="ri-time-line"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="pending-count">0</h3>
+              <span>排队任务</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon running">
+              <i class="ri-play-circle-line"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="running-count">0</h3>
+              <span>执行中</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--danger);">
+              <i class="ri-bug-line"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="fix-pending-count">0</h3>
+              <span>待修复问题</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon completed">
+              <i class="ri-check-line"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="completed-count">0</h3>
+              <span>今日完成</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 标签过滤栏 -->
+        <div class="filter-bar" style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
+          <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+            <span class="filter-label" style="font-size: 13px; color: var(--text-primary); font-weight: 500;">来源:</span>
+            <button class="filter-tag active" data-filter="source" data-value="all" style="padding: 6px 14px; border-radius: 16px; border: none; background: #3b82f6; color: white; font-size: 13px; cursor: pointer; font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">全部</button>
+            <button class="filter-tag" data-filter="source" data-value="manual" style="padding: 6px 14px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-secondary); font-size: 13px; cursor: pointer;">手动</button>
+            <button class="filter-tag" data-filter="source" data-value="monitor" style="padding: 6px 14px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-secondary); font-size: 13px; cursor: pointer;">监控</button>
+            <button class="filter-tag" data-filter="source" data-value="test" style="padding: 6px 14px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-secondary); font-size: 13px; cursor: pointer;">测试</button>
+            <button class="filter-tag" data-filter="source" data-value="acceptance" style="padding: 6px 14px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-secondary); font-size: 13px; cursor: pointer;">验收</button>
+          </div>
+          <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+            <span class="filter-label" style="font-size: 13px; color: var(--text-primary); font-weight: 500;">问题:</span>
+            <button class="filter-tag active" data-filter="issue" data-value="all" style="padding: 6px 14px; border-radius: 16px; border: none; background: #3b82f6; color: white; font-size: 13px; cursor: pointer; font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">全部</button>
+            <button class="filter-tag" data-filter="issue" data-value="with-issue" style="padding: 6px 14px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-secondary); font-size: 13px; cursor: pointer;">有问题</button>
+            <button class="filter-tag" data-filter="issue" data-value="no-issue" style="padding: 6px 14px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-secondary); font-size: 13px; cursor: pointer;">无问题</button>
+          </div>
+          <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+            <span class="filter-label" style="font-size: 13px; color: var(--text-primary); font-weight: 500;">优先级:</span>
+            <button class="filter-tag active" data-filter="priority" data-value="all" style="padding: 6px 14px; border-radius: 16px; border: none; background: #3b82f6; color: white; font-size: 13px; cursor: pointer; font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">全部</button>
+            <button class="filter-tag" data-filter="priority" data-value="P1" style="padding: 6px 14px; border-radius: 16px; border: 1px solid #ef4444; color: #ef4444; background: rgba(239,68,68,0.1); font-size: 13px; cursor: pointer; font-weight: 500;">P1</button>
+            <button class="filter-tag" data-filter="priority" data-value="P2" style="padding: 6px 14px; border-radius: 16px; border: 1px solid #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.1); font-size: 13px; cursor: pointer; font-weight: 500;">P2</button>
+            <button class="filter-tag" data-filter="priority" data-value="P3" style="padding: 6px 14px; border-radius: 16px; border: 1px solid #6b7280; color: #6b7280; background: rgba(107,114,128,0.1); font-size: 13px; cursor: pointer;">P3</button>
+          </div>
+        </div>
+        
+        <!-- 四栏布局 -->
+        <div class="queue-layout four-columns">
+          <!-- 排队任务列 -->
+          <div class="queue-column" id="pending-column">
+            <div class="column-header">
+              <div class="column-title">
+                <i class="ri-list-check-2"></i>
+                <span>排队任务</span>
+                <span class="column-badge" id="pending-badge">0</span>
+              </div>
+              <div class="column-actions">
+                <button class="column-btn tooltip" data-tooltip="调整优先级" onclick="adjustPriority()">
+                  <i class="ri-arrow-up-down-line"></i>
+                </button>
+                <button class="column-btn tooltip" data-tooltip="批量分配" onclick="batchAssign()">
+                  <i class="ri-user-add-line"></i>
+                </button>
+              </div>
+            </div>
+            <div class="column-content" id="pending-tasks">
+              <!-- 排队任务将通过 JS 动态加载 -->
+              <div class="empty-state">
+                <i class="ri-inbox-line"></i>
+                <p>暂无排队任务</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 执行中任务列 -->
+          <div class="queue-column" id="running-column">
+            <div class="column-header">
+              <div class="column-title">
+                <i class="ri-play-circle-fill" style="color: var(--primary);"></i>
+                <span>执行中</span>
+                <span class="column-badge" id="running-badge">0</span>
+              </div>
+              <div class="column-actions">
+                <button class="column-btn tooltip" data-tooltip="暂停全部" onclick="pauseAll()">
+                  <i class="ri-pause-line"></i>
+                </button>
+                <button class="column-btn tooltip" data-tooltip="查看日志" onclick="viewLogs()">
+                  <i class="ri-file-list-3-line"></i>
+                </button>
+              </div>
+            </div>
+            <div class="column-content" id="running-tasks">
+              <!-- 执行中任务将通过 JS 动态加载 -->
+              <div class="empty-state">
+                <i class="ri-loader-4-line"></i>
+                <p>暂无执行中任务</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 修复队列列 -->
+          <div class="queue-column" id="fix-column">
+            <div class="column-header">
+              <div class="column-title">
+                <i class="ri-tools-line" style="color: var(--danger);"></i>
+                <span>修复队列</span>
+                <span class="column-badge" id="fix-badge">0</span>
+              </div>
+              <div class="column-actions">
+                <button class="column-btn tooltip" data-tooltip="自动修复全部" onclick="autoFixAll()">
+                  <i class="ri-magic-line"></i>
+                </button>
+              </div>
+            </div>
+            <div class="column-content" id="fix-tasks">
+              <!-- 修复任务将通过 JS 动态加载 -->
+              <div class="empty-state">
+                <i class="ri-tools-line"></i>
+                <p>暂无待修复问题</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Agent 状态列 -->
+          <div class="queue-column" id="agent-column">
+            <div class="column-header">
+              <div class="column-title">
+                <i class="ri-robot-2-line"></i>
+                <span>Agent 状态</span>
+                <span class="column-badge" id="agent-badge">0 在线</span>
+              </div>
+              <div class="column-actions">
+                <button class="column-btn tooltip" data-tooltip="添加 Agent" onclick="addAgent()">
+                  <i class="ri-add-line"></i>
+                </button>
+              </div>
+            </div>
+            <div class="column-content" id="agent-list">
+              <!-- Agent 列表将通过 JS 动态加载 -->
+              <div class="empty-state">
+                <i class="ri-robot-line"></i>
+                <p>暂无活跃 Agent</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    // 初始化侧边栏
+    Sidebar.init({ activePage: 'execution-queue' });
+    
+    // API 基础地址
+    const API_BASE = '/api';
+    
+    // 页面数据
+    let queueData = {
+      pending: [],
+      running: [],
+      fixQueue: [],
+      completed: [],
+      agents: []
+    };
+    
+    // 当前过滤条件
+    let activeFilters = {
+      source: 'all',
+      issue: 'all',
+      priority: 'all'
+    };
+    
+    // 初始化页面
+    async function init() {
+      await loadQueueData();
+      renderQueue();
+      startAutoRefresh();
+    }
+    
+    // 加载队列数据
+    async function loadQueueData() {
+      try {
+        // 加载任务数据
+        const tasksRes = await fetch(`${API_BASE}/tasks`);
+        const tasksData = await tasksRes.json();
+        
+        if (tasksData.code === 200 || tasksData.success) {
+          const tasks = tasksData.data?.tasks || tasksData.data || [];
+          queueData.pending = tasks.filter(t => t.status === 'pending');
+          queueData.running = tasks.filter(t => t.status === 'doing');
+          queueData.completed = tasks.filter(t => t.status === 'completed');
+          
+          // 提取所有待修复问题
+          queueData.fixQueue = [];
+          tasks.forEach(task => {
+            if (task.issues && Array.isArray(task.issues)) {
+              task.issues.forEach(issue => {
+                if (issue.status === 'open' && issue.can_auto_fix) {
+                  queueData.fixQueue.push({
+                    ...issue,
+                    taskId: task.id,
+                    taskTitle: task.title
+                  });
+                }
+              });
+            }
+          });
+          
+          // 从运行中的任务推断agent状态
+          const runningAgents = new Set(queueData.running.map(t => t.assignedAgent).filter(Boolean));
+          
+          // 加载 Agent 数据
+          queueData.agents = [
+            {
+              id: 'agent-main',
+              name: 'Main Agent',
+              type: '主 Agent',
+              status: runningAgents.has('main') || runningAgents.has('agent-main') ? 'busy' : 'idle',
+              avatar: '🤖',
+              completedToday: 5,
+              avgTime: '2.3min',
+              currentTask: getAgentCurrentTask('main', queueData.running) || getAgentCurrentTask('agent-main', queueData.running)
+            },
+            {
+              id: 'agent-coder',
+              name: 'Coder Agent',
+              type: '代码执行',
+              status: runningAgents.has('coder') || runningAgents.has('agent-coder') ? 'busy' : 'idle',
+              avatar: '👨‍💻',
+              completedToday: 12,
+              avgTime: '1.5min',
+              currentTask: getAgentCurrentTask('coder', queueData.running) || getAgentCurrentTask('agent-coder', queueData.running)
+            },
+            {
+              id: 'agent-deep',
+              name: 'Deep Agent',
+              type: '深度思考',
+              status: runningAgents.has('deep') || runningAgents.has('agent-deep') ? 'busy' : 'idle',
+              avatar: '🧠',
+              completedToday: 3,
+              avgTime: '8.2min',
+              currentTask: getAgentCurrentTask('deep', queueData.running) || getAgentCurrentTask('agent-deep', queueData.running)
+            },
+            {
+              id: 'agent-fast',
+              name: 'Fast Agent',
+              type: '快速执行',
+              status: runningAgents.has('fast') || runningAgents.has('agent-fast') ? 'busy' : 'idle',
+              avatar: '⚡',
+              completedToday: 18,
+              avgTime: '0.8min',
+              currentTask: getAgentCurrentTask('fast', queueData.running) || getAgentCurrentTask('agent-fast', queueData.running)
+            },
+            {
+              id: 'agent-office',
+              name: 'Office Agent',
+              type: '办公执行',
+              status: runningAgents.has('office') || runningAgents.has('agent-office') ? 'busy' : 'idle',
+              avatar: '📊',
+              completedToday: 8,
+              avgTime: '3.2min',
+              currentTask: getAgentCurrentTask('office', queueData.running) || getAgentCurrentTask('agent-office', queueData.running)
+            }
+          ];
+        }
+        
+        // 加载修复队列（从fix-queue.json）
+        try {
+          // 使用 API 路径读取修复队列详细数据
+          const fixQueueDetailRes = await fetch(`${API_BASE}/file/read?path=./data/fix-queue.json`);
+          if (fixQueueDetailRes.ok) {
+            const fixQueueResponse = await fixQueueDetailRes.json();
+            
+            // 解析 content 字段
+            let fixQueueData = fixQueueResponse;
+            if (fixQueueResponse.content) {
+              fixQueueData = JSON.parse(fixQueueResponse.content);
+            }
+            
+            if (Array.isArray(fixQueueData)) {
+              // 按状态分组
+              const pending = fixQueueData.filter(item => item.status === 'pending');
+              const running = fixQueueData.filter(item => item.status === 'running');
+              const completed = fixQueueData.filter(item => item.status === 'completed');
+              const failed = fixQueueData.filter(item => item.status === 'failed');
+              
+              // 更新 queueData.fixQueue（用于渲染）
+              queueData.fixQueue = [...running, ...pending].map(item => ({
+                id: item.issueId,
+                taskId: item.taskId,
+                name: item.issueTitle || '修复任务',
+                taskTitle: item.issueTitle,
+                priority: item.severity === 'high' ? 'high' : (item.severity === 'critical' ? 'high' : 'medium'),
+                status: item.status,
+                agent: item.agentId,
+                type: item.type,
+                can_auto_fix: true
+              }));
+              
+              // 更新统计
+              const totalCount = pending.length + running.length;
+              
+              // 更新显示
+              const fixCountEl = document.getElementById('fix-pending-count');
+              const fixQueueCountEl = document.querySelector('[data-stat="fix-queue"]');
+              
+              if (fixCountEl) fixCountEl.textContent = totalCount;
+              if (fixQueueCountEl) fixQueueCountEl.textContent = totalCount;
+              
+              console.log('修复队列加载完成:', {pending: pending.length, running: running.length, completed: completed.length, failed: failed.length});
+            }
+          }
+        } catch (e) {
+          console.log('修复队列 API 调用失败，跳过', e);
+        }
+        
+      } catch (error) {
+        console.error('加载数据失败:', error);
+      }
+    }
+    
+    // 获取agent当前任务
+    function getAgentCurrentTask(agentName, runningTasks) {
+      const task = runningTasks.find(t => t.assignedAgent === agentName || t.assignedAgent === 'agent-' + agentName);
+      if (task) {
+        return { id: task.id, title: task.title };
+      }
+      return null;
+    }
+    
+    // 渲染队列
+    function renderQueue() {
+      renderPendingTasks();
+      renderRunningTasks();
+      renderFixQueue();
+      renderAgentList();
+      updateStats();
+      initFilterButtons();
+    }
+    
+    // 渲染修复队列
+    function renderFixQueue() {
+      const container = document.getElementById('fix-tasks');
+      const issues = queueData.fixQueue;
+      
+      // 分组：修复中和等待中
+      const running = issues.filter(i => i.status === 'running');
+      const pending = issues.filter(i => i.status === 'pending');
+      
+      if (issues.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="ri-tools-line"></i>
+            <p>暂无待修复问题</p>
+          </div>
+        `;
+        return;
+      }
+      
+      let html = '';
+      
+      // 显示正在修复的问题
+      if (running.length > 0) {
+        html += `<div class="fix-section" style="margin-bottom: 12px;"><div class="fix-section-title" style="font-size: 12px; font-weight: 600; color: #22c55e; margin-bottom: 8px;">🔄 修复中 (${running.length})</div>`;
+        running.forEach((issue) => {
+          html += `
+            <div class="task-card fix-card running" style="border-left: 3px solid #22c55e; background: rgba(34, 197, 94, 0.05); margin-bottom: 4px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="flex: 1;">
+                  <div style="font-weight: 500; font-size: 13px;">${issue.name || '修复任务'}</div>
+                  <div style="font-size: 11px; color: var(--text-secondary);">
+                    Agent: ${issue.agent || 'main'} | 优先级: ${issue.priority || 'medium'}
+                  </div>
+                </div>
+                <span style="font-size: 10px; padding: 2px 8px; background: #22c55e; color: white; border-radius: 10px;">执行中</span>
+              </div>
+            </div>`;
+        });
+        html += '</div>';
+      }
+      
+      // 显示等待中的问题
+      if (pending.length > 0) {
+        html += `<div class="fix-section" style="margin-bottom: 12px;"><div class="fix-section-title" style="font-size: 12px; font-weight: 600; color: var(--warning); margin-bottom: 8px;">⏳ 等待中 (${pending.length})</div>`;
+        pending.slice(0, 10).forEach((issue, index) => {
+          html += `
+            <div class="task-card fix-card pending" style="border-left: 3px solid var(--warning); background: var(--bg-secondary); margin-bottom: 4px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="flex: 1;">
+                  <div style="font-weight: 500; font-size: 13px;">#${index + 1} ${issue.name || '修复任务'}</div>
+                  <div style="font-size: 11px; color: var(--text-secondary);">
+                    Agent: ${issue.agent || 'coder'} | 类型: ${issue.type || 'bug'}
+                  </div>
+                </div>
+                <span style="font-size: 10px; padding: 2px 8px; background: var(--bg-tertiary); border-radius: 10px;">等待</span>
+              </div>
+            </div>`;
+        });
+        if (pending.length > 10) {
+          html += `<div style="text-align: center; padding: 8px; color: var(--text-secondary); font-size: 12px;">还有 ${pending.length - 10} 个问题在队列中...</div>`;
+        }
+        html += '</div>';
+      }
+      
+      // 底部提示
+      html += `<p style="color: var(--text-secondary); font-size: 11px; margin-top: 12px; text-align: center;">修复队列正在后台自动处理中...</p>`;
+      
+      container.innerHTML = html;
+    }
+    
+    // 触发自动修复
+    async function triggerAutoFix(taskId, issueId) {
+      try {
+        const res = await fetch(`${API_BASE}/issues/${taskId}/${issueId}/auto-fix`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          alert('修复任务已创建！');
+          await loadQueueData();
+          renderQueue();
+        } else {
+          alert('创建失败: ' + data.error);
+        }
+      } catch (err) {
+        alert('操作失败: ' + err.message);
+      }
+    }
+    
+    // 查看问题详情
+    function viewIssueDetail(taskId, issueId) {
+      window.location.href = `/task-detail.html?id=${taskId}&issue=${issueId}`;
+    }
+    
+    // 渲染排队任务
+    function renderPendingTasks() {
+      const container = document.getElementById('pending-tasks');
+      let tasks = [...queueData.pending];
+      
+      // 应用过滤
+      tasks = applyFilters(tasks);
+      
+      if (tasks.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="ri-inbox-line"></i>
+            <p>暂无排队任务</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = tasks.map(task => {
+        // 检查是否有问题
+        const hasIssues = task.issues && task.issues.length > 0;
+        const openIssues = hasIssues ? task.issues.filter(i => i.status === 'open') : [];
+        const issueTag = openIssues.length > 0 
+          ? `<span style="font-size: 10px; padding: 2px 6px; background: rgba(239,68,68,0.15); color: var(--danger); border-radius: 3px; margin-left: 4px;"><i class="ri-bug-line"></i> ${openIssues.length}</span>`
+          : '';
+        
+        // 来源标签
+        const sourceTag = task.source 
+          ? `<span style="font-size: 10px; padding: 2px 6px; background: var(--bg-tertiary); border-radius: 3px; margin-left: 4px;">${task.source}</span>`
+          : '';
+        
+        return `
+        <div class="task-card" draggable="true" data-id="${task.id}" onclick="window.location.href='/task-detail.html?id=${task.id}'" style="cursor: pointer;">
+          <div class="task-header">
+            <span class="task-id">${task.id.substring(0, 8)}</span>
+            <span class="task-priority ${task.priority || 'p3'}">${task.priority || 'P3'}</span>
+            ${issueTag}
+            ${sourceTag}
+          </div>
+          <div class="task-title">${task.title}</div>
+          <div class="task-meta">
+            <span class="task-meta-item"><i class="ri-time-line"></i> ${formatTime(task.created_at)}</span>
+            <span class="task-meta-item"><i class="ri-user-line"></i> ${task.assignedAgent || '未分配'}</span>
+          </div>
+        </div>
+      `}).join('');
+    }
+    
+    // 应用过滤条件
+    function applyFilters(tasks) {
+      return tasks.filter(task => {
+        // 来源过滤
+        if (activeFilters.source !== 'all') {
+          if (task.source !== activeFilters.source) return false;
+        }
+        
+        // 问题过滤
+        if (activeFilters.issue !== 'all') {
+          const hasIssues = task.issues && task.issues.some(i => i.status === 'open');
+          if (activeFilters.issue === 'with-issue' && !hasIssues) return false;
+          if (activeFilters.issue === 'no-issue' && hasIssues) return false;
+        }
+        
+        // 优先级过滤
+        if (activeFilters.priority !== 'all') {
+          if (task.priority !== activeFilters.priority) return false;
+        }
+        
+        return true;
+      });
+    }
+    
+    // 渲染执行中任务
+    function renderRunningTasks() {
+      const container = document.getElementById('running-tasks');
+      let tasks = [...queueData.running];
+      
+      // 应用过滤
+      tasks = applyFilters(tasks);
+      
+      if (tasks.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="ri-loader-4-line"></i>
+            <p>暂无执行中任务</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = tasks.map(task => {
+        // 计算执行时间
+        const startTime = task.started_at || task.assigned_at;
+        const duration = startTime ? Math.round((Date.now() - new Date(startTime).getTime()) / 60000) : 0;
+        const progress = task.total_steps ? Math.round((task.completed_steps || 0) / task.total_steps * 100) : 0;
+        
+        // 检查是否有问题
+        const hasIssues = task.issues && task.issues.length > 0;
+        const openIssues = hasIssues ? task.issues.filter(i => i.status === 'open') : [];
+        const issueTag = openIssues.length > 0 
+          ? `<span style="font-size: 10px; padding: 2px 6px; background: rgba(239,68,68,0.15); color: var(--danger); border-radius: 3px; margin-left: 4px;"><i class="ri-bug-line"></i> ${openIssues.length}</span>`
+          : '';
+        
+        return `
+        <div class="task-card" style="border-left: 3px solid var(--primary);" data-id="${task.id}" onclick="window.location.href='/task-detail.html?id=${task.id}'" style="cursor: pointer;">
+          <div class="task-header">
+            <span class="task-id">${task.id.substring(0, 8)}</span>
+            <span class="task-priority ${task.priority || 'p3'}">${task.priority || 'P3'}</span>
+            ${issueTag}
+          </div>
+          <div class="task-title">${task.title}</div>
+          <div class="task-meta">
+            <span class="task-meta-item"><i class="ri-user-line"></i> ${task.assignedAgent || '未分配'}</span>
+            <span class="task-meta-item"><i class="ri-time-line"></i> 已执行 ${duration}min</span>
+          </div>
+          ${task.total_steps ? `
+          <div class="task-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${progress}%;"></div>
+            </div>
+            <div class="progress-text">
+              <span>步骤 ${task.completed_steps || 0}/${task.total_steps}</span>
+              <span>${progress}%</span>
+            </div>
+          </div>
+          ` : ''}
+        </div>
+      `}).join('');
+    }
+    
+    // 渲染 Agent 列表
+    function renderAgentList() {
+      const container = document.getElementById('agent-list');
+      const agents = queueData.agents;
+      
+      if (agents.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="ri-robot-line"></i>
+            <p>暂无活跃 Agent</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = agents.map(agent => `
+        <div class="agent-card" data-id="${agent.id}">
+          <div class="agent-header">
+            <div class="agent-avatar">${agent.avatar}</div>
+            <div class="agent-info">
+              <div class="agent-name">${agent.name}</div>
+              <div class="agent-type">${agent.type}</div>
+            </div>
+            <div class="agent-status ${agent.status}" title="${agent.status === 'idle' ? '空闲' : '忙碌'}"></div>
+          </div>
+          <div class="agent-stats">
+            <div class="agent-stat">
+              <div class="agent-stat-value">${agent.completedToday}</div>
+              <div class="agent-stat-label">今日完成</div>
+            </div>
+            <div class="agent-stat">
+              <div class="agent-stat-value">${agent.avgTime}</div>
+              <div class="agent-stat-label">平均耗时</div>
+            </div>
+          </div>
+          ${agent.currentTask ? `
+          <div class="agent-current-task">
+            <div class="agent-current-task-title">当前任务:</div>
+            <div class="agent-current-task-name">${agent.currentTask.title}</div>
+          </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+    
+    // 更新统计数据
+    function updateStats() {
+      const safeSet = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      };
+      
+      safeSet('pending-count', queueData.pending.length || 0);
+      safeSet('running-count', queueData.running.length || 0);
+      safeSet('completed-count', queueData.completed.length || 0);
+      safeSet('fix-pending-count', queueData.fixQueue.length || 0);
+      
+      const activeAgents = queueData.agents.filter(a => a.status !== 'offline').length;
+      safeSet('active-agents', activeAgents);
+      
+      safeSet('pending-badge', queueData.pending.length || 0);
+      safeSet('running-badge', queueData.running.length || 0);
+      safeSet('fix-badge', queueData.fixQueue.length || 0);
+      safeSet('agent-badge', `${activeAgents} 在线`);
+    }
+    
+    // 初始化过滤按钮
+    function initFilterButtons() {
+      document.querySelectorAll('.filter-tag').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const filterType = this.dataset.filter;
+          const filterValue = this.dataset.value;
+          
+          // 更新按钮状态
+          this.parentElement.querySelectorAll('.filter-tag').forEach(b => {
+            b.classList.remove('active');
+            b.style.background = 'var(--bg-tertiary)';
+            b.style.color = 'var(--text-secondary)';
+            b.style.border = '1px solid var(--border)';
+            b.style.boxShadow = 'none';
+          });
+          this.classList.add('active');
+          this.style.background = '#3b82f6';
+          this.style.color = 'white';
+          this.style.border = 'none';
+          this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+          
+          // 更新过滤条件
+          activeFilters[filterType] = filterValue;
+          
+          // 重新渲染
+          renderQueue();
+        });
+      });
+    }
+    
+    // 自动修复全部
+    async function autoFixAll() {
+      const issues = queueData.fixQueue.filter(i => i.can_auto_fix !== false);
+      if (issues.length === 0) {
+        alert('没有可自动修复的问题');
+        return;
+      }
+      
+      if (!confirm(`确定要自动修复 ${issues.length} 个问题吗？`)) {
+        return;
+      }
+      
+      let successCount = 0;
+      for (const issue of issues) {
+        try {
+          const res = await fetch(`${API_BASE}/issues/${issue.taskId}/${issue.id}/auto-fix`, { method: 'POST' });
+          const data = await res.json();
+          if (data.success) successCount++;
+        } catch (e) {
+          console.error('修复失败:', e);
+        }
+      }
+      
+      alert(`已创建 ${successCount} 个修复任务`);
+      await loadQueueData();
+      renderQueue();
+    }
+    
+    // 查看修复日志
+    function viewFixLogs() {
+      window.open('/fix-logs.html', '_blank');
+    }
+    
+    // 格式化时间
+    function formatTime(timestamp) {
+      if (!timestamp) return '未知';
+      const now = Date.now();
+      const diff = now - new Date(timestamp).getTime();
+      const minutes = Math.floor(diff / 60000);
+      if (minutes < 1) return '刚刚';
+      if (minutes < 60) return `${minutes}min 前`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h 前`;
+      return `${Math.floor(hours / 24)}d 前`;
+    }
+    
+    // ===== WebSocket 实时更新 =====
+    let ws = null;
+    let wsReconnectTimer = null;
+    let usePolling = false;
+    const WS_RECONNECT_INTERVAL = 5000;
+    
+    // 连接状态指示器样式
+    const connectionStyles = `
+      .connection-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: var(--bg-tertiary);
+      }
+      .connection-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        transition: all 0.3s;
+      }
+      .connection-dot.connected { background: var(--success); }
+      .connection-dot.connecting { background: var(--warning); animation: blink 1s infinite; }
+      .connection-dot.disconnected { background: var(--danger); }
+      @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    `;
+    
+    // 添加连接状态样式
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = connectionStyles;
+    document.head.appendChild(styleSheet);
+    
+    // 初始化 WebSocket 连接
+    function initWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws?agentId=ui-client&token=tui-${Date.now()}`;
+      
+      updateConnectionStatus('connecting');
+      
+      try {
+        ws = new WebSocket(wsUrl);
+        
+        ws.onopen = () => {
+          console.log('[WebSocket] 连接成功');
+          updateConnectionStatus('connected');
+          usePolling = false;
+          
+          // 清除重连定时器
+          if (wsReconnectTimer) {
+            clearTimeout(wsReconnectTimer);
+            wsReconnectTimer = null;
+          }
+        };
+        
+        ws.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data);
+            handleWebSocketMessage(message);
+          } catch (e) {
+            console.error('[WebSocket] 解析消息失败:', e);
+          }
+        };
+        
+        ws.onclose = (event) => {
+          console.log('[WebSocket] 连接关闭:', event.code, event.reason);
+          updateConnectionStatus('disconnected');
+          
+          // 如果是 1006 错误（服务器无响应），切换到轮询模式
+          if (event.code === 1006) {
+            console.log('[WebSocket] 服务器无 WebSocket 支持，切换到轮询模式');
+            usePolling = true;
+            startPolling();
+            return;
+          }
+          
+          // 其他情况自动重连
+          if (!wsReconnectTimer) {
+            wsReconnectTimer = setTimeout(() => {
+              console.log('[WebSocket] 尝试重连...');
+              initWebSocket();
+            }, WS_RECONNECT_INTERVAL);
+          }
+        };
+        
+        ws.onerror = (error) => {
+          console.error('[WebSocket] 错误:', error);
+          updateConnectionStatus('disconnected');
+          // 切换到轮询模式
+          usePolling = true;
+          startPolling();
+        };
+        
+      } catch (error) {
+        console.error('[WebSocket] 连接失败:', error);
+        updateConnectionStatus('disconnected');
+        // 切换到轮询模式
+        usePolling = true;
+        startPolling();
+      }
+    }
+    
+    // 轮询模式
+    let pollingTimer = null;
+    function startPolling() {
+      if (pollingTimer) return;
+      console.log('[轮询模式] 启动定时刷新');
+      pollingTimer = setInterval(async () => {
+        try {
+          await loadQueueData();
+        } catch (e) {
+          console.error('[轮询模式] 刷新失败:', e);
+        }
+      }, 10000);
+    }
+    
+    // 处理 WebSocket 消息
+    function handleWebSocketMessage(message) {
+      const { type, data, timestamp } = message;
+      
+      console.log('[WebSocket] 收到消息:', type, data);
+      
+      switch (type) {
+        case 'task_started':
+          handleTaskStarted(data);
+          break;
+        case 'task_step_progress':
+          handleTaskProgress(data);
+          break;
+        case 'task_step_completed':
+          handleStepCompleted(data);
+          break;
+        case 'task_completed':
+          handleTaskCompleted(data);
+          break;
+        case 'task_error':
+          handleTaskError(data);
+          break;
+        case 'task_cancelled':
+          handleTaskCancelled(data);
+          break;
+        case 'system_status':
+          handleSystemStatus(data);
+          break;
+        case 'heartbeat':
+          // 心跳消息，忽略
+          break;
+        default:
+          console.log('[WebSocket] 未知消息类型:', type);
+      }
+    }
+    
+    // 处理任务开始
+    function handleTaskStarted(data) {
+      const { taskId, agentId, agentName } = data;
+      
+      // 从排队列表移除
+      queueData.pending = queueData.pending.filter(t => t.id !== taskId);
+      
+      // 添加到执行中列表
+      const task = queueData.pending.find(t => t.id === taskId) || {
+        id: taskId,
+        title: `任务 ${taskId}`,
+        status: 'doing',
+        assignee: agentName || agentId,
+        startTime: Date.now()
+      };
+      task.status = 'doing';
+      task.assignee = agentName || agentId;
+      task.progress = 0;
+      queueData.running.push(task);
+      
+      // 更新 Agent 状态
+      const agent = queueData.agents.find(a => a.id === agentId);
+      if (agent) {
+        agent.status = 'busy';
+        agent.currentTask = task;
+      }
+      
+      renderQueue();
+      showToast(`任务 ${taskId} 开始执行`, 'info');
+    }
+    
+    // 处理任务进度更新
+    function handleTaskProgress(data) {
+      const { taskId, agentId, stepIndex, description, progress } = data;
+      
+      // 更新任务进度
+      const task = queueData.running.find(t => t.id === taskId);
+      if (task) {
+        task.progress = progress;
+        task.currentStep = stepIndex;
+        task.stepDescription = description;
+        task.lastUpdate = Date.now();
+      }
+      
+      renderRunningTasks();
+    }
+    
+    // 处理步骤完成
+    function handleStepCompleted(data) {
+      const { taskId, agentId, stepIndex, description, output } = data;
+      
+      showToast(`任务 ${taskId} 步骤 ${stepIndex} 完成`, 'success');
+    }
+    
+    // 处理任务完成
+    function handleTaskCompleted(data) {
+      const { taskId, agentId, agentName, output, metrics } = data;
+      
+      // 从执行中列表移除
+      queueData.running = queueData.running.filter(t => t.id !== taskId);
+      
+      // 添加到完成列表
+      queueData.completed.push({
+        id: taskId,
+        title: `任务 ${taskId}`,
+        completedAt: Date.now(),
+        metrics
+      });
+      
+      // 更新 Agent 状态
+      const agent = queueData.agents.find(a => a.id === agentId);
+      if (agent) {
+        agent.status = 'idle';
+        agent.currentTask = null;
+        agent.completedToday = (agent.completedToday || 0) + 1;
+      }
+      
+      renderQueue();
+      showToast(`任务 ${taskId} 完成`, 'success');
+    }
+    
+    // 处理任务错误
+    function handleTaskError(data) {
+      const { taskId, agentId, errorCode, errorMessage } = data;
+      
+      showToast(`任务 ${taskId} 错误: ${errorMessage}`, 'error');
+    }
+    
+    // 处理任务取消
+    function handleTaskCancelled(data) {
+      const { taskId } = data;
+      
+      // 从执行中列表移除
+      queueData.running = queueData.running.filter(t => t.id !== taskId);
+      
+      renderQueue();
+      showToast(`任务 ${taskId} 已取消`, 'warning');
+    }
+    
+    // 处理系统状态
+    function handleSystemStatus(data) {
+      console.log('[WebSocket] 系统状态:', data);
+    }
+    
+    // 更新连接状态显示
+    function updateConnectionStatus(status) {
+      const statusEl = document.getElementById('connection-status');
+      if (!statusEl) return;
+      
+      const dot = statusEl.querySelector('.connection-dot');
+      const text = statusEl.querySelector('.connection-text');
+      
+      if (dot) {
+        dot.className = `connection-dot ${status}`;
+      }
+      if (text) {
+        const statusText = {
+          connected: '实时连接',
+          connecting: '连接中...',
+          disconnected: '已断开'
+        };
+        text.textContent = statusText[status] || status;
+      }
+    }
+    
+    // 轮询降级模式
+    function startPollingFallback() {
+      console.log('[WebSocket] 使用轮询模式');
+      setInterval(refreshQueue, 10000); // 10秒轮询一次
+    }
+    
+    // Toast 提示
+    function showToast(message, type = 'info') {
+      // 创建 toast 容器
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = `
+          position: fixed;
+          top: 60px;
+          right: 20px;
+          z-index: 9999;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        `;
+        document.body.appendChild(container);
+      }
+      
+      // 创建 toast
+      const toast = document.createElement('div');
+      const colors = {
+        info: 'var(--primary)',
+        success: 'var(--success)',
+        warning: 'var(--warning)',
+        error: 'var(--danger)'
+      };
+      
+      toast.style.cssText = `
+        padding: 12px 16px;
+        background: var(--bg-secondary);
+        border: 1px solid ${colors[type] || colors.info};
+        border-left: 3px solid ${colors[type] || colors.info};
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 13px;
+        animation: slideIn 0.3s ease;
+        max-width: 300px;
+      `;
+      toast.textContent = message;
+      
+      // 添加动画
+      const animation = document.createElement('style');
+      animation.textContent = `
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+          from { transform: translateX(0); opacity: 1; }
+          to { transform: translateX(100%); opacity: 0; }
+        }
+      `;
+      document.head.appendChild(animation);
+      
+      container.appendChild(toast);
+      
+      // 自动移除
+      setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    // 刷新队列
+    async function refreshQueue() {
+      const btn = document.querySelector('.header-btn');
+      btn.innerHTML = '<div class="loading-spinner"></div>';
+      
+      await loadQueueData();
+      renderQueue();
+      
+      setTimeout(() => {
+        btn.innerHTML = '<i class="ri-refresh-line"></i>';
+      }, 500);
+    }
+    
+    // 自动刷新（仅作为备份）
+    function startAutoRefresh() {
+      // WebSocket 模式下不需要定时刷新
+      // 仅在 WebSocket 断开时使用
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        setInterval(refreshQueue, 30000);
+      }
+    }
+    
+    // 操作函数
+    function adjustPriority() {
+      showToast('优先级调整功能开发中...', 'info');
+    }
+    
+    function batchAssign() {
+      showToast('批量分配功能开发中...', 'info');
+    }
+    
+    function pauseAll() {
+      showToast('暂停全部任务功能开发中...', 'info');
+    }
+    
+    function viewLogs() {
+      showToast('日志查看功能开发中...', 'info');
+    }
+    
+    function addAgent() {
+      showToast('添加 Agent 功能开发中...', 'info');
+    }
+    
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      init();
+      
+      // 添加连接状态指示器
+      const headerRight = document.querySelector('.header-right');
+      if (headerRight) {
+        const statusHtml = `
+          <div id="connection-status" class="connection-status">
+            <span class="connection-dot disconnected"></span>
+            <span class="connection-text">未连接</span>
+          </div>
+        `;
+        headerRight.insertAdjacentHTML('afterbegin', statusHtml);
+      }
+      
+      // 初始化 WebSocket
+      initWebSocket();
+    });
+    
+    // 页面卸载时关闭 WebSocket
+    window.addEventListener('beforeunload', () => {
+      if (ws) {
+        ws.close();
+      }
+    });
+  </script>
+  <script src="js/page-tips.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tipsContainer = document.getElementById('tipsContainer');
+      if (tipsContainer && PageTips) {
+        PageTips.init('execution-queue', tipsContainer);
+      }
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

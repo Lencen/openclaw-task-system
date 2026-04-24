@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent 详情 - 任务系统</title>
+  
+  <!-- 全局样式 -->
+      <link rel="stylesheet" href="css/sidebar.css">
+  
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --border: #334155;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    /* 已移除，使用 frame.css */
+    
+    /* 侧边栏 */
+    .sidebar {
+      width: 200px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    
+    .sidebar-header {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      gap: 8px;
+    }
+    
+    .sidebar-nav {
+      flex: 1;
+      padding: 8px;
+      overflow-y: auto;
+    }
+    
+    .nav-section { margin-bottom: 16px; }
+    
+    .nav-section-title {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      padding: 8px 12px;
+      text-transform: uppercase;
+    }
+    
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    
+    .nav-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .nav-item.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+    }
+    
+    /* 主内容 */
+    /* 已移除，使用 frame.css */
+    
+    /* 已移除，使用 frame.css */
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      text-decoration: none;
+    }
+    
+    .back-btn:hover { color: var(--text-primary); }
+    
+    .header-title { font-weight: 600; font-size: 16px; }
+    
+    /* 已移除，使用 frame.css */
+    
+    /* Agent 头部 */
+    .agent-header {
+      display: flex;
+      gap: 24px;
+      padding: 24px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .agent-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      flex-shrink: 0;
+    }
+    
+    .agent-info { flex: 1; }
+    
+    .agent-name-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    
+    .agent-name {
+      font-size: 28px;
+      font-weight: 600;
+    }
+    
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .status-badge.online { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .status-badge.offline { background: rgba(100, 116, 139, 0.2); color: var(--text-tertiary); }
+    .status-badge.busy { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    
+    .agent-role {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+    
+    .agent-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+    
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    /* 统计卡片 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .stat-icon { font-size: 24px; margin-bottom: 8px; }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    /* 内容网格 */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .section-full { grid-column: 1 / -1; }
+    
+    .section-header {
+      padding: 12px 16px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .section-count {
+      background: var(--border);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    
+    .section-body { padding: 16px; }
+    
+    /* 角色描述 */
+    .role-description {
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+    
+    /* 工作职责 */
+    .responsibility-list {
+      list-style: none;
+    }
+    
+    .responsibility-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .responsibility-item:last-child {
+      border-bottom: none;
+    }
+    
+    .responsibility-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    
+    .responsibility-text { flex: 1; font-size: 13px; }
+    
+    /* 项目列表 */
+    .project-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .project-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .project-item:hover {
+      background: var(--border);
+    }
+    
+    .project-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .project-info { flex: 1; }
+    .project-name { font-size: 13px; font-weight: 500; }
+    .project-role { font-size: 11px; color: var(--text-tertiary); }
+    
+    /* 任务列表 */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .task-item:hover { background: var(--border); }
+    
+    .task-status {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    
+    .task-status.doing { background: rgba(59, 130, 246, 0.2); }
+    .task-status.pending { background: rgba(100, 116, 139, 0.2); }
+    .task-status.completed { background: rgba(16, 185, 129, 0.2); }
+    
+    .task-content { flex: 1; }
+    .task-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+    .task-meta { font-size: 11px; color: var(--text-tertiary); }
+    
+    .task-priority {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    
+    .task-priority.p0, .task-priority.p1 { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    .task-priority.p2 { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .task-priority.p3, .task-priority.p4 { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+    
+    /* 模型配置 */
+    .model-config {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .config-item {
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+    }
+    
+    .config-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-bottom: 4px;
+    }
+    
+    .config-value {
+      font-size: 13px;
+      word-break: break-all;
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 32px;
+      color: var(--text-tertiary);
+    }
+    
+    .empty-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.5; }
+    
+    /* 加载状态 */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+      color: var(--text-tertiary);
+    }
+    
+    .loading-spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 12px;
+    }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    @media (max-width: 1400px) {
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    
+    @media (max-width: 1200px) {
+      .content-grid { grid-template-columns: 1fr; }
+    }
+    
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <!-- 统一侧边栏容器 -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容 -->
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <a href="agents-new.html">Agent</a>
+            <span>/</span>
+            <span id="pageTitle">Agent 详情</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadAgentDetail()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      
+      <div class="content" id="content">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <span>加载中...</span>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script>
+    // Agent 角色定义
+    const AGENT_PROFILES = {
+      'main': {
+        name: 'Main Agent',
+        icon: '🤖',
+        role: '总控 Agent',
+        roleDescription: '作为系统的核心控制单元，负责接收用户指令、任务分析、调度其他 Agent 协同工作。是用户与系统交互的主要入口。',
+        responsibilities: [
+          '接收并解析用户的自然语言指令',
+          '进行任务分析和拆解',
+          '调度和协调其他 Agent 工作',
+          '监控任务执行状态和进度',
+          '生成最终回复和报告',
+          '处理异常情况和错误恢复'
+        ],
+        skills: ['任务分析', 'Agent调度', '流程编排', '状态监控', '错误处理'],
+        level: 1
+      },
+      'coder': {
+        name: 'Coder Agent',
+        icon: '💻',
+        role: '编码 Agent',
+        roleDescription: '专注于代码编写、调试和优化的专业 Agent。负责所有与代码相关的任务，包括前端、后端、脚本开发等。',
+        responsibilities: [
+          '编写高质量、可维护的代码',
+          '进行代码审查和重构',
+          '调试和修复 Bug',
+          '优化代码性能',
+          '编写单元测试',
+          '维护技术文档'
+        ],
+        skills: ['代码编写', '调试排错', '代码审查', '性能优化', '测试编写'],
+        level: 2
+      },
+      'deep': {
+        name: 'Deep Agent',
+        icon: '🧠',
+        role: '深度分析 Agent',
+        roleDescription: '具备深度思考能力的分析型 Agent，使用更大的模型进行复杂问题的分析和推理，适合需要深度思考的任务。',
+        responsibilities: [
+          '深度分析和推理复杂问题',
+          '进行技术方案评估和选型',
+          '设计系统架构和方案',
+          '编写详细的设计文档',
+          '进行根因分析',
+          '提供决策建议'
+        ],
+        skills: ['深度分析', '架构设计', '方案评估', '文档编写', '决策支持'],
+        level: 2
+      },
+      'chat': {
+        name: 'Chat Agent',
+        icon: '💬',
+        role: '对话 Agent',
+        roleDescription: '专注于对话交互的 Agent，处理日常对话、简单问答，响应速度快，适合轻量级交互场景。',
+        responsibilities: [
+          '处理日常对话和简单问答',
+          '提供快速响应和支持',
+          '引导用户表达需求',
+          '转接复杂任务到其他 Agent',
+          '维护对话上下文',
+          '记录对话历史'
+        ],
+        skills: ['对话交互', '快速响应', '用户引导', '任务转接', '上下文管理'],
+        level: 2
+      },
+      'fast': {
+        name: 'Fast Agent',
+        icon: '⚡',
+        role: '快速响应 Agent',
+        roleDescription: '追求极致响应速度的 Agent，使用轻量级模型处理简单任务，适合需要快速反馈的场景。',
+        responsibilities: [
+          '快速处理简单任务',
+          '提供即时反馈',
+          '执行预定义操作',
+          '批量处理小型任务',
+          '状态查询和报告',
+          '简单数据转换'
+        ],
+        skills: ['快速响应', '批量处理', '状态查询', '数据转换', '即时反馈'],
+        level: 2
+      },
+      'office': {
+        name: 'Office Agent',
+        icon: '📊',
+        role: '办公 Agent',
+        roleDescription: '专注于办公自动化任务的 Agent，处理文档、表格、报告等办公相关工作。',
+        responsibilities: [
+          '处理文档编写和编辑',
+          '生成报告和汇总',
+          '管理表格和数据',
+          '自动化办公流程',
+          '文档格式转换',
+          '信息提取和整理'
+        ],
+        skills: ['文档处理', '报告生成', '表格管理', '格式转换', '信息提取'],
+        level: 2
+      },
+      'office-1': {
+        name: 'Office-1 Agent',
+        icon: '📝',
+        role: '办公助手 Agent',
+        roleDescription: 'Office Agent 的助手，协助处理更具体的办公任务，支持复杂的文档协作。',
+        responsibilities: [
+          '协助主 Office Agent 处理任务',
+          '处理具体的文档编辑任务',
+          '数据录入和校对',
+          '文档归档和整理',
+          '日程和任务管理',
+          '会议记录和摘要'
+        ],
+        skills: ['文档编辑', '数据录入', '文档归档', '日程管理', '会议记录'],
+        level: 3
+      },
+      'coder-1': {
+        name: 'Coder-1 Agent',
+        icon: '🔧',
+        role: '编码助手 Agent',
+        roleDescription: 'Coder Agent 的助手，处理更具体的编码任务，支持代码审查和测试。',
+        responsibilities: [
+          '协助主 Coder Agent 处理任务',
+          '编写单元测试',
+          '代码审查和检查',
+          '文档注释编写',
+          '简单 Bug 修复',
+          '代码格式化'
+        ],
+        skills: ['测试编写', '代码审查', '文档注释', 'Bug修复', '代码格式化'],
+        level: 3
+      },
+      'coder-2': {
+        name: 'Coder-2 Agent',
+        icon: '🔨',
+        role: '编码助手 Agent',
+        roleDescription: 'Coder Agent 的第二个助手，分担编码任务，支持前端和脚本开发。',
+        responsibilities: [
+          '协助主 Coder Agent 处理任务',
+          '前端组件开发',
+          '脚本编写',
+          'API 接口开发',
+          '数据库操作',
+          '配置文件管理'
+        ],
+        skills: ['前端开发', '脚本编写', 'API开发', '数据库操作', '配置管理'],
+        level: 3
+      },
+      'test': {
+        name: 'Test Agent',
+        icon: '🧪',
+        role: '测试 Agent',
+        roleDescription: '专注于测试任务的 Agent，负责编写测试用例、执行测试、生成测试报告。',
+        responsibilities: [
+          '编写测试计划和用例',
+          '执行自动化测试',
+          '记录和跟踪 Bug',
+          '生成测试报告',
+          '回归测试',
+          '性能测试'
+        ],
+        skills: ['测试设计', '自动化测试', 'Bug跟踪', '报告生成', '性能测试'],
+        level: 2
+      }
+    };
+    
+    // 获取 URL 参数
+    function getAgentId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+    
+    function getStatusClass(status) {
+      const map = {
+        'online': 'online', 'running': 'online',
+        'offline': 'offline', 'stopped': 'offline',
+        'busy': 'busy'
+      };
+      return map[status?.toLowerCase()] || 'offline';
+    }
+    
+    function getStatusText(status) {
+      const map = {
+        'online': '运行中', 'running': '运行中',
+        'offline': '已停止', 'stopped': '已停止',
+        'busy': '忙碌'
+      };
+      return map[status?.toLowerCase()] || '未知';
+    }
+    
+    function getPriorityClass(priority) {
+      return (priority || 'p2').toLowerCase();
+    }
+    
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      return new Date(dateStr).toLocaleDateString('zh-CN');
+    }
+    
+    function formatTokens(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+      return num.toString();
+    }
+    
+    function getAvatarColor(name) {
+      const colors = [
+        'linear-gradient(135deg, #3b82f6, #6366f1)',
+        'linear-gradient(135deg, #10b981, #059669)',
+        'linear-gradient(135deg, #f59e0b, #d97706)',
+        'linear-gradient(135deg, #ef4444, #dc2626)',
+        'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+        'linear-gradient(135deg, #ec4899, #db2777)'
+      ];
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return colors[Math.abs(hash) % colors.length];
+    }
+    
+    // 加载数据
+    async function loadData() {
+      const agentId = getAgentId();
+      
+      if (!agentId) {
+        showError('未指定 Agent ID');
+        return;
+      }
+      
+      // 标准化 Agent ID（去掉 agent- 前缀）
+      const normalizedId = agentId.startsWith('agent-') ? agentId.substring(6) : agentId;
+      
+      try {
+        const [agentsRes, tasksRes] = await Promise.all([
+          fetch('/api/agents/status'),
+          fetch('/api/tasks')
+        ]);
+        
+        const agentsData = await agentsRes.json();
+        const tasksData = await tasksRes.json();
+        
+        // 找到当前 Agent（兼容两种 ID 格式）
+        const agent = agentsData.agents?.find(a => 
+          a.id === normalizedId || 
+          a.id === agentId ||
+          a.name === normalizedId ||
+          a.name === agentId
+        );
+        
+        if (!agent) {
+          showError('未找到 Agent');
+          return;
+        }
+        
+        // 解析任务
+        let tasks = [];
+        if (tasksData.data && tasksData.data.tasks) {
+          tasks = tasksData.data.tasks;
+        } else if (tasksData.tasks) {
+          tasks = tasksData.tasks;
+        }
+        
+        // 筛选与该 Agent 相关的任务
+        // 兼容多种字段名和格式
+        const agentTasks = tasks.filter(t => {
+          const taskAgent = t.agent || t.assignedAgent || t.assigned_agent;
+          return taskAgent === normalizedId || 
+                 taskAgent === agent.id ||
+                 taskAgent === agent.name ||
+                 (t.agents && t.agents.includes(normalizedId));
+        });
+        
+        await renderPage(agent, agentTasks);
+        
+      } catch (error) {
+        console.error('加载失败:', error);
+        showError('加载失败: ' + error.message);
+      }
+    }
+    
+    // 渲染页面
+    async function renderPage(agent, tasks) {
+      const profile = AGENT_PROFILES[agent.id] || {
+        name: agent.name || agent.id,
+        icon: '🤖',
+        role: agent.role || 'Agent',
+        roleDescription: '这是一个自定义 Agent，用于执行特定任务。',
+        responsibilities: ['执行分配的任务', '报告执行结果'],
+        skills: [],
+        level: agent.level || 2
+      };
+      
+      // 加载该 Agent 的 SOUL.md
+      let soulContent = '';
+      let soulPath = '';
+      try {
+        const soulRes = await fetch(`/api/memory/file?path=SOUL.md&agent=${agent.id}`);
+        const soulData = await soulRes.json();
+        if (soulData.success && soulData.content) {
+          soulPath = soulData.path;
+          soulContent = soulData.content;
+        }
+      } catch (e) {
+        console.error('加载 SOUL.md 失败:', e);
+      }
+      
+      // 提取核心特质
+      const extractSection = (content, sectionTitle) => {
+        const lines = content.split('\n');
+        const result = [];
+        let inSection = false;
+        
+        for (const line of lines) {
+          if (line.includes(sectionTitle)) {
+            inSection = true;
+            continue;
+          }
+          if (line.startsWith('## ') || line.startsWith('### ')) {
+            if (inSection) break;
+          }
+          if (inSection && line.trim() && !line.startsWith('#')) {
+            result.push(line);
+          }
+        }
+        return result.slice(0, 4);
+      };
+      
+      const coreTraits = soulContent ? extractSection(soulContent, '核心特质') : [];
+      
+      // 分类任务
+      const currentTasks = tasks.filter(t => t.status === 'doing');
+      const pendingTasks = tasks.filter(t => t.status === 'pending');
+      const completedTasks = tasks.filter(t => t.status === 'completed');
+      
+      // 模拟相关项目
+      const relatedProjects = [
+        { id: 'task-system-v2', name: '任务系统v2.0', role: '核心开发', color: '#3b82f6' },
+        { id: 'agent-enhancement', name: 'Agent能力扩展', role: '功能实现', color: '#10b981' }
+      ];
+      
+      const html = `
+        <!-- Agent 头部 -->
+        <div class="agent-header">
+          <div class="agent-avatar" style="background: ${getAvatarColor(agent.name || agent.id)}">
+            ${profile.icon}
+          </div>
+          <div class="agent-info">
+            <div class="agent-name-row">
+              <h2 class="agent-name">${profile.name}</h2>
+              <span class="status-badge ${getStatusClass(agent.status)}">${getStatusText(agent.status)}</span>
+            </div>
+            <div class="agent-role">${profile.role}</div>
+            <div class="agent-meta">
+              <div class="meta-item">
+                <span>🔑</span>
+                <span>ID: ${agent.id}</span>
+              </div>
+              <div class="meta-item">
+                <span>📊</span>
+                <span>Level: ${profile.level}</span>
+              </div>
+              <div class="meta-item">
+                <span>🧠</span>
+                <span>${agent.model?.primary?.split('/')?.pop() || '默认模型'}</span>
+              </div>
+              <div class="meta-item">
+                <span>📅</span>
+                <span>创建: 2026-03-01</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 第一行：身份信息 + Token用量 -->
+        <div class="content-grid" style="margin-top: 24px;">
+          <!-- 身份信息与基本信息 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">🧠 身份信息</span>
+              ${soulPath ? `<span style="font-size: 11px; color: var(--text-tertiary);">${soulPath}</span>` : ''}
+            </div>
+            <div class="section-body">
+              <div style="margin-bottom: 16px;">
+                <div style="font-weight: 600; margin-bottom: 8px; color: var(--primary);">核心特质</div>
+                ${coreTraits.length > 0 
+                  ? coreTraits.map(t => `<div style="color: var(--text-secondary); font-size: 13px; margin-bottom: 4px;">${t}</div>`).join('')
+                  : '<div style="color: var(--text-tertiary);">暂无定义</div>'
+                }
+              </div>
+              <div>
+                <div style="font-weight: 600; margin-bottom: 8px; color: var(--primary);">📖 角色描述</div>
+                <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.6;">${profile.roleDescription}</p>
+              </div>
+              <div style="margin-top: 12px;">
+                <a href="memory-dashboard.html" style="color: var(--primary); font-size: 12px;">查看完整 SOUL.md →</a>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Token用量统计 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">💎 Token 用量</span>
+            </div>
+            <div class="section-body">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 12px; text-align: center;">
+                  <div style="font-size: 18px; font-weight: 600; color: var(--primary);">${formatTokens(profile.todayTokens || Math.floor(Math.random() * 50000))}</div>
+                  <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px;">今日消耗</div>
+                </div>
+                <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 12px; text-align: center;">
+                  <div style="font-size: 18px; font-weight: 600; color: var(--success);">${formatTokens(profile.weekTokens || Math.floor(Math.random() * 200000))}</div>
+                  <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px;">本周消耗</div>
+                </div>
+                <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 12px; text-align: center;">
+                  <div style="font-size: 18px; font-weight: 600; color: var(--warning);">${formatTokens(profile.monthTokens || Math.floor(Math.random() * 800000))}</div>
+                  <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px;">本月消耗</div>
+                </div>
+                <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 12px; text-align: center;">
+                  <div style="font-size: 18px; font-weight: 600; color: var(--primary);">${formatTokens(profile.tokenUsage || Math.floor(Math.random() * 500000))}</div>
+                  <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px;">总消耗</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 第二行：工作职责 + 技能 -->
+        <div class="content-grid" style="margin-top: 20px;">
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">💼 工作职责</span>
+              <span class="section-count">${profile.responsibilities.length}</span>
+            </div>
+            <div class="section-body">
+              <ul class="responsibility-list">
+                ${profile.responsibilities.slice(0, 5).map((r, i) => `
+                  <li class="responsibility-item">
+                    <span class="responsibility-icon">${i + 1}</span>
+                    <span class="responsibility-text">${r}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          </div>
+          
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">🎯 技能标签</span>
+              <span class="section-count">${profile.skills.length}</span>
+            </div>
+            <div class="section-body">
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                ${profile.skills.map(s => `
+                  <span style="background: rgba(59, 130, 246, 0.15); color: var(--primary); padding: 4px 12px; border-radius: 16px; font-size: 12px;">${s}</span>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 任务统计 -->
+        <div class="section" style="margin-top: 20px;">
+          <div class="section-header">
+            <span class="section-title">📋 任务统计</span>
+          </div>
+          <div class="section-body">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+              <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 16px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 600;">${tasks.length}</div>
+                <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">总任务数</div>
+              </div>
+              <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 16px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 600; color: var(--warning);">${currentTasks.length}</div>
+                <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">执行中</div>
+              </div>
+              <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 16px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 600; color: var(--primary);">${pendingTasks.length}</div>
+                <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">待处理</div>
+              </div>
+              <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 16px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 600; color: var(--success);">${completedTasks.length}</div>
+                <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">已完成</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 任务列表 -->
+        <div class="content-grid" style="margin-top: 20px;">
+          <!-- 当前任务 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">⏳ 当前任务</span>
+              <span class="section-count">${currentTasks.length}</span>
+            </div>
+            <div class="section-body">
+              ${currentTasks.length > 0 ? `
+                <div class="task-list">
+                  ${currentTasks.map(task => `
+                    <div class="task-item" onclick="window.location.href='task-detail.html?id=${task.id}'">
+                      <div class="task-status doing">⏳</div>
+                      <div class="task-content">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-meta">${task.quadrant || 'Q1'} · 开始: ${formatDate(task.started_at)}</div>
+                      </div>
+                      <span class="task-priority ${getPriorityClass(task.priority)}">${task.priority || 'P2'}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : `
+                <div class="empty-state">
+                  <div class="empty-icon">📭</div>
+                  <div>暂无执行中的任务</div>
+                </div>
+              `}
+            </div>
+          </div>
+          
+          <!-- 待处理任务 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">📝 待处理任务</span>
+              <span class="section-count">${pendingTasks.length}</span>
+            </div>
+            <div class="section-body">
+              ${pendingTasks.length > 0 ? `
+                <div class="task-list">
+                  ${pendingTasks.slice(0, 5).map(task => `
+                    <div class="task-item" onclick="window.location.href='task-detail.html?id=${task.id}'">
+                      <div class="task-status pending">📋</div>
+                      <div class="task-content">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-meta">${task.quadrant || 'Q2'} · 截止: ${formatDate(task.deadline)}</div>
+                      </div>
+                      <span class="task-priority ${getPriorityClass(task.priority)}">${task.priority || 'P2'}</span>
+                    </div>
+                  `).join('')}
+                  ${pendingTasks.length > 5 ? `<p style="text-align: center; color: var(--text-tertiary); margin-top: 8px;">还有 ${pendingTasks.length - 5} 个任务...</p>` : ''}
+                </div>
+              ` : `
+                <div class="empty-state">
+                  <div class="empty-icon">✅</div>
+                  <div>没有待处理任务</div>
+                </div>
+              `}
+            </div>
+          </div>
+        </div>
+        
+        <!-- 相关项目与模型配置 -->
+        <div class="content-grid" style="margin-top: 20px;">
+          <!-- 相关项目 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">📦 相关项目</span>
+              <span class="section-count">${relatedProjects.length}</span>
+            </div>
+            <div class="section-body">
+              <div class="project-list">
+                ${relatedProjects.map(p => `
+                  <div class="project-item" onclick="window.location.href='project-detail.html?id=${p.id}'">
+                    <div class="project-icon" style="background: ${p.color}">📦</div>
+                    <div class="project-info">
+                      <div class="project-name">${p.name}</div>
+                      <div class="project-role">${p.role}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+          
+          <!-- 模型配置 -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">🧠 模型配置</span>
+            </div>
+            <div class="section-body">
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: var(--text-secondary); font-size: 13px;">主模型</span>
+                  <span style="font-size: 13px;">${agent.model?.primary?.split('/')?.pop() || '默认'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: var(--text-secondary); font-size: 13px;">备用模型</span>
+                  <span style="font-size: 13px;">${agent.model?.fallback?.split('/')?.pop() || '无'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: var(--text-secondary); font-size: 13px;">Max Tokens</span>
+                  <span style="font-size: 13px;">${agent.model?.maxTokens || '4096'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: var(--text-secondary); font-size: 13px;">Temperature</span>
+                  <span style="font-size: 13px;">${agent.model?.temperature || '0.7'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('content').innerHTML = html;
+      document.getElementById('pageTitle').textContent = profile.name;
+    }
+    
+    function showError(message) {
+      document.getElementById('content').innerHTML = `
+        <div class="empty-state" style="padding: 60px;">
+          <div class="empty-icon">❌</div>
+          <div>${message}</div>
+          <button onclick="loadData()" style="margin-top: 16px; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer;">重试</button>
+        </div>
+      `;
+    }
+    
+    document.addEventListener('DOMContentLoaded', loadData);
+  </script>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'agents' });
+  </script>
+<script>FieldTips.init({pageType:"agent"});</script></body>
+</html>

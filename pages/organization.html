@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>组织架构 - 任务系统</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --border: #334155;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #8b5cf6;
+      --cyan: #06b6d4;
+      --pink: #ec4899;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    /* 已移除，使用 frame.css */
+    
+    /* 侧边栏 */
+    .sidebar {
+      width: 200px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    
+    .sidebar-header {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      gap: 8px;
+    }
+    
+    .sidebar-nav {
+      flex: 1;
+      padding: 8px;
+      overflow-y: auto;
+    }
+    
+    .nav-section { margin-bottom: 16px; }
+    
+    .nav-section-title {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      padding: 8px 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    
+    .nav-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .nav-item.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+    }
+    
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    
+    /* 主内容 */
+    /* 已移除，使用 frame.css */
+    
+    /* 已移除，使用 frame.css */
+    
+    .page-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover { background: #2563eb; }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .btn-secondary:hover { background: #475569; }
+    
+    /* 已移除，使用 frame.css */
+    
+    /* 组织图容器 */
+    .org-container {
+      flex: 1;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: auto;
+      position: relative;
+    }
+    
+    /* 让内容区支持右侧面板 */
+    .content {
+      display: flex;
+      gap: 16px;
+      flex: 1;
+      overflow: hidden;
+    }
+    
+    .org-toolbar {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+    
+    .toolbar-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .toolbar-btn:hover {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    #orgChart {
+      width: 1200px;
+      height: 800px;
+      position: relative;
+      min-height: 500px;
+    }
+    
+    /* Agent 节点 */
+    .agent-node {
+      position: absolute;
+      background: var(--bg-primary);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: move;
+      transition: box-shadow 0.2s, border-color 0.2s;
+      min-width: 140px;
+    }
+    
+    .agent-node:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border-color: var(--primary);
+    }
+    
+    .agent-node.dragging {
+      opacity: 0.8;
+      z-index: 100;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    
+    .agent-node.selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
+    
+    .agent-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .agent-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: white;
+    }
+    
+    .agent-avatar/* 已移除，使用 frame.css */
+    /* L2 专家 */
+    .agent-avatar.coder { background: linear-gradient(135deg, var(--cyan), var(--primary)); }
+    .agent-avatar.deep { background: linear-gradient(135deg, var(--purple), var(--pink)); }
+    .agent-avatar.office { background: linear-gradient(135deg, var(--pink), var(--purple)); }
+    /* L3 助手 - 使用父节点颜色但更浅 */
+    .agent-avatar.office-1 { background: linear-gradient(135deg, #a855f7, #ec4899); }
+    .agent-avatar.coder-1, .agent-avatar.coder-2 { background: linear-gradient(135deg, #22d3ee, #3b82f6); }
+    /* 轻量级 */
+    .agent-avatar.chat { background: linear-gradient(135deg, var(--success), var(--cyan)); }
+    .agent-avatar.fast { background: linear-gradient(135deg, var(--warning), var(--danger)); }
+    .agent-avatar.test { background: linear-gradient(135deg, var(--text-tertiary), var(--bg-tertiary)); }
+    
+    .agent-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .agent-role {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    
+    .agent-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    
+    .status-dot.online { background: var(--success); }
+    .status-dot.offline { background: var(--text-tertiary); }
+    .status-dot.busy { background: var(--warning); }
+    
+    /* 连接线 SVG */
+    .connections-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    .connection-line {
+      stroke: #64748b;
+      stroke-width: 2;
+      fill: none;
+      opacity: 0.8;
+    }
+    
+    .connection-line.active {
+      stroke: var(--primary);
+      stroke-width: 2.5;
+      opacity: 1;
+    }
+    
+    /* 右侧面板 */
+    .side-panel {
+      width: 320px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .panel-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+    
+    .panel-section {
+      margin-bottom: 20px;
+    }
+    
+    .panel-section-title {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .info-label {
+      color: var(--text-secondary);
+    }
+    
+    .info-value {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      margin: 2px;
+    }
+    
+    .tag.primary { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+    .tag.coder { background: rgba(6, 182, 212, 0.2); color: var(--cyan); }
+    .tag.deep { background: rgba(139, 92, 246, 0.2); color: var(--purple); }
+    
+    /* 图例 */
+    .legend {
+      display: flex;
+      gap: 16px;
+      padding: 12px 16px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      margin-top: auto;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+    }
+    
+    /* 模态框 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal-overlay.active {
+      display: flex;
+    }
+    
+    .modal {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      width: 400px;
+      max-height: 80vh;
+      overflow: hidden;
+    }
+    
+    .modal-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      font-size: 18px;
+    }
+    
+    .modal-body {
+      padding: 16px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    
+    .form-input, .form-select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+    
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .modal-footer {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+  </style>
+  <link rel="stylesheet" href="css/sidebar.css">
+          <link rel="stylesheet" href="css/frame.css">
+  <script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <!-- 侧边栏 -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容 -->
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <span>组织架构</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" onclick="resetLayout()" title="重置布局"><i class="ri-refresh-line"></i></button>
+          <button class="header-btn" onclick="exportConfig()" title="导出配置"><i class="ri-download-line"></i></button>
+          <button class="header-btn primary" onclick="showCreateTeamModal()" title="创建团队"><i class="ri-team-line"></i></button>
+          <button class="header-btn primary" onclick="showAddAgentModal()" title="添加 Agent"><i class="ri-add-line"></i></button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <!-- 组织图 -->
+        <div class="org-container">
+          <div class="org-toolbar">
+            <button class="toolbar-btn" onclick="zoomIn()" title="放大"><i class="ri-zoom-in-line"></i></button>
+            <button class="toolbar-btn" onclick="zoomOut()" title="缩小"><i class="ri-zoom-out-line"></i></button>
+            <button class="toolbar-btn" onclick="fitView()" title="适应视图"><i class="ri-fullscreen-line"></i></button>
+          </div>
+          <div id="orgChart" style="position: relative; width: 1200px; height: 800px;">
+            <svg id="connectionsLayer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;"></svg>
+            <div id="nodesContainer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;"></div>
+          </div>
+        </div>
+        
+        <!-- 右侧面板 -->
+        <div class="side-panel">
+          <div class="panel-header">
+            <span>Agent 详情</span>
+            <button class="modal-close" onclick="deselectAgent()"><i class="ri-close-line"></i></button>
+          </div>
+          <div class="panel-content" id="agentDetails">
+            <div style="text-align: center; color: var(--text-tertiary); padding: 40px 0;">
+              <i class="ri-cursor-line" style="font-size: 32px; margin-bottom: 8px; display: block;"></i>
+              点击 Agent 节点查看详情
+            </div>
+          </div>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-color" style="background: linear-gradient(135deg, var(--primary), var(--purple));"></div>
+              <span>L1 总控</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background: linear-gradient(135deg, var(--cyan), var(--primary));"></div>
+              <span>L2 专家</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background: linear-gradient(135deg, var(--success), var(--cyan));"></div>
+              <span>L3 助手</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background: var(--text-tertiary);"></div>
+              <span>轻量级</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 添加 Agent 模态框 -->
+  <div class="modal-overlay" id="addAgentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span>添加 Agent</span>
+        <button class="modal-close" onclick="hideAddAgentModal()"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Agent ID</label>
+          <input type="text" class="form-input" id="newAgentId" placeholder="例如: agent-new">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Agent 名称</label>
+          <input type="text" class="form-input" id="newAgentName" placeholder="显示名称">
+        </div>
+        <div class="form-group">
+          <label class="form-label">角色类型</label>
+          <select class="form-select" id="newAgentRole">
+            <option value="worker">工作者</option>
+            <option value="orchestrator">协调者</option>
+            <option value="specialist">专家</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">主模型</label>
+          <select class="form-select" id="newAgentModel">
+            <option value="qwencoding/glm-5">GLM-5 (阿里云)</option>
+            <option value="qwencoding/qwen3-coder-next">Qwen3-Coder-Next</option>
+            <option value="nvidia-2/deepseek-ai/deepseek-v3.2">DeepSeek-V3.2</option>
+            <option value="qwencoding/MiniMax-M2.5">MiniMax-M2.5</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideAddAgentModal()">取消</button>
+        <button class="btn btn-primary" onclick="addAgent()">添加</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 创建团队模态框 -->
+  <div class="modal-overlay" id="createTeamModal">
+    <div class="modal" style="width: 500px;">
+      <div class="modal-header">
+        <span>创建虚拟团队</span>
+        <button class="modal-close" onclick="hideCreateTeamModal()"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">团队名称</label>
+          <input type="text" class="form-input" id="newTeamName" placeholder="例如: 评审小组">
+        </div>
+        <div class="form-group">
+          <label class="form-label">团队类型</label>
+          <select class="form-select" id="newTeamType">
+            <option value="review">评审小组</option>
+            <option value="project">项目团队</option>
+            <option value="expert">专家组</option>
+            <option value="virtual">虚拟团队</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">团队描述</label>
+          <textarea class="form-input" id="newTeamDesc" rows="3" placeholder="团队职责和目标..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">团队成员</label>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+              <input type="checkbox" name="teamMember" value="main"> main
+            </label>
+            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+              <input type="checkbox" name="teamMember" value="coder"> coder
+            </label>
+            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+              <input type="checkbox" name="teamMember" value="deep"> deep
+            </label>
+            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+              <input type="checkbox" name="teamMember" value="chat"> chat
+            </label>
+            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+              <input type="checkbox" name="teamMember" value="fast"> fast
+            </label>
+            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+              <input type="checkbox" name="teamMember" value="test"> test
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">团队负责人</label>
+          <select class="form-select" id="newTeamLeader">
+            <option value="main">main</option>
+            <option value="deep">deep</option>
+            <option value="coder">coder</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideCreateTeamModal()">取消</button>
+        <button class="btn btn-primary" onclick="createTeam()">创建团队</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 虚拟团队数据
+    let teams = [];
+    
+    // 显示创建团队模态框
+    function showCreateTeamModal() {
+      document.getElementById('createTeamModal').classList.add('active');
+    }
+    
+    function hideCreateTeamModal() {
+      document.getElementById('createTeamModal').classList.remove('active');
+    }
+    
+    // 创建团队
+    async function createTeam() {
+      const name = document.getElementById('newTeamName').value.trim();
+      const type = document.getElementById('newTeamType').value;
+      const desc = document.getElementById('newTeamDesc').value.trim();
+      const leader = document.getElementById('newTeamLeader').value;
+      
+      const members = Array.from(document.querySelectorAll('input[name="teamMember"]:checked'))
+        .map(cb => cb.value);
+      
+      if (!name) {
+        alert('请输入团队名称');
+        return;
+      }
+      
+      const team = {
+        id: 'team-' + Date.now(),
+        name: name,
+        type: type,
+        description: desc,
+        leader: leader,
+        members: members,
+        createdAt: new Date().toISOString()
+      };
+      
+      try {
+        const res = await fetch('/api/agents/teams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(team)
+        });
+        
+        if (res.ok) {
+          alert('团队创建成功');
+          hideCreateTeamModal();
+          loadTeams();
+        } else {
+          alert('创建失败: ' + (await res.json()).error);
+        }
+      } catch (e) {
+        console.log('本地存储团队:', team);
+        teams.push(team);
+        alert('团队创建成功（本地）');
+        hideCreateTeamModal();
+      }
+    }
+    
+    // 加载团队
+    async function loadTeams() {
+      try {
+        const res = await fetch('/api/agents/teams');
+        if (res.ok) {
+          teams = await res.json();
+        }
+      } catch (e) {
+        // 使用本地数据
+      }
+    }
+    
+    // Agent 数据
+    let agents = [];
+    let selectedAgent = null;
+    let scale = 1;
+    let panX = 0, panY = 0;
+    let isDragging = false;
+    let dragTarget = null;
+    let dragStartX, dragStartY;
+    let nodeStartX, nodeStartY;
+    
+    // Agent 角色类型 - 树形层级结构
+    // L1: main (总控)
+    // L2: chat, fast, deep, office, coder, test
+    // L3: office-1, coder-1, coder-2
+    const agentRoles = {
+      'main': { role: '总控', type: 'orchestrator', icon: 'ri-robot-2-line' },
+      'chat': { role: '对话', type: 'lightweight', icon: 'ri-chat-3-line' },
+      'fast': { role: '快速响应', type: 'lightweight', icon: 'ri-flashlight-line' },
+      'deep': { role: '深度分析', type: 'specialist', icon: 'ri-brain-line' },
+      'office': { role: '办公', type: 'specialist', icon: 'ri-file-text-line' },
+      'office-1': { role: '办公助手', type: 'worker', icon: 'ri-file-text-line' },
+      'coder': { role: '编码', type: 'specialist', icon: 'ri-code-line' },
+      'coder-1': { role: '编码助手', type: 'worker', icon: 'ri-code-line' },
+      'coder-2': { role: '编码助手', type: 'worker', icon: 'ri-code-line' },
+      'test': { role: '测试', type: 'lightweight', icon: 'ri-test-tube-line' }
+    };
+    
+    // 加载 Agent 数据
+    async function loadAgents() {
+      try {
+        // 同时获取组织数据和状态数据
+        const [orgResponse, statusResponse] = await Promise.all([
+          fetch('/api/agents/organization'),
+          fetch('/api/agents/status')
+        ]);
+        
+        const orgData = await orgResponse.json();
+        const statusData = await statusResponse.json();
+        
+        // 合并数据
+        const statusMap = {};
+        if (statusData.agents) {
+          statusData.agents.forEach(a => {
+            statusMap[a.id] = a;
+          });
+        }
+        
+        // 使用组织数据作为基础，合并状态
+        if (orgData.agents) {
+          agents = orgData.agents.map(agent => ({
+            ...agent,
+            status: statusMap[agent.id]?.status || 'offline',
+            model: statusMap[agent.id]?.model ? { primary: statusMap[agent.id].model } : agent.model
+          }));
+        }
+        
+        console.log('Loaded agents:', agents.length, agents);
+        renderOrgChart();
+      } catch (error) {
+        console.error('加载 Agent 数据失败:', error);
+        // 使用默认数据 - 树形层级结构
+        // main → chat, fast, deep, office, coder, test
+        // office → office-1
+        // coder → coder-1, coder-2
+        agents = [
+          { id: 'main', name: 'Main', status: 'online', position: { x: 400, y: 60 }, allowAgents: ['chat', 'fast', 'deep', 'office', 'coder', 'test'], model: { primary: 'qwencoding/glm-5' }, level: 1, role: '总控' },
+          { id: 'chat', name: 'Chat', status: 'offline', position: { x: 80, y: 200 }, allowAgents: [], model: { primary: 'uos/GLM-4.7' }, level: 2, role: '对话' },
+          { id: 'fast', name: 'Fast', status: 'offline', position: { x: 200, y: 200 }, allowAgents: [], model: { primary: 'qwencoding/kimi-k2.5' }, level: 2, role: '快速响应' },
+          { id: 'deep', name: 'Deep', status: 'offline', position: { x: 400, y: 200 }, allowAgents: [], model: { primary: 'nvidia-2/deepseek-ai/deepseek-v3.2' }, level: 2, role: '深度分析' },
+          { id: 'office', name: 'Office', status: 'offline', position: { x: 540, y: 200 }, allowAgents: ['office-1'], model: { primary: 'qwencoding/MiniMax-M2.5' }, level: 2, role: '办公' },
+          { id: 'office-1', name: 'Office-1', status: 'offline', position: { x: 540, y: 340 }, allowAgents: [], model: { primary: 'nvidia-1/qwen/qwen3.5-397b-a17b' }, level: 3, role: '办公助手' },
+          { id: 'coder', name: 'Coder', status: 'offline', position: { x: 860, y: 200 }, allowAgents: ['coder-1', 'coder-2'], model: { primary: 'qwencoding/qwen3-coder-next' }, level: 2, role: '编码' },
+          { id: 'coder-1', name: 'Coder-1', status: 'offline', position: { x: 800, y: 340 }, allowAgents: [], model: { primary: 'qwencoding/qwen3-coder-plus' }, level: 3, role: '编码助手' },
+          { id: 'coder-2', name: 'Coder-2', status: 'offline', position: { x: 940, y: 340 }, allowAgents: [], model: { primary: 'qwencoding/qwen3-coder-next' }, level: 3, role: '编码助手' },
+          { id: 'test', name: 'Test', status: 'offline', position: { x: 720, y: 200 }, allowAgents: [], model: { primary: 'qwencoding/MiniMax-M2.5' }, level: 2, role: '测试' }
+        ];
+        renderOrgChart();
+      }
+    }
+    
+    // 渲染组织图
+    function renderOrgChart() {
+      const container = document.getElementById('nodesContainer');
+      container.innerHTML = '';
+      
+      // 创建节点
+      agents.forEach(agent => {
+        const roleInfo = agentRoles[agent.id] || { role: '工作者', type: 'worker', icon: 'ri-user-line' };
+        const node = document.createElement('div');
+        node.className = 'agent-node';
+        node.id = `node-${agent.id}`;
+        node.style.left = (agent.position?.x || 100) + 'px';
+        node.style.top = (agent.position?.y || 100) + 'px';
+        node.style.zIndex = 10;
+        node.dataset.agentId = agent.id;
+        
+        node.innerHTML = `
+          <div class="agent-header">
+            <div class="agent-avatar ${agent.id.split('-')[0]}">
+              <i class="${roleInfo.icon}"></i>
+            </div>
+            <div>
+              <div class="agent-name">${agent.name || agent.id}</div>
+              <div class="agent-role">${roleInfo.role}</div>
+            </div>
+          </div>
+          <div class="agent-status">
+            <span class="status-dot ${agent.status === 'idle' ? 'online' : agent.status === 'working' ? 'busy' : 'offline'}"></span>
+            <span>${agent.status === 'idle' ? '空闲' : agent.status === 'working' ? '工作中' : '离线'}</span>
+          </div>
+        `;
+        
+        // 拖拽事件
+        node.addEventListener('mousedown', (e) => startDrag(e, agent));
+        node.addEventListener('click', (e) => selectAgent(agent, e));
+        
+        container.appendChild(node);
+      });
+      
+      // 延迟绘制连接线，确保节点已渲染
+      setTimeout(() => drawConnections(), 50);
+    }
+    
+    // 绘制连接线
+    function drawConnections() {
+      const svg = document.getElementById('connectionsLayer');
+      svg.innerHTML = '';
+      
+      // 设置 SVG 尺寸 - 使用足够大的尺寸
+      const width = 1200;
+      const height = 800;
+      
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.setAttribute('width', '100%');
+      svg.setAttribute('height', '100%');
+      svg.style.width = width + 'px';
+      svg.style.height = height + 'px';
+      
+      console.log('SVG size:', width, height);
+      let lineCount = 0;
+      
+      agents.forEach(agent => {
+        if (!agent.allowAgents) return;
+        
+        const sourceNode = document.getElementById(`node-${agent.id}`);
+        if (!sourceNode) return;
+        
+        const sourceX = agent.position?.x || 100;
+        const sourceY = agent.position?.y || 100;
+        const sourceWidth = sourceNode.offsetWidth || 140;
+        const sourceHeight = sourceNode.offsetHeight || 70;
+        
+        agent.allowAgents.forEach(targetId => {
+          const targetAgent = agents.find(a => a.id === targetId);
+          if (!targetAgent) return;
+          
+          const targetX = targetAgent.position?.x || 100;
+          const targetY = targetAgent.position?.y || 100;
+          const targetNode = document.getElementById(`node-${targetId}`);
+          if (!targetNode) return;
+          
+          const targetWidth = targetNode.offsetWidth || 140;
+          const targetHeight = targetNode.offsetHeight || 70;
+          
+          // 计算连接点
+          const sx = sourceX + sourceWidth / 2;
+          const sy = sourceY + sourceHeight;
+          const tx = targetX + targetWidth / 2;
+          const ty = targetY;
+          
+          // 只画向下的连接线
+          if (ty > sy) {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const midY = (sy + ty) / 2;
+            const d = `M ${sx} ${sy} C ${sx} ${midY}, ${tx} ${midY}, ${tx} ${ty}`;
+            path.setAttribute('d', d);
+            path.setAttribute('class', 'connection-line');
+            path.setAttribute('stroke', '#3b82f6');  // 蓝色，更明显
+            path.setAttribute('stroke-width', '2');
+            path.setAttribute('fill', 'none');
+            path.setAttribute('opacity', '0.8');
+            svg.appendChild(path);
+            lineCount++;
+            console.log('Line:', agent.id, '->', targetId, d);
+          }
+        });
+      });
+      
+      console.log('Total lines drawn:', lineCount);
+    }
+    
+    // 拖拽功能
+    function startDrag(e, agent) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      
+      isDragging = true;
+      dragTarget = agent;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      nodeStartX = agent.position?.x || 100;
+      nodeStartY = agent.position?.y || 100;
+      
+      const node = document.getElementById(`node-${agent.id}`);
+      node.classList.add('dragging');
+    }
+    
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging || !dragTarget) return;
+      
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      
+      const newX = Math.max(0, nodeStartX + dx);
+      const newY = Math.max(0, nodeStartY + dy);
+      
+      dragTarget.position = { x: newX, y: newY };
+      
+      const node = document.getElementById(`node-${dragTarget.id}`);
+      node.style.left = newX + 'px';
+      node.style.top = newY + 'px';
+      
+      drawConnections();
+    });
+    
+    document.addEventListener('mouseup', () => {
+      if (isDragging && dragTarget) {
+        const node = document.getElementById(`node-${dragTarget.id}`);
+        node.classList.remove('dragging');
+        saveAgentPosition(dragTarget.id, dragTarget.position);
+      }
+      isDragging = false;
+      dragTarget = null;
+    });
+    
+    // 选择 Agent
+    function selectAgent(agent, e) {
+      if (isDragging) return;
+      e.stopPropagation();
+      
+      // 移除之前的选择
+      document.querySelectorAll('.agent-node.selected').forEach(n => n.classList.remove('selected'));
+      
+      // 添加选择
+      const node = document.getElementById(`node-${agent.id}`);
+      node.classList.add('selected');
+      selectedAgent = agent;
+      
+      // 显示详情
+      showAgentDetails(agent);
+    }
+    
+    // 显示 Agent 详情
+    function showAgentDetails(agent) {
+      const roleInfo = agentRoles[agent.id] || { role: '工作者', type: 'worker', icon: 'ri-user-line' };
+      const details = document.getElementById('agentDetails');
+      
+      details.innerHTML = `
+        <div class="panel-section">
+          <div class="panel-section-title">基本信息</div>
+          <div class="info-row">
+            <span class="info-label">ID</span>
+            <span class="info-value">${agent.id}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">名称</span>
+            <span class="info-value">${agent.name || agent.id}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">角色</span>
+            <span class="info-value">${roleInfo.role}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">类型</span>
+            <span class="info-value">${roleInfo.type}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">状态</span>
+            <span class="info-value" style="display: flex; align-items: center; gap: 6px;">
+              <span class="status-dot ${agent.status === 'idle' ? 'online' : agent.status === 'working' ? 'busy' : 'offline'}"></span>
+              ${agent.status === 'idle' ? '空闲' : agent.status === 'working' ? '工作中' : '离线'}
+            </span>
+          </div>
+        </div>
+        
+        <div class="panel-section">
+          <div class="panel-section-title">模型配置</div>
+          <div class="info-row">
+            <span class="info-label">主模型</span>
+            <span class="info-value" style="font-size: 11px;">${agent.model?.primary || '-'}</span>
+          </div>
+        </div>
+        
+        <div class="panel-section">
+          <div class="panel-section-title">可调用的 Subagent</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+            ${(agent.allowAgents || []).map(a => `<span class="tag ${a.split('-')[0]}">${a}</span>`).join('') || '<span style="color: var(--text-tertiary);">无</span>'}
+          </div>
+        </div>
+        
+        <div class="panel-section" style="margin-top: 16px;">
+          <button class="btn btn-secondary" style="width: 100%;" onclick="editAgent('${agent.id}')">
+            <i class="ri-edit-line"></i>编辑配置
+          </button>
+        </div>
+      `;
+    }
+    
+    function deselectAgent() {
+      document.querySelectorAll('.agent-node.selected').forEach(n => n.classList.remove('selected'));
+      selectedAgent = null;
+      document.getElementById('agentDetails').innerHTML = `
+        <div style="text-align: center; color: var(--text-tertiary); padding: 40px 0;">
+          <i class="ri-cursor-line" style="font-size: 32px; margin-bottom: 8px; display: block;"></i>
+          点击 Agent 节点查看详情
+        </div>
+      `;
+    }
+    
+    // 保存位置
+    async function saveAgentPosition(agentId, position) {
+      try {
+        await fetch('/api/agents/position', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agentId, position })
+        });
+      } catch (error) {
+        console.error('保存位置失败:', error);
+      }
+    }
+    
+    // 缩放
+    function zoomIn() {
+      scale = Math.min(2, scale + 0.1);
+      applyTransform();
+    }
+    
+    function zoomOut() {
+      scale = Math.max(0.5, scale - 0.1);
+      applyTransform();
+    }
+    
+    function fitView() {
+      scale = 1;
+      panX = 0;
+      panY = 0;
+      applyTransform();
+    }
+    
+    function applyTransform() {
+      document.getElementById('orgChart').style.transform = `scale(${scale})`;
+      document.getElementById('connectionsLayer').style.transform = `scale(${scale})`;
+    }
+    
+    // 重置布局
+    function resetLayout() {
+      const defaultPositions = {
+        'main': { x: 400, y: 80 },
+        'coder': { x: 200, y: 200 },
+        'coder-1': { x: 100, y: 320 },
+        'coder-2': { x: 300, y: 320 },
+        'deep': { x: 500, y: 200 },
+        'chat': { x: 650, y: 200 },
+        'fast': { x: 800, y: 200 },
+        'office': { x: 400, y: 320 },
+        'office-1': { x: 500, y: 420 },
+        'test': { x: 700, y: 320 }
+      };
+      
+      agents.forEach(agent => {
+        if (defaultPositions[agent.id]) {
+          agent.position = defaultPositions[agent.id];
+        }
+      });
+      
+      renderOrgChart();
+    }
+    
+    // 导出配置
+    function exportConfig() {
+      const config = {
+        agents: agents.map(a => ({
+          id: a.id,
+          name: a.name,
+          position: a.position,
+          allowAgents: a.allowAgents
+        }))
+      };
+      
+      const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'agent-organization.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    // 模态框
+    function showAddAgentModal() {
+      document.getElementById('addAgentModal').classList.add('active');
+    }
+    
+    function hideAddAgentModal() {
+      document.getElementById('addAgentModal').classList.remove('active');
+    }
+    
+    async function addAgent() {
+      const id = document.getElementById('newAgentId').value.trim();
+      const name = document.getElementById('newAgentName').value.trim();
+      const role = document.getElementById('newAgentRole').value;
+      const model = document.getElementById('newAgentModel').value;
+      
+      if (!id) {
+        alert('请输入 Agent ID');
+        return;
+      }
+      
+      // 添加到列表
+      agents.push({
+        id,
+        name: name || id,
+        status: 'offline',
+        position: { x: 400, y: 400 },
+        model: { primary: model }
+      });
+      
+      renderOrgChart();
+      hideAddAgentModal();
+    }
+    
+    function editAgent(agentId) {
+      alert(`编辑 Agent: ${agentId} (功能开发中)`);
+    }
+    
+    // 点击空白处取消选择
+    document.getElementById('orgChart').addEventListener('click', (e) => {
+      if (e.target.id === 'orgChart') {
+        deselectAgent();
+      }
+    });
+    
+    // 初始化
+    loadAgents();
+  </script>
+
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'org-structure' });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

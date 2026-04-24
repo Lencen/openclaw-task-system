@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="deep-dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作日历 - 智能工作汇总</title>
+    
+    <!-- 统一框架样式 -->
+    <link rel="stylesheet" href="css/frame.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link href="assets/fonts/remixicon.css" rel="stylesheet">
+    <script src="js/auth-guard.js"></script>
+    <script src="js/field-tips.js"></script>
+    
+    <style>
+        /* 日历页面专用样式 */
+        .calendar-page {
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+            height: calc(100vh - 48px);
+            overflow: hidden;
+        }
+        
+        .calendar-panel {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .calendar-header h2 {
+            color: var(--text-primary);
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .month-nav {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .month-nav button {
+            padding: 8px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .month-nav button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding: 12px 4px;
+            font-size: 13px;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            background: var(--bg-tertiary);
+            border: 1px solid transparent;
+        }
+        
+        .calendar-day:hover:not(.empty) {
+            background: var(--bg-primary);
+            border-color: var(--primary);
+        }
+        
+        .calendar-day.empty {
+            cursor: default;
+            background: transparent;
+        }
+        
+        .calendar-day.has-data {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary);
+        }
+        
+        .calendar-day.today {
+            border-color: var(--warning);
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+        }
+        
+        .calendar-day span {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .calendar-day .task-badge {
+            font-size: 10px;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--primary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+        
+        .detail-panel {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            overflow-y: auto;
+        }
+        
+        .detail-header {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .detail-header h3 {
+            color: var(--text-primary);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .detail-date-text {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .stat-card:hover {
+            background: var(--bg-primary);
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .stat-value.blue { color: var(--primary); }
+        .stat-value.green { color: var(--success); }
+        .stat-value.orange { color: var(--warning); }
+        .stat-value.red { color: var(--danger); }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .summary-section {
+            margin-top: 20px;
+        }
+        
+        .summary-card {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .summary-card h4 {
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .summary-card ul {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            padding-left: 20px;
+            font-size: 13px;
+        }
+        
+        .summary-card li {
+            margin: 4px 0;
+        }
+        
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .task-item {
+            background: var(--bg-primary);
+            border-radius: 6px;
+            padding: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .task-item-title {
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        
+        .task-item-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+        }
+        
+        .task-status {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .task-status.completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .task-status.doing {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .loading, .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .no-data-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <div id="sidebar-container"></div>
+        <main class="main">
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="header-title">工作日历</h1>
+                </div>
+            </header>
+            <div class="content">
+                <div class="calendar-page">
+                    <div class="calendar-panel">
+                        <div class="calendar-header">
+                            <h2 id="currentMonth">2026 年 4 月</h2>
+                            <div class="month-nav">
+                                <button onclick="changeMonth(-1)">◀ 上月</button>
+                                <button onclick="changeMonth(1)">下月 ▶</button>
+                            </div>
+                        </div>
+
+                        <div class="calendar-grid" id="calendarGrid">
+                            <div class="calendar-day-header">日</div>
+                            <div class="calendar-day-header">一</div>
+                            <div class="calendar-day-header">二</div>
+                            <div class="calendar-day-header">三</div>
+                            <div class="calendar-day-header">四</div>
+                            <div class="calendar-day-header">五</div>
+                            <div class="calendar-day-header">六</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-panel" id="detailSection">
+                        <div class="no-data">
+                            <div class="no-data-icon">📅</div>
+                            <p>点击日期查看该日的工作内容</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="js/sidebar.js"></script>
+    <script>Sidebar.init({ activePage: 'calendar' });</script>
+    
+    <script>
+        const API_BASE = '/api/calendar';
+        let currentDate = new Date();
+        let dataDates = [];
+
+        // 加载所有有数据的日期
+        async function loadDates() {
+            try {
+                const response = await fetch(`${API_BASE}/dates`);
+                const result = await response.json();
+                if (result.success) {
+                    dataDates = result.dates;
+                    renderCalendar();
+                }
+            } catch (error) {
+                console.error('加载日期失败:', error);
+            }
+        }
+
+        // 渲染日历
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            // 更新标题
+            document.getElementById('currentMonth').textContent = 
+                `${year}年${month + 1}月`;
+
+            // 获取本月第一天和最后一天
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startOffset = firstDay.getDay(); // 0-6 (周日到周六)
+
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = `
+                <div class="calendar-day-header">日</div>
+                <div class="calendar-day-header">一</div>
+                <div class="calendar-day-header">二</div>
+                <div class="calendar-day-header">三</div>
+                <div class="calendar-day-header">四</div>
+                <div class="calendar-day-header">五</div>
+                <div class="calendar-day-header">六</div>
+            `;
+
+            // 填充空白
+            for (let i = 0; i < startOffset; i++) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day empty';
+                grid.appendChild(day);
+            }
+
+            // 填充日期
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const hasData = dataDates.includes(dateStr);
+                const isToday = new Date().toISOString().split('T')[0] === dateStr;
+
+                const dayEl = document.createElement('div');
+                dayEl.className = `calendar-day ${hasData ? 'has-data' : ''} ${isToday ? 'today' : ''}`;
+                
+                if (hasData) {
+                    dayEl.onclick = () => showDetail(dateStr);
+                }
+
+                dayEl.innerHTML = `
+                    <span>${day}</span>
+                    ${hasData ? '<div class="task-badge">有记录</div>' : ''}
+                `;
+
+                grid.appendChild(dayEl);
+            }
+        }
+
+        // 切换月份
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        // 显示详情
+        async function showDetail(dateStr) {
+            const detailSection = document.getElementById('detailSection');
+            detailSection.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/summary/${dateStr}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    renderDetail(result.summary);
+                } else {
+                    detailSection.innerHTML = `
+                        <div class="no-data">
+                            <div class="no-data-icon">📭</div>
+                            <p>该日期暂无工作记录</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                detailSection.innerHTML = `
+                    <div class="no-data">
+                        <div class="no-data-icon">❌</div>
+                        <p>加载失败</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 渲染详情
+        function renderDetail(summary) {
+            const detailSection = document.getElementById('detailSection');
+
+            const achievementsHtml = summary.aiSummary.achievements.length > 0 
+                ? summary.aiSummary.achievements.map(a => `<li>${a}</li>`).join('')
+                : '<li>无</li>';
+
+            const issuesHtml = summary.aiSummary.issues.length > 0
+                ? summary.aiSummary.issues.map(i => `<li>${i}</li>`).join('')
+                : '<li>无</li>';
+
+            const tasksHtml = summary.tasks.tasks.map(t => `
+                <div class="task-item">
+                    <div class="task-item-title">${t.title}</div>
+                    <div class="task-item-meta">
+                        <span class="task-status ${t.status === 'completed' ? 'completed' : 'doing'}">
+                            ${t.status === 'completed' ? '✓' : '●'} ${t.status}
+                        </span>
+                        ${t.completedAt ? `<span style="color: var(--text-secondary)">完成：${new Date(t.completedAt).toLocaleDateString()}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            const agentsHtml = summary.agents.map(a => `
+                <div class="stat-item">
+                    <span class="stat-label">${a.name}</span>
+                    <span class="stat-value">${a.tasksExecuted} 个任务</span>
+                </div>
+            `).join('');
+
+            detailSection.innerHTML = `
+                <div class="detail-header">
+                    <h3>📊 ${summary.date} 工作详情</h3>
+                    <span class="detail-date-text">${getWeekDay(summary.date)}</span>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="openDrawer('tasks')">
+                        <div class="stat-value blue">${summary.tasks.total}</div>
+                        <div class="stat-label">任务总数</div>
+                    </div>
+                    <div class="stat-card" onclick="openDrawer('tasks')">
+                        <div class="stat-value green">${summary.tasks.completed}</div>
+                        <div class="stat-label">已完成</div>
+                    </div>
+                    <div class="stat-card" onclick="openDrawer('tasks')">
+                        <div class="stat-value orange">${summary.tasks.inProgress}</div>
+                        <div class="stat-label">进行中</div>
+                    </div>
+                    <div class="stat-card" onclick="openDrawer('issues')">
+                        <div class="stat-value red">${summary.aiSummary.issues.length}</div>
+                        <div class="stat-label">问题数</div>
+                    </div>
+                </div>
+
+                ${summary.aiSummary.overall ? `
+                <div class="summary-card">
+                    <h4>💡 整体总结</h4>
+                    <p style="color: var(--text-secondary); line-height: 1.6; font-size: 13px;">${summary.aiSummary.overall}</p>
+                </div>
+                ` : ''}
+
+                ${summary.aiSummary.achievements.length > 0 ? `
+                <div class="summary-card">
+                    <h4>🎯 主要成就</h4>
+                    <ul>${achievementsHtml}</ul>
+                </div>
+                ` : ''}
+
+                ${summary.tasks.tasks.length > 0 ? `
+                <div class="summary-card">
+                    <h4>📋 任务列表</h4>
+                    <div class="task-list">${tasksHtml}</div>
+                </div>
+                ` : ''}
+
+                ${summary.aiSummary.issues.length > 0 ? `
+                <div class="summary-card" style="border-left-color: var(--warning);">
+                    <h4 style="color: var(--warning);">⚠️ 问题与挑战</h4>
+                    <ul>${issuesHtml}</ul>
+                </div>
+                ` : ''}
+
+                <div class="summary-card" style="border-left-color: var(--success);">
+                    <h4 style="color: var(--success);">🌟 今日亮点</h4>
+                    <ul>${summary.aiSummary.highlights.map(h => `<li>${h}</li>`).join('')}</ul>
+                </div>
+            `;
+        }
+        
+        function getWeekDay(dateStr) {
+            const date = new Date(dateStr);
+            const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            return weekDays[date.getDay()];
+        }
+
+        // 初始化
+        loadDates();
+    </script>
+<script>FieldTips.init({pageType:"general"});</script>
+</body>
+</html>

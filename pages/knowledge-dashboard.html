@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>知识库 - Morning 任务管理系统</title>
+  
+  <!-- Remix Icon -->
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <!-- 页面专用样式 -->
+  <style>
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    
+    /* 统计卡片 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    
+    .stat-icon.hot { background: rgba(239, 68, 68, 0.15); }
+    .stat-icon.warm { background: rgba(245, 158, 11, 0.15); }
+    .stat-icon.cold { background: rgba(59, 130, 246, 0.15); }
+    .stat-icon.total { background: rgba(16, 185, 129, 0.15); }
+    
+    .stat-info h3 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .stat-info p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    
+    /* 工具栏 */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .search-box {
+      position: relative;
+      flex: 1;
+      max-width: 400px;
+    }
+    
+    .search-box input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .search-box i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+    }
+    
+    .toolbar-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+      border-color: var(--primary);
+    }
+    
+    /* 分类标签 */
+    .category-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .category-tab {
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+      border: 1px solid var(--border);
+    }
+    
+    .category-tab:hover {
+      border-color: var(--primary);
+    }
+    
+    .category-tab.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    /* 内容区域 */
+    .content-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    /* HOT层 - 快速访问 */
+    .hot-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    
+    .hot-item {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+    
+    .hot-item:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    
+    .hot-item-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    
+    .hot-item-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    /* WARM层 - 知识目录 */
+    .warm-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    
+    .warm-folder {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .warm-folder:hover {
+      background: var(--bg-primary);
+    }
+    
+    .folder-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    
+    .folder-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    
+    .folder-count {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    /* 记忆文件列表 */
+    .memory-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .memory-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .memory-item:hover {
+      background: var(--bg-primary);
+    }
+    
+    .memory-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .memory-info {
+      flex: 1;
+    }
+    
+    .memory-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    
+    .memory-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+    
+    .memory-size {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-tertiary);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    /* 加载状态 */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+    
+    .loading i {
+      font-size: 24px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* 学习知识卡片 */
+    .learning-knowledge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 16px;
+    }
+
+    .learning-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .learning-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .learning-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    .learning-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    .learning-card-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .tag.hot { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .tag.warm { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .tag.cold { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .tag.category { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+
+    .learning-card-summary {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .learning-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    .view-link {
+      color: var(--primary);
+      font-weight: 500;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb"><span>能力积累</span> / <span>知识</span></div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadStats()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      <div class="content">
+        <div class="page-content" style="padding: 24px;">
+          <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div>
+              <h1 style="font-size: 20px; font-weight: 600; color: var(--text-primary);">🧠 知识库</h1>
+              <p style="font-size: 14px; color: var(--text-secondary); margin-top: 4px;">三层记忆架构：HOT(常访问) / WARM(工作知识) / COLD(长期存储)</p>
+            </div>
+          </div>
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon hot">🔥</div>
+            <div class="stat-info">
+              <h3 id="hotCount">-</h3>
+              <p>HOT层（当前容量/最大容量）</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <i class="stat-icon ri-sun-line"></i>
+            <div class="stat-info">
+              <h3 id="warmCount">-</h3>
+              <p>WARM层（工作知识）</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <i class="stat-icon ri-snowflake-line"></i>
+            <div class="stat-info">
+              <h3 id="coldCount">-</h3>
+              <p>COLD层（长期存储）</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <i class="stat-icon ri-bar-chart-box-line"></i>
+            <div class="stat-info">
+              <h3 id="totalCount">-</h3>
+              <p>总容量利用率</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 分类标签 -->
+        <div class="category-tabs">
+          <div class="category-tab active" data-category="all">全部</div>
+          <div class="category-tab" data-category="memory">📝 记忆文件</div>
+          <div class="category-tab" data-category="docs">📄 文档</div>
+          <div class="category-tab" data-category="skills">⚡ 技能</div>
+        </div>
+        
+        <!-- 工具栏 -->
+        <div class="toolbar">
+          <div class="search-box">
+            <i class="ri-search-line"></i>
+            <input type="text" id="searchInput" placeholder="搜索知识..." />
+          </div>
+          <div class="toolbar-actions">
+            <button class="btn btn-secondary" onclick="refreshKnowledge()">
+              <i class="ri-refresh-line"></i> 刷新
+            </button>
+          </div>
+        </div>
+        
+        <!-- HOT层：快速访问 -->
+        <div class="content-section" id="hotSection">
+          <h3 class="section-title">🔥 HOT层 - 快速访问</h3>
+          <div class="hot-list" id="hotList">
+            <div class="loading"><i class="ri-loader-4-line"></i></div>
+          </div>
+        </div>
+        
+        <!-- WARM层：工作知识 -->
+        <div class="content-section" id="warmSection">
+          <h3 class="section-title">🌤️ WARM层 - 工作知识</h3>
+          <div class="warm-grid" id="warmGrid">
+            <div class="loading"><i class="ri-loader-4-line"></i></div>
+          </div>
+        </div>
+        
+        <!-- 记忆文件 -->
+        <div class="content-section" id="memorySection">
+          <h3 class="section-title">📝 记忆文件</h3>
+          <div class="memory-list" id="memoryList">
+            <div class="loading"><i class="ri-loader-4-line"></i></div>
+          </div>
+        </div>
+
+        <!-- 学习成果 -->
+        <div class="content-section" id="learningSection">
+          <h3 class="section-title">🎓 学习成果（01项目 + UDOC产品部）</h3>
+          <div style="margin-bottom: 16px; font-size: 13px; color: var(--text-secondary);">
+            两轮并行学习共完成 <strong>29,367</strong> 个文件，创建 <strong>25+</strong> 份知识文档
+          </div>
+          <div class="learning-knowledge-grid" id="learningKnowledgeGrid">
+            <div class="loading"><i class="ri-loader-4-line"></i></div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 侧边栏 -->
+  <script src="js/sidebar.js"></script>
+  <script>Sidebar.init({ activePage: 'knowledge' });</script>
+  
+  <!-- 页面逻辑 -->
+  <script>
+    const API_BASE = window.location.origin;
+    let stats = {};
+    let warmFolders = [];
+    let memoryFiles = [];
+    
+    // 加载统计数据
+    async function loadStats() {
+      try {
+        const response = await fetch(`${API_BASE}/api/knowledge/stats`);
+        const result = await response.json();
+        
+        if (result.success) {
+          stats = result;
+          const capacity = result.capacity;
+          document.getElementById('hotCount').textContent = `${capacity.hot_used}/${capacity.hot_total}`;
+          // 确保 0 也显示为 "0"，而不是 "-"
+          document.getElementById('warmCount').textContent = (capacity.warm_total !== undefined && capacity.warm_total !== null) ? capacity.warm_total : '-';
+          document.getElementById('coldCount').textContent = (capacity.cold_total !== undefined && capacity.cold_total !== null) ? capacity.cold_total : '-';
+          // 确保 utilization 是百分比格式（API 可能返回小数或百分比）
+          const util = capacity.utilization;
+          // 如果 utilization < 1，说明是小数，需要乘以 100
+          const utilPercent = (util < 1 && util > 0) ? (util * 100).toFixed(1) : util.toFixed(1);
+          document.getElementById('totalCount').textContent = `${utilPercent}%`;
+        }
+      } catch (error) {
+        console.error('加载统计失败:', error);
+      }
+    }
+    
+    // 加载WARM层数据
+    async function loadWarmData() {
+      try {
+        // 从memory目录获取数据
+        const response = await fetch(`${API_BASE}/api/knowledge/warm/list`);
+        const result = await response.json();
+        
+        if (result.success && result.folders) {
+          warmFolders = result.folders;
+          renderWarmGrid(result.folders);
+        } else {
+          // 使用模拟数据
+          renderWarmGrid(getDefaultWarmFolders());
+        }
+      } catch (error) {
+        console.error('加载WARM层失败:', error);
+        renderWarmGrid(getDefaultWarmFolders());
+      }
+    }
+    
+    // 获取默认WARM文件夹
+    function getDefaultWarmFolders() {
+      return [
+        { name: 'domains', count: 13, icon: '📁' },
+        { name: 'projects', count: 1, icon: '📁' },
+        { name: 'skills', count: 45, icon: '⚡' },
+        { name: 'docs', count: 20, icon: '📄' }
+      ];
+    }
+    
+    // 加载记忆文件
+    async function loadMemoryFiles() {
+      try {
+        const response = await fetch(`${API_BASE}/api/memory/list`);
+        const result = await response.json();
+        
+        if (result.success && result.files) {
+          memoryFiles = result.files;
+          renderMemoryList(result.files);
+        } else {
+          // 使用默认记忆文件
+          renderMemoryList(getDefaultMemoryFiles());
+        }
+      } catch (error) {
+        console.error('加载记忆文件失败:', error);
+        renderMemoryList(getDefaultMemoryFiles());
+      }
+    }
+    
+    // 获取默认记忆文件
+    function getDefaultMemoryFiles() {
+      return [
+        { name: 'MEMORY.md', size: '28KB', modified: '2026-03-18', type: 'main' },
+        { name: 'EVOLUTION-LOG.md', size: '15KB', modified: '2026-03-18', type: 'evolution' },
+        { name: '2026-03-18.md', size: '12KB', modified: '2026-03-18', type: 'daily' },
+        { name: '2026-03-17.md', size: '8KB', modified: '2026-03-17', type: 'daily' }
+      ];
+    }
+    
+    // 渲染HOT层
+    function renderHotList(items) {
+      const container = document.getElementById('hotList');
+      
+      if (!items || items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <i class="ri-fire-line"></i>
+            <p>HOT层暂无数据。频繁访问的知识会自动提升到HOT层。</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = items.map(item => `
+        <div class="hot-item" onclick="viewItem('${item.id}')">
+          <div class="hot-item-title">${escapeHtml(item.title)}</div>
+          <div class="hot-item-meta">
+            <span>${item.category || '未分类'}</span>
+            <span>访问 ${item.access_count || 0} 次</span>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // 渲染WARM层
+    function renderWarmGrid(folders) {
+      const container = document.getElementById('warmGrid');
+      
+      if (!folders || folders.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><p>暂无数据</p></div>';
+        return;
+      }
+      
+      container.innerHTML = folders.map(folder => `
+        <div class="warm-folder" onclick="openFolder('${folder.name}')">
+          <div class="folder-icon">${folder.icon || '📁'}</div>
+          <div class="folder-name">${escapeHtml(folder.name)}</div>
+          <div class="folder-count">${folder.count || 0} 个文件</div>
+        </div>
+      `).join('');
+    }
+    
+    // 渲染记忆文件列表
+    function renderMemoryList(files) {
+      const container = document.getElementById('memoryList');
+      
+      if (!files || files.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>暂无记忆文件</p></div>';
+        return;
+      }
+      
+      const typeIcons = {
+        'main': '🧠',
+        'evolution': '🌱',
+        'daily': '📅',
+        'notice': '⚠️'
+      };
+      
+      container.innerHTML = files.map(file => `
+        <div class="memory-item" onclick="viewMemory('${file.name}')">
+          <div class="memory-icon" style="background: rgba(59, 130, 246, 0.15);">
+            ${typeIcons[file.type] || '📄'}
+          </div>
+          <div class="memory-info">
+            <div class="memory-name">${escapeHtml(file.name)}</div>
+            <div class="memory-meta">修改于 ${file.modified || '未知'}</div>
+          </div>
+          <div class="memory-size">${file.size || '-'}</div>
+        </div>
+      `).join('');
+    }
+    
+    // 搜索
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      // TODO: 实现搜索逻辑
+      console.log('搜索:', query);
+    });
+    
+    // 刷新
+    function refreshKnowledge() {
+      loadStats();
+      loadWarmData();
+      loadMemoryFiles();
+    }
+    
+    // 辅助函数
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // 操作函数
+    function viewItem(id) {
+      console.log('查看:', id);
+    }
+    
+    function openFolder(name) {
+      console.log('打开文件夹:', name);
+    }
+    
+    function viewMemory(name) {
+      console.log('查看记忆:', name);
+    }
+    
+    // 分类标签点击
+    document.querySelectorAll('.category-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        // TODO: 根据分类过滤
+      });
+    });
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStats();
+      // 加载 HOT 层数据
+      loadHotData();
+      renderWarmGrid(getDefaultWarmFolders());
+      renderMemoryList(getDefaultMemoryFiles());
+      // 加载学习成果
+      renderLearningKnowledge();
+    });
+
+    // 加载 HOT 层数据
+    async function loadHotData() {
+      try {
+        // 先从 API 获取
+        const response = await fetch(`${API_BASE}/api/knowledge/hot/list`);
+        const result = await response.json();
+        
+        if (result.success && result.items && result.items.length > 0) {
+          renderHotList(result.items);
+        } else {
+          // API 无数据，使用本地数据
+          renderHotList(getDefaultHotItems());
+        }
+      } catch (error) {
+        console.error('加载HOT层失败:', error);
+        // 使用本地数据
+        renderHotList(getDefaultHotItems());
+      }
+    }
+
+    // 获取默认 HOT 层数据
+    function getDefaultHotItems() {
+      return [
+        { id: 'hot-1', title: '任务管理系统架构 V4.0', category: '系统架构', access_count: 15 },
+        { id: 'hot-2', title: '全链路自动化工作流 V6', category: '自动化', access_count: 12 },
+        { id: 'hot-3', title: 'SQLite 数据库迁移', category: '数据库', access_count: 10 },
+        { id: 'hot-4', title: 'Agent 架构', category: 'Agent', access_count: 8 },
+        { id: 'hot-5', title: '任务生命周期', category: '任务管理', access_count: 7 },
+        { id: 'hot-6', title: '统一开发框架', category: '开发规范', access_count: 6 },
+        { id: 'hot-7', title: '禁止命令规范', category: '开发规范', access_count: 5 },
+        { id: 'hot-8', title: '文档更新规范', category: '开发规范', access_count: 4 },
+        { id: 'hot-9', title: 'Auto Recovery 自动恢复', category: '自动化', access_count: 3 },
+        { id: 'hot-10', title: '修复队列机制', category: '问题管理', access_count: 2 },
+        { id: 'hot-11', title: 'Heartbeat 定期任务', category: '自动化', access_count: 2 },
+        { id: 'hot-12', title: '知识库分层机制', category: '知识管理', access_count: 2 },
+        { id: 'hot-13', title: '记忆系统', category: '知识管理', access_count: 2 },
+        { id: 'hot-14', title: 'systemd 服务配置', category: '系统配置', access_count: 1 },
+        { id: 'hot-15', title: 'PM2 服务列表', category: '系统配置', access_count: 1 }
+      ];
+    }
+
+    // 学习知识数据
+    const learningKnowledgeData = [
+      {
+        id: '1',
+        title: '工行项目学习报告',
+        summary: '工商银行深度学习：4大定制化需求、5份安全评估报告、12万终端规模，V1.0→V1.7.0_ICBC.13完整演进',
+        tier: 'hot',
+        category: 'customer',
+        file: 'memory/工行项目学习报告.md',
+        size: '15KB',
+        date: '2026-03-23'
+      },
+      {
+        id: '2',
+        title: '解决方案平台学习报告',
+        summary: '集中域管平台完整知识：IDLINK现代化IAM产品、6大功能模块、5+客户案例',
+        tier: 'hot',
+        category: 'product',
+        file: 'memory/解决方案平台学习报告.md',
+        size: '20KB',
+        date: '2026-03-23'
+      },
+      {
+        id: '3',
+        title: 'UDOC-产品线与市场调研',
+        summary: '集中域管平台V1.0→V3.2完整演进、竞品分析（18个）、政策驱动分析',
+        tier: 'hot',
+        category: 'product',
+        file: 'memory/UDOC-产品线与市场调研.md',
+        size: '13KB',
+        date: '2026-03-23'
+      },
+      {
+        id: '4',
+        title: 'UDOC-售前与公共资源',
+        summary: '招投标宝典（9个核心文档）、客户案例（17个银行/企业）、行业研报（28个，129MB）',
+        tier: 'hot',
+        category: 'technical',
+        file: 'memory/UDOC-售前与公共资源.md',
+        size: '25KB',
+        date: '2026-03-23'
+      },
+      {
+        id: '5',
+        title: 'UDOC-商业项目与软著',
+        summary: '8+客户案例（工行/中行/招行/农行/南航等）、软著申请流程、版本命名规范',
+        tier: 'hot',
+        category: 'customer',
+        file: 'memory/UDOC-商业项目与软著.md',
+        size: '25KB',
+        date: '2026-03-23'
+      },
+      {
+        id: '6',
+        title: 'UDOC-团队建设与宣传',
+        summary: '五大核心管理流程、需求管理生命周期（六步骤）、客户访谈三阶段流程',
+        tier: 'hot',
+        category: 'process',
+        file: 'memory/UDOC-团队建设与宣传.md',
+        size: '52KB',
+        date: '2026-03-23'
+      },
+      {
+        id: '7',
+        title: '浏览器产品学习报告',
+        summary: 'UOSX插件接口标准、Docker容器隔离、国密算法支持（SM2/SM3/SM4）、Flash替代方案',
+        tier: 'warm',
+        category: 'product',
+        file: 'memory/浏览器产品学习报告.md',
+        size: '18KB',
+        date: '2026-03-23'
+      },
+      {
+        id: '8',
+        title: '原型与安全中心学习报告',
+        summary: '安全中心V4.4完整原型（47页）、三级安全等级设计、三权分立权限管理',
+        tier: 'warm',
+        category: 'product',
+        file: 'memory/原型与安全中心学习报告.md',
+        size: '25KB',
+        date: '2026-03-23'
+      },
+      {
+        id: '9',
+        title: 'UDOC产品部完整知识库整合报告',
+        summary: '4个Agent并行学习、115KB知识库输出、L1-L4四层级完整覆盖',
+        tier: 'warm',
+        category: 'technical',
+        file: 'memory/UDOC产品部完整知识库整合报告-20260323.md',
+        size: '14KB',
+        date: '2026-03-23'
+      },
+      {
+        id: '10',
+        title: '01项目完整知识库整合报告',
+        summary: '两轮学习整合、25+份文档、20+客户案例、18个竞品对比、12个实战场景',
+        tier: 'warm',
+        category: 'technical',
+        file: 'memory/01项目完整知识库整合报告-最终版-20260323.md',
+        size: '30KB',
+        date: '2026-03-23'
+      },
+      {
+        id: '11',
+        title: '全局知识库-核心内容整合',
+        summary: '全局知识索引、工作快速指南、完整知识框架、L1-L4结构',
+        tier: 'cold',
+        category: 'technical',
+        file: 'memory/全局知识库-核心内容整合-20260323.md',
+        size: '20KB',
+        date: '2026-03-23'
+      },
+      {
+        id: '12',
+        title: '完整知识框架',
+        summary: 'L1产品线、L2客户项目、L3技术文档、L4管理流程完整框架',
+        tier: 'cold',
+        category: 'technical',
+        file: 'memory/完整知识框架-20260323.md',
+        size: '15KB',
+        date: '2026-03-23'
+      }
+    ];
+
+    // 渲染学习知识卡片
+    function renderLearningKnowledge() {
+      const container = document.getElementById('learningKnowledgeGrid');
+      
+      if (!learningKnowledgeData || learningKnowledgeData.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>暂无学习成果</p></div>';
+        return;
+      }
+
+      const tierLabels = {
+        'hot': '🔥 HOT',
+        'warm': '⚡ WARM',
+        'cold': '❄️ COLD'
+      };
+
+      const categoryLabels = {
+        'customer': '客户案例',
+        'product': '产品线',
+        'technical': '技术文档',
+        'process': '管理流程'
+      };
+
+      container.innerHTML = learningKnowledgeData.map(item => `
+        <div class="learning-card" onclick="viewLearningKnowledge('${item.file}')">
+          <div class="learning-card-header">
+            <div class="learning-card-title">${escapeHtml(item.title)}</div>
+            <div class="learning-card-tags">
+              <span class="tag ${item.tier}">${tierLabels[item.tier]}</span>
+              <span class="tag category">${categoryLabels[item.category]}</span>
+            </div>
+          </div>
+          <div class="learning-card-summary">${escapeHtml(item.summary)}</div>
+          <div class="learning-card-footer">
+            <div>
+              <span>📄 ${item.file}</span>
+              <span style="margin: 0 6px;">•</span>
+              <span>${item.size}</span>
+              <span style="margin: 0 6px;">•</span>
+              <span>${item.date}</span>
+            </div>
+            <span class="view-link">查看详情 →</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 查看学习知识文档
+    async function viewLearningKnowledge(filePath) {
+      try {
+        const response = await fetch(`/api/file/read?path=${encodeURIComponent(filePath)}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          // 打开新窗口显示markdown内容
+          const win = window.open('', '_blank');
+          win.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="UTF-8">
+              <title>${filePath.split('/').pop()}</title>
+              <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>
+              <style>
+                body {
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  max-width: 900px;
+                  margin: 0 auto;
+                  padding: 40px 20px;
+                  line-height: 1.8;
+                  background: #1a1a2e;
+                  color: #eee;
+                }
+                h1, h2, h3 { color: #4fc3f7; margin-top: 32px; }
+                h1 { border-bottom: 2px solid #4fc3f7; padding-bottom: 12px; }
+                pre { background: #16213e; padding: 16px; border-radius: 8px; overflow-x: auto; }
+                code { background: #16213e; padding: 2px 6px; border-radius: 4px; }
+                table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+                th, td { border: 1px solid #333; padding: 8px 12px; text-align: left; }
+                th { background: #16213e; }
+                a { color: #4fc3f7; }
+                blockquote { border-left: 4px solid #4fc3f7; padding-left: 16px; margin-left: 0; color: #aaa; }
+              </style>
+            <script src="js/field-tips.js"></script></head>
+            <body>
+              <div id="content"></div>
+              <script>
+                document.getElementById('content').innerHTML = marked.parse(${JSON.stringify(result.content)});
+              <\/script>
+            <script>FieldTips.init({pageType:"knowledge"});</script></body>
+            </html>
+          `);
+          win.document.close();
+        } else {
+          alert('加载失败: ' + result.error);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('加载失败: ' + error.message);
+      }
+    }
+  </script>
+<script>FieldTips.init({pageType:"knowledge"});</script></body>
+</html>

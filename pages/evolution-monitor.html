@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自我进化监控 - Morning 任务管理系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <!-- 图表库 -->
+  <script src="assets/js/chart.min.js"></script>
+  
+  <style>
+    /* 页面特定样式 */
+    .evolution-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .phase-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .phase-badge.phase-1 {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white;
+    }
+    
+    .phase-badge.phase-2 {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid var(--border);
+    }
+    
+    .stat-card .label {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .stat-card .trend {
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    
+    .stat-card .trend.up { color: var(--success); }
+    .stat-card .trend.down { color: var(--danger); }
+    
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    
+    @media (max-width: 1200px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .chart-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid var(--border);
+    }
+    
+    .chart-card h3 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      color: var(--text-primary);
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 250px;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+    
+    .tab {
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      transition: all 0.2s;
+    }
+    
+    .tab:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .tab.active {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    
+    .timeline-item {
+      position: relative;
+      padding-bottom: 24px;
+    }
+    
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid var(--bg-secondary);
+    }
+    
+    .timeline-item.success::before { background: var(--success); }
+    .timeline-item.warning::before { background: var(--warning); }
+    .timeline-item.danger::before { background: var(--danger); }
+    
+    .timeline-time {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    
+    .timeline-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    
+    .timeline-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    
+    .skill-list {
+      display: grid;
+      gap: 12px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .skill-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+    
+    .skill-info h4 {
+      margin: 0 0 4px 0;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+    
+    .skill-info .desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .skill-version {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: var(--primary);
+      color: white;
+    }
+    
+    .reflection-list {
+      display: grid;
+      gap: 12px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .reflection-item {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    
+    .reflection-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .reflection-score {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .score-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .score-badge.high { background: var(--success); color: white; }
+    .score-badge.medium { background: var(--warning); color: white; }
+    .score-badge.low { background: var(--danger); color: white; }
+    
+    .reflection-context {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    
+    .reflection-content {
+      font-size: 14px;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    
+    .reflection-lesson {
+      font-size: 14px;
+      color: var(--success);
+      padding: 8px 12px;
+      background: rgba(16, 185, 129, 0.1);
+      border-radius: 6px;
+      border-left: 3px solid var(--success);
+    }
+    
+    .reflection-status {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .status-tag {
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+    }
+    
+    .status-tag.applied {
+      background: var(--success);
+      color: white;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <h1 class="header-title">🧬 自我进化监控</h1>
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="loadData()">
+            <i class="ri-refresh-line"></i> 刷新
+          </button>
+          <button class="btn btn-primary" onclick="runEvolution()">
+            <i class="ri-play-line"></i> 执行进化
+          </button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <!-- 进化状态头部 -->
+        <div class="evolution-header">
+          <div>
+            <span class="phase-badge phase-2" id="phaseBadge">
+              <i class="ri-flashlight-line"></i>
+              Phase 2 已启用 - 自动学习模式
+            </span>
+          </div>
+          <div style="color: var(--text-secondary); font-size: 14px;">
+            上次进化: <span id="lastEvolution">-</span>
+          </div>
+        </div>
+        
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="label">📚 知识点总数</div>
+            <div class="value" id="totalKnowledge">0</div>
+            <div class="trend up" id="knowledgeTrend">↑ +0 本周</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">🎯 技能数量</div>
+            <div class="value" id="totalSkills">0</div>
+            <div class="trend up" id="skillsTrend">↑ +0 本周</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">🧠 反思数量</div>
+            <div class="value" id="totalReflections">0</div>
+            <div class="trend up" id="reflectionsTrend">↑ +0 本周</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">✅ 自动应用</div>
+            <div class="value" id="appliedCount">0</div>
+            <div class="trend up" id="appliedTrend">成功率: 0%</div>
+          </div>
+        </div>
+        
+        <!-- 图表区域 -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>📈 知识点增长趋势</h3>
+            <div class="chart-container">
+              <canvas id="knowledgeChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>🎯 反思质量分布</h3>
+            <div class="chart-container">
+              <canvas id="reflectionChart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 详情 Tab -->
+        <div class="chart-card">
+          <div class="tabs">
+            <button class="tab active" data-tab="evolution">进化历史</button>
+            <button class="tab" data-tab="skills">技能版本</button>
+            <button class="tab" data-tab="reflections">反思详情</button>
+            <button class="tab" data-tab="knowledge">知识图谱</button>
+          </div>
+          
+          <!-- 进化历史 -->
+          <div class="tab-content active" id="tab-evolution">
+            <div class="timeline" id="evolutionTimeline">
+              <!-- 动态填充 -->
+            </div>
+          </div>
+          
+          <!-- 技能版本 -->
+          <div class="tab-content" id="tab-skills">
+            <div class="skill-list" id="skillList">
+              <!-- 动态填充 -->
+            </div>
+          </div>
+          
+          <!-- 反思详情 -->
+          <div class="tab-content" id="tab-reflections">
+            <div class="reflection-list" id="reflectionList">
+              <!-- 动态填充 -->
+            </div>
+          </div>
+          
+          <!-- 知识图谱 -->
+          <div class="tab-content" id="tab-knowledge">
+            <div class="empty-state">
+              <i class="ri-mind-map"></i>
+              <p>知识图谱可视化开发中...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 统一侧边栏 -->
+  <script src="js/sidebar.js"></script>
+  <script>Sidebar.init({ activePage: 'evolution' });</script>
+  
+  <script>
+    const API_BASE = window.location.origin;
+    let knowledgeChart, reflectionChart;
+    
+    // Tab 切换
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      });
+    });
+    
+    // 加载数据
+    async function loadData() {
+      try {
+        // 加载进化历史
+        const historyRes = await fetch(`${API_BASE}/api/self-evolution/history`);
+        const history = await historyRes.json();
+        
+        // 加载知识库
+        const kbRes = await fetch(`${API_BASE}/api/self-evolution/knowledge-base`);
+        const kb = await kbRes.json();
+        
+        // 加载反思记录
+        const refRes = await fetch(`${API_BASE}/api/self-evolution/reflections`);
+        const reflections = await refRes.json();
+        
+        // 加载技能列表
+        const skillsRes = await fetch(`${API_BASE}/api/self-evolution/skills`);
+        const skills = await skillsRes.json();
+        
+        // 更新统计
+        updateStats(history, kb, reflections, skills);
+        
+        // 更新图表
+        updateCharts(history, reflections);
+        
+        // 更新列表
+        updateEvolutionTimeline(history);
+        updateSkillList(skills);
+        updateReflectionList(reflections);
+        
+      } catch (error) {
+        console.error('加载数据失败:', error);
+      }
+    }
+    
+    // 更新统计
+    function updateStats(history, kb, reflections, skills) {
+      document.getElementById('totalKnowledge').textContent = kb.totalKnowledge || 0;
+      document.getElementById('totalSkills').textContent = skills.length || 0;
+      document.getElementById('totalReflections').textContent = reflections.total || 0;
+      document.getElementById('appliedCount').textContent = reflections.applied || 0;
+      
+      const lastEvolution = history[0];
+      if (lastEvolution) {
+        document.getElementById('lastEvolution').textContent = 
+          new Date(lastEvolution.timestamp).toLocaleString('zh-CN');
+      }
+    }
+    
+    // 更新图表
+    function updateCharts(history, reflections) {
+      // 知识点增长趋势
+      const labels = history.slice(0, 7).reverse().map(h => 
+        new Date(h.timestamp).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+      );
+      const data = history.slice(0, 7).reverse().map(h => h.knowledgePoints || 0);
+      
+      if (knowledgeChart) knowledgeChart.destroy();
+      knowledgeChart = new Chart(document.getElementById('knowledgeChart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: '知识点数量',
+            data,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#334155' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+      
+      // 反思质量分布
+      const scoreRanges = {
+        high: reflections.items?.filter(r => r.score >= 8).length || 0,
+        medium: reflections.items?.filter(r => r.score >= 6 && r.score < 8).length || 0,
+        low: reflections.items?.filter(r => r.score < 6).length || 0
+      };
+      
+      if (reflectionChart) reflectionChart.destroy();
+      reflectionChart = new Chart(document.getElementById('reflectionChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['高质量 (≥8)', '中等 (6-8)', '需改进 (<6)'],
+          datasets: [{
+            data: [scoreRanges.high, scoreRanges.medium, scoreRanges.low],
+            backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+    
+    // 更新进化时间线
+    function updateEvolutionTimeline(history) {
+      const container = document.getElementById('evolutionTimeline');
+      
+      if (!history || history.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="ri-history-line"></i><p>暂无进化记录</p></div>';
+        return;
+      }
+      
+      container.innerHTML = history.slice(0, 10).map(ev => `
+        <div class="timeline-item success">
+          <div class="timeline-time">${new Date(ev.timestamp).toLocaleString('zh-CN')}</div>
+          <div class="timeline-title">进化 #${ev.id.split('_')[1]}</div>
+          <div class="timeline-desc">
+            知识点: ${ev.knowledgePoints} | 技能: ${ev.generatedSkills} | 模式: ${ev.patterns}
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // 更新技能列表
+    function updateSkillList(skills) {
+      const container = document.getElementById('skillList');
+      
+      if (!skills || skills.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="ri-tools-line"></i><p>暂无技能</p></div>';
+        return;
+      }
+      
+      container.innerHTML = skills.map(skill => `
+        <div class="skill-item">
+          <div class="skill-info">
+            <h4>${skill.name}</h4>
+            <div class="desc">${skill.description || '无描述'}</div>
+          </div>
+          <div class="skill-version">v${skill.version}</div>
+        </div>
+      `).join('');
+    }
+    
+    // 更新反思列表
+    function updateReflectionList(reflections) {
+      const container = document.getElementById('reflectionList');
+      
+      if (!reflections.items || reflections.items.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="ri-lightbulb-line"></i><p>暂无反思记录</p></div>';
+        return;
+      }
+      
+      container.innerHTML = reflections.items.slice(0, 10).map(ref => `
+        <div class="reflection-item">
+          <div class="reflection-header">
+            <div class="reflection-score">
+              <span class="score-badge ${ref.score >= 8 ? 'high' : ref.score >= 6 ? 'medium' : 'low'}">
+                ${ref.score}/10
+              </span>
+              <span style="font-size: 12px; color: var(--text-secondary);">
+                ${new Date(ref.created_at).toLocaleDateString('zh-CN')}
+              </span>
+            </div>
+          </div>
+          <div class="reflection-context">📌 ${ref.context}</div>
+          <div class="reflection-content">🔍 ${ref.reflection}</div>
+          <div class="reflection-lesson">💡 ${ref.lesson}</div>
+          <div class="reflection-status">
+            <span class="status-tag ${ref.applied ? 'applied' : ''}">
+              ${ref.applied ? '✅ 已应用' : '⏳ 待审核'}
+            </span>
+            ${ref.conflicts_with?.length > 0 ? '<span class="status-tag">⚠️ 有冲突</span>' : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // 执行进化
+    async function runEvolution() {
+      try {
+        const res = await fetch(`${API_BASE}/api/self-evolution/run`, { method: 'POST' });
+        const result = await res.json();
+        
+        if (result.success) {
+          alert('进化执行成功！\n知识点: ' + result.knowledgePoints + '\n技能: ' + result.generatedSkills);
+          loadData();
+        } else {
+          alert('进化执行失败: ' + result.error);
+        }
+      } catch (error) {
+        alert('请求失败: ' + error.message);
+      }
+    }
+    
+    // 初始化
+    loadData();
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

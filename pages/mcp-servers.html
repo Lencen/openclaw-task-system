@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>MCP 服务 - 任务系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content { padding: 24px; }
+    
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .page-title { font-size: 24px; font-weight: 700; }
+    
+    .tips-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: all 0.2s;
+    }
+    
+    .tips-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    
+    .tips-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+    
+    .tips-modal.show { opacity: 1; visibility: visible; }
+    
+    .tips-content {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      max-width: 700px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 24px;
+      transform: translateY(20px);
+      transition: all 0.3s;
+    }
+    
+    .tips-modal.show .tips-content { transform: translateY(0); }
+    
+    .tips-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    
+    .tips-title {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .tips-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: var(--text-secondary);
+      padding: 4px;
+    }
+    
+    .tips-section {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+    
+    .tips-section-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .tips-section-content {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    
+    .tips-section-content ul { margin: 8px 0; padding-left: 20px; }
+    .tips-section-content li { margin: 6px 0; }
+    
+    .learn-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    
+    .learn-link:hover { text-decoration: underline; }
+    
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      flex: 1;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+    
+    .stat-value { font-size: 28px; font-weight: 700; }
+    .stat-label { font-size: 13px; color: var(--text-secondary); }
+    .stat-card.success .stat-value { color: var(--success); }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .mcp-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    
+    .mcp-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .mcp-card.connected { border-color: var(--success); }
+    
+    .mcp-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .mcp-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    
+    .mcp-info { flex: 1; }
+    .mcp-name { font-size: 14px; font-weight: 600; }
+    .mcp-package { font-size: 12px; color: var(--text-secondary); font-family: monospace; }
+    
+    .mcp-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    
+    .status-dot.connected { background: var(--success); }
+    .status-dot.available { background: var(--warning); }
+    
+    .mcp-body { padding: 16px; }
+    .mcp-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+    
+    .mcp-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    
+    .tool-tag {
+      font-size: 11px;
+      padding: 3px 8px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      color: var(--text-secondary);
+    }
+    
+    .mcp-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .mcp-meta { font-size: 12px; color: var(--text-secondary); }
+    
+    .btn {
+      padding: 6px 14px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); }
+    .btn-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <a href="tools-list.html">资源</a>
+            <span>/</span>
+            <span>MCP 服务</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadMCPServers()">
+            <i class="ri-refresh-line"></i>
+          </button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <div class="page-content">
+          <div class="page-header">
+            <h1 class="page-title">MCP 服务</h1>
+            <button class="tips-btn" onclick="showTips()">
+              <i class="ri-information-line"></i>
+              <span>MCP 规范与规则</span>
+            </button>
+          </div>
+          
+          <div class="stats-bar">
+            <div class="stat-card success">
+              <div class="stat-value" id="stat-connected">0</div>
+              <div class="stat-label">已连接</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-available">0</div>
+              <div class="stat-label">可连接</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-tools">0</div>
+              <div class="stat-label">工具总数</div>
+            </div>
+          </div>
+          
+          <div class="section-title">
+            <i class="ri-link" style="color: var(--success);"></i>
+            已连接的 MCP 服务
+          </div>
+          <div class="mcp-grid" id="connected-grid"></div>
+          
+          <div class="section-title">
+            <i class="ri-add-circle-line" style="color: var(--warning);"></i>
+            可连接的 MCP 服务（官方参考）
+          </div>
+          <div class="mcp-grid" id="available-grid"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Tips 弹窗 -->
+  <div class="tips-modal" id="tips-modal" onclick="hideTips(event)">
+    <div class="tips-content" onclick="event.stopPropagation()">
+      <div class="tips-header">
+        <div class="tips-title">
+          <i class="ri-link"></i>
+          MCP 服务规范与规则
+        </div>
+        <button class="tips-close" onclick="hideTips()">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      
+      <div class="tips-section">
+        <div class="tips-section-title">
+          <i class="ri-settings-3-line"></i>
+          1. MCP 服务配置规则
+        </div>
+        <div class="tips-section-content">
+          <ul>
+            <li><strong>协议支持</strong>：支持 stdio 和 HTTP 两种传输协议</li>
+            <li><strong>配置文件</strong>：使用 mcporter.json 配置 MCP 服务</li>
+            <li><strong>环境变量</strong>：敏感信息使用环境变量存储</li>
+            <li><strong>连接测试</strong>：配置后使用 mcporter list 测试连接</li>
+          </ul>
+          <a href="https://modelcontextprotocol.io/docs/develop/connect-local-servers" class="learn-link" target="_blank">
+            <i class="ri-external-link-line"></i>
+            学习 MCP 配置
+          </a>
+        </div>
+      </div>
+      
+      <div class="tips-section">
+        <div class="tips-section-title">
+          <i class="ri-shield-check-line"></i>
+          2. MCP 安全使用规范
+        </div>
+        <div class="tips-section-content">
+          <ul>
+            <li><strong>访问控制</strong>：限制 MCP 服务的访问范围</li>
+            <li><strong>数据验证</strong>：验证 MCP 返回的数据格式</li>
+            <li><strong>超时设置</strong>：设置合理的调用超时时间</li>
+            <li><strong>审计日志</strong>：记录所有 MCP 调用</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="tips-section">
+        <div class="tips-section-title">
+          <i class="ri-code-line"></i>
+          3. MCP 工具开发规范
+        </div>
+        <div class="tips-section-content">
+          <ul>
+            <li><strong>协议遵循</strong>：严格遵循 MCP 协议规范</li>
+            <li><strong>类型定义</strong>：提供完整的 JSON Schema 类型定义</li>
+            <li><strong>错误码规范</strong>：使用标准化的错误码</li>
+            <li><strong>文档完整</strong>：提供工具描述和使用示例</li>
+          </ul>
+          <a href="https://modelcontextprotocol.io/docs/develop/build-server" class="learn-link" target="_blank">
+            <i class="ri-external-link-line"></i>
+            学习 MCP 开发
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 已连接的 MCP 服务（从 mcporter list 获取）
+    const connectedServers = [
+      {
+        id: 'drawio',
+        name: 'Draw.io',
+        package: '@next-ai-drawio/mcp-server',
+        icon: '🎨',
+        desc: '创建和编辑图表，支持实时预览',
+        tools: ['start_session', 'create_new_diagram', 'edit_diagram', 'get_diagram', 'export_diagram'],
+        transport: 'stdio'
+      }
+    ];
+    
+    // 可用的 MCP 服务（官方参考实现）
+    const availableServers = [
+      {
+        id: 'filesystem',
+        name: 'Filesystem',
+        package: '@modelcontextprotocol/server-filesystem',
+        icon: '📁',
+        category: '文件系统',
+        desc: '安全文件操作，可配置访问控制',
+        tools: ['read_file', 'write_file', 'list_directory', 'search_files', 'get_file_info']
+      },
+      {
+        id: 'git',
+        name: 'Git',
+        package: 'mcp-server-git',
+        icon: '🔀',
+        category: '版本控制',
+        desc: '读取、搜索和操作 Git 仓库',
+        tools: ['git_status', 'git_log', 'git_diff', 'git_show', 'git_branch']
+      },
+      {
+        id: 'github',
+        name: 'GitHub',
+        package: '@modelcontextprotocol/server-github',
+        icon: '🐙',
+        category: '代码托管',
+        desc: 'GitHub API 集成，需要 Personal Access Token',
+        tools: ['create_issue', 'create_pull_request', 'search_repositories', 'get_file_contents'],
+        requiresAuth: true
+      },
+      {
+        id: 'memory',
+        name: 'Memory',
+        package: '@modelcontextprotocol/server-memory',
+        icon: '🧠',
+        category: '知识图谱',
+        desc: '基于知识图谱的持久记忆系统',
+        tools: ['create_entities', 'create_relations', 'add_observations', 'search_nodes', 'read_graph']
+      },
+      {
+        id: 'fetch',
+        name: 'Fetch',
+        package: '@modelcontextprotocol/server-fetch',
+        icon: '🌐',
+        category: '网络',
+        desc: '网页内容获取和转换',
+        tools: ['fetch_url', 'fetch_text', 'fetch_html']
+      },
+      {
+        id: 'sequentialthinking',
+        name: 'Sequential Thinking',
+        package: '@modelcontextprotocol/server-sequentialthinking',
+        icon: '🧩',
+        category: '推理',
+        desc: '动态反思性问题解决，通过思维序列',
+        tools: ['think', 'analyze', 'conclude']
+      },
+      {
+        id: 'time',
+        name: 'Time',
+        package: '@modelcontextprotocol/server-time',
+        icon: '⏰',
+        category: '时间',
+        desc: '时间和时区转换能力',
+        tools: ['get_current_time', 'convert_time', 'get_timezones']
+      },
+      {
+        id: 'postgres',
+        name: 'PostgreSQL',
+        package: '@modelcontextprotocol/server-postgres',
+        icon: '🐘',
+        category: '数据库',
+        desc: 'PostgreSQL 数据库操作',
+        tools: ['query', 'list_tables', 'describe_table'],
+        requiresAuth: true
+      },
+      {
+        id: 'sqlite',
+        name: 'SQLite',
+        package: '@modelcontextprotocol/server-sqlite',
+        icon: '🗃️',
+        category: '数据库',
+        desc: 'SQLite 数据库操作',
+        tools: ['query', 'list_tables', 'describe_table']
+      },
+      {
+        id: 'brave-search',
+        name: 'Brave Search',
+        package: '@modelcontextprotocol/server-brave-search',
+        icon: '🔍',
+        category: '搜索',
+        desc: 'Brave 搜索 API 集成',
+        tools: ['search', 'search_news'],
+        requiresAuth: true
+      },
+      {
+        id: 'slack',
+        name: 'Slack',
+        package: '@modelcontextprotocol/server-slack',
+        icon: '💼',
+        category: '通信',
+        desc: 'Slack 消息和频道操作',
+        tools: ['send_message', 'list_channels', 'get_messages'],
+        requiresAuth: true
+      },
+      {
+        id: 'puppeteer',
+        name: 'Puppeteer',
+        package: '@modelcontextprotocol/server-puppeteer',
+        icon: '🎭',
+        category: '浏览器',
+        desc: '浏览器自动化和截图',
+        tools: ['navigate', 'screenshot', 'click', 'fill', 'evaluate']
+      }
+    ];
+    
+    // 加载 MCP 服务
+    function loadMCPServers() {
+      const connectedGrid = document.getElementById('connected-grid');
+      const availableGrid = document.getElementById('available-grid');
+      
+      let totalTools = 0;
+      
+      // 渲染已连接服务
+      connectedGrid.innerHTML = connectedServers.map(server => {
+        totalTools += server.tools.length;
+        return `
+          <div class="mcp-card connected">
+            <div class="mcp-header">
+              <div class="mcp-icon">${server.icon}</div>
+              <div class="mcp-info">
+                <div class="mcp-name">${server.name}</div>
+                <div class="mcp-package">${server.package}</div>
+              </div>
+              <div class="mcp-status">
+                <span class="status-dot connected"></span>
+                已连接
+              </div>
+            </div>
+            <div class="mcp-body">
+              <div class="mcp-desc">${server.desc}</div>
+              <div class="mcp-tools">
+                ${server.tools.slice(0, 4).map(t => `<span class="tool-tag">${t}</span>`).join('')}
+                ${server.tools.length > 4 ? `<span class="tool-tag">+${server.tools.length - 4}</span>` : ''}
+              </div>
+            </div>
+            <div class="mcp-footer">
+              <span class="mcp-meta">${server.tools.length} 工具 · ${server.transport}</span>
+              <button class="btn btn-danger" onclick="disconnectServer('${server.id}')">断开</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // 渲染可用服务
+      availableGrid.innerHTML = availableServers.map(server => {
+        return `
+          <div class="mcp-card">
+            <div class="mcp-header">
+              <div class="mcp-icon">${server.icon}</div>
+              <div class="mcp-info">
+                <div class="mcp-name">${server.name}</div>
+                <div class="mcp-package">${server.package}</div>
+              </div>
+              <div class="mcp-status">
+                <span class="status-dot available"></span>
+                可连接
+              </div>
+            </div>
+            <div class="mcp-body">
+              <div class="mcp-desc">${server.desc}</div>
+              <div class="mcp-tools">
+                ${server.tools.slice(0, 3).map(t => `<span class="tool-tag">${t}</span>`).join('')}
+                ${server.tools.length > 3 ? `<span class="tool-tag">+${server.tools.length - 3}</span>` : ''}
+              </div>
+            </div>
+            <div class="mcp-footer">
+              <span class="mcp-meta">${server.category} ${server.requiresAuth ? '· 需要认证' : ''}</span>
+              <button class="btn btn-primary" onclick="connectServer('${server.id}')">连接</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // 更新统计
+      document.getElementById('stat-connected').textContent = connectedServers.length;
+      document.getElementById('stat-available').textContent = availableServers.length;
+      document.getElementById('stat-tools').textContent = totalTools;
+    }
+    
+    function connectServer(serverId) {
+      const server = availableServers.find(s => s.id === serverId);
+      if (server) {
+        alert(`连接 MCP 服务：${server.name}\n\n` +
+              `需要在 mcporter.json 中添加配置：\n\n` +
+              `{\n` +
+              `  "${server.id}": {\n` +
+              `    "command": "npx",\n` +
+              `    "args": ["-y", "${server.package}"]\n` +
+              `  }\n` +
+              `}\n\n` +
+              `${server.requiresAuth ? '注意：此服务需要配置认证信息（如 API Token）' : ''}`);
+      }
+    }
+    
+    function disconnectServer(serverId) {
+      alert(`断开 MCP 服务：${serverId}\n\n需要在 mcporter.json 中移除配置。`);
+    }
+    
+    function showTips() {
+      document.getElementById('tips-modal').classList.add('show');
+    }
+    
+    function hideTips(event) {
+      if (!event || event.target === document.getElementById('tips-modal')) {
+        document.getElementById('tips-modal').classList.remove('show');
+      }
+    }
+    
+    loadMCPServers();
+  </script>
+  
+  <script src="js/sidebar.js"></script>
+  <script>Sidebar.init({ activePage: 'mcp' });</script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务执行队列 - 可视化中心</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    /* ========== 设计系统 ========== */
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --bg-hover: #3d4f65;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --border: #334155;
+      --primary: #3b82f6;
+      --primary-light: rgba(59, 130, 246, 0.15);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #8b5cf6;
+      --cyan: #06b6d4;
+      --orange: #f97316;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    /* ========== 布局框架 ========== */
+    .layout { display: flex; min-height: 100vh; }
+    .main { flex: 1; display: flex; flex-direction: column; }
+    .content { flex: 1; padding: 20px; overflow-y: auto; }
+
+    /* ========== 顶部栏 ========== */
+    .header {
+      height: 64px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .page-title {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .live-clock {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      color: var(--cyan);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .refresh-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .refresh-btn:hover { background: var(--primary-light); }
+    .refresh-btn i { animation: spin 0s linear; }
+    .refresh-btn.refreshing i { animation: spin 1s linear infinite; }
+
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* ========== 统计卡片区 ========== */
+    .stats-overview {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      padding: 20px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-card {
+      background: var(--bg-tertiary);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .stat-icon.pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .stat-icon.running { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .stat-icon.completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .stat-icon.agents { background: rgba(139, 92, 246, 0.15); color: var(--purple); }
+    .stat-icon.load { background: rgba(6, 182, 212, 0.15); color: var(--cyan); }
+
+    .stat-info h3 { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+    .stat-info span { font-size: 12px; color: var(--text-secondary); }
+
+    /* ========== 三栏主布局 ========== */
+    .queue-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr 320px;
+      gap: 20px;
+      padding: 20px;
+      height: calc(100vh - 280px);
+    }
+
+    .queue-column {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .column-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-tertiary);
+    }
+
+    .column-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .column-title i { font-size: 18px; }
+    .column-title.pending i { color: var(--warning); }
+    .column-title.running i { color: var(--primary); }
+    .column-title.agents i { color: var(--purple); }
+
+    .column-badge {
+      background: var(--bg-primary);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .column-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    /* ========== 任务卡片 ========== */
+    .task-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .task-card:hover {
+      border-color: var(--primary);
+      transform: translateX(2px);
+      background: var(--bg-hover);
+    }
+
+    .task-card.priority-p1 { border-left-color: var(--danger); }
+    .task-card.priority-p2 { border-left-color: var(--warning); }
+    .task-card.priority-p3 { border-left-color: var(--primary); }
+    .task-card.priority-p4 { border-left-color: var(--text-tertiary); }
+
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .task-id {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      font-family: monospace;
+      background: var(--bg-primary);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .task-priority {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .task-priority.p1 { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .task-priority.p2 { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .task-priority.p3 { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .task-priority.p4 { background: rgba(100, 116, 139, 0.15); color: var(--text-tertiary); }
+
+    .task-title {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    .task-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .task-meta-item i { font-size: 12px; }
+
+    .task-agent {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: var(--bg-primary);
+      border-radius: 4px;
+      font-size: 11px;
+      margin-top: 8px;
+    }
+
+    .task-agent i { color: var(--success); }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-tertiary);
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    /* ========== Agent 卡片 ========== */
+    .agent-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .agent-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .agent-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      background: var(--primary);
+      color: white;
+    }
+
+    .agent-avatar.online { background: var(--success); }
+    .agent-avatar.busy { background: var(--warning); }
+    .agent-avatar.offline { background: var(--text-tertiary); }
+
+    .agent-info { flex: 1; }
+    .agent-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+    .agent-status { font-size: 11px; color: var(--text-secondary); }
+
+    .agent-status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .agent-status-indicator.online { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .agent-status-indicator.busy { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .agent-status-indicator.offline { background: rgba(100, 116, 139, 0.15); color: var(--text-tertiary); }
+
+    .agent-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .agent-stat {
+      text-align: center;
+    }
+
+    .agent-stat-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .agent-stat-label {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    .load-bar {
+      height: 6px;
+      background: var(--bg-primary);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .load-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .load-fill.low { background: var(--success); }
+    .load-fill.medium { background: var(--warning); }
+    .load-fill.high { background: var(--danger); }
+
+    /* ========== 加载状态 ========== */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .loading i {
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+      font-size: 20px;
+    }
+
+    /* ========== 响应式 ========== */
+    @media (max-width: 1400px) {
+      .queue-layout {
+        grid-template-columns: 1fr 1fr;
+      }
+      .queue-column:last-child {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .queue-layout {
+        grid-template-columns: 1fr;
+      }
+      .queue-column:last-child {
+        grid-column: span 1;
+      }
+      .stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+  <script src="js/auth-guard.js"></script>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <!-- 顶部栏 -->
+      <header class="header">
+        <div class="header-left">
+          <h1 class="page-title">
+            <i class="ri-queue-view"></i>
+            任务执行队列可视化
+          </h1>
+          <div class="live-clock" id="liveClock">
+            <i class="ri-time-line"></i>
+            <span>--:--:--</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="refresh-btn" onclick="loadAllData()">
+            <i class="ri-refresh-line"></i>
+            刷新
+          </button>
+        </div>
+      </header>
+
+      <!-- 统计卡片区 -->
+      <div class="stats-overview">
+        <div class="stat-card">
+          <div class="stat-icon pending">
+            <i class="ri-time-line"></i>
+          </div>
+          <div class="stat-info">
+            <h3 id="pendingCount">0</h3>
+            <span>排队任务</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon running">
+            <i class="ri-play-circle-line"></i>
+          </div>
+          <div class="stat-info">
+            <h3 id="runningCount">0</h3>
+            <span>执行中任务</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon completed">
+            <i class="ri-checkbox-circle-line"></i>
+          </div>
+          <div class="stat-info">
+            <h3 id="completedCount">0</h3>
+            <span>今日完成</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon agents">
+            <i class="ri-team-line"></i>
+          </div>
+          <div class="stat-info">
+            <h3 id="agentCount">0</h3>
+            <span>活跃 Agent</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon load">
+            <i class="ri-equalizer-line"></i>
+          </div>
+          <div class="stat-info">
+            <h3 id="avgLoad">0%</h3>
+            <span>平均负载</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 主内容区 -->
+      <div class="queue-layout">
+        <!-- 排队任务 -->
+        <div class="queue-column">
+          <div class="column-header">
+            <div class="column-title pending">
+              <i class="ri-time-line"></i>
+              排队任务
+            </div>
+            <span class="column-badge" id="pendingBadge">0</span>
+          </div>
+          <div class="column-content" id="pendingList">
+            <div class="loading">
+              <i class="ri-loader-4-line"></i>
+              加载中...
+            </div>
+          </div>
+        </div>
+
+        <!-- 执行中任务 -->
+        <div class="queue-column">
+          <div class="column-header">
+            <div class="column-title running">
+              <i class="ri-play-circle-line"></i>
+              执行中任务
+            </div>
+            <span class="column-badge" id="runningBadge">0</span>
+          </div>
+          <div class="column-content" id="runningList">
+            <div class="loading">
+              <i class="ri-loader-4-line"></i>
+              加载中...
+            </div>
+          </div>
+        </div>
+
+        <!-- Agent 状态 -->
+        <div class="queue-column">
+          <div class="column-header">
+            <div class="column-title agents">
+              <i class="ri-team-line"></i>
+              Agent 状态
+            </div>
+            <span class="column-badge" id="agentBadge">0</span>
+          </div>
+          <div class="column-content" id="agentList">
+            <div class="loading">
+              <i class="ri-loader-4-line"></i>
+              加载中...
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = '';
+
+    // ========== 实时时钟 ==========
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      document.querySelector('#liveClock span').textContent = timeStr;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // ========== 格式化时间 ==========
+    function formatTime(dateStr) {
+      if (!dateStr) return '--:--';
+      const date = new Date(dateStr);
+      return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // ========== 格式化时长 ==========
+    function formatDuration(minutes) {
+      if (!minutes) return '刚刚';
+      if (minutes < 60) return `${minutes} 分钟前`;
+      if (minutes < 1440) return `${Math.round(minutes / 60)} 小时前`;
+      return `${Math.round(minutes / 1440)} 天前`;
+    }
+
+    // ========== 计算时长 ==========
+    function getDurationMinutes(dateStr) {
+      if (!dateStr) return 0;
+      const start = new Date(dateStr);
+      const now = new Date();
+      return Math.floor((now - start) / 60000);
+    }
+
+    // ========== 加载任务数据 ==========
+    async function loadTasks() {
+      try {
+        const res = await fetch(`${API_BASE}/api/tasks`);
+        const data = await res.json();
+        
+        if (data.code === 200 || data.success) {
+          const tasks = data.tasks || data.data?.tasks || [];
+          
+          // 分类任务
+          const pending = tasks.filter(t => t.status === 'pending');
+          const running = tasks.filter(t => t.status === 'doing');
+          const completed = tasks.filter(t => t.status === 'completed');
+          
+          // 渲染列表
+          renderPendingTasks(pending);
+          renderRunningTasks(running);
+          
+          // 更新统计
+          document.getElementById('pendingCount').textContent = pending.length;
+          document.getElementById('runningCount').textContent = running.length;
+          document.getElementById('completedCount').textContent = completed.length;
+          document.getElementById('pendingBadge').textContent = pending.length;
+          document.getElementById('runningBadge').textContent = running.length;
+        }
+      } catch (e) {
+        console.error('加载任务失败:', e);
+      }
+    }
+
+    // ========== 渲染排队任务 ==========
+    function renderPendingTasks(tasks) {
+      const container = document.getElementById('pendingList');
+      
+      if (tasks.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="ri-inbox-line"></i>
+            <p>暂无排队任务</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = tasks.map(task => `
+        <div class="task-card priority-${task.priority?.toLowerCase() || 'p3'}">
+          <div class="task-header">
+            <span class="task-id">${task.id?.slice(0, 8) || 'N/A'}</span>
+            <span class="task-priority ${task.priority?.toLowerCase() || 'p3'}">${task.priority || 'P3'}</span>
+          </div>
+          <div class="task-title">${task.title || '无标题'}</div>
+          <div class="task-meta">
+            <span class="task-meta-item">
+              <i class="ri-time-line"></i>
+              ${formatDuration(getDurationMinutes(task.created_at))}
+            </span>
+            ${task.deadline ? `
+            <span class="task-meta-item">
+              <i class="ri-calendar-line"></i>
+              截止：${task.deadline.slice(0, 10)}
+            </span>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ========== 渲染执行中任务 ==========
+    function renderRunningTasks(tasks) {
+      const container = document.getElementById('runningList');
+      
+      if (tasks.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="ri-pause-circle-line"></i>
+            <p>暂无执行中任务</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = tasks.map(task => `
+        <div class="task-card priority-${task.priority?.toLowerCase() || 'p3'}">
+          <div class="task-header">
+            <span class="task-id">${task.id?.slice(0, 8) || 'N/A'}</span>
+            <span class="task-priority ${task.priority?.toLowerCase() || 'p3'}">${task.priority || 'P3'}</span>
+          </div>
+          <div class="task-title">${task.title || '无标题'}</div>
+          <div class="task-meta">
+            <span class="task-meta-item">
+              <i class="ri-play-circle-line"></i>
+              已开始 ${formatDuration(getDurationMinutes(task.started_at))}
+            </span>
+            ${task.total_steps ? `
+            <span class="task-meta-item">
+              <i class="ri-progress-bar"></i>
+              ${task.completed_steps || 0}/${task.total_steps}
+            </span>
+            ` : ''}
+          </div>
+          ${task.assigned_to ? `
+          <div class="task-agent">
+            <i class="ri-user-line"></i>
+            <span>${task.assigned_to}</span>
+          </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    // ========== 加载 Agent 状态 ==========
+    async function loadAgents() {
+      try {
+        const res = await fetch(`${API_BASE}/api/agents/status`);
+        const data = await res.json();
+        
+        if (data.success) {
+          const agents = data.agents || [];
+          
+          renderAgents(agents);
+          
+          // 更新统计
+          const online = agents.filter(a => a.status !== 'offline').length;
+          document.getElementById('agentCount').textContent = online;
+          document.getElementById('agentBadge').textContent = agents.length;
+          
+          // 计算平均负载
+          const avgLoad = agents.length > 0 
+            ? Math.round((agents.filter(a => a.busy).length / agents.length) * 100)
+            : 0;
+          document.getElementById('avgLoad').textContent = `${avgLoad}%`;
+        }
+      } catch (e) {
+        console.error('加载 Agent 状态失败:', e);
+      }
+    }
+
+    // ========== 渲染 Agent 列表 ==========
+    function renderAgents(agents) {
+      const container = document.getElementById('agentList');
+      
+      if (agents.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="ri-team-line"></i>
+            <p>暂无 Agent</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = agents.map(agent => {
+        const isOnline = agent.status !== 'offline';
+        const isBusy = agent.busy;
+        const statusClass = isOnline ? (isBusy ? 'busy' : 'online') : 'offline';
+        const statusText = isOnline ? (isBusy ? '忙碌' : '空闲') : '离线';
+        const loadPercent = isBusy ? 80 : (isOnline ? 30 : 0);
+        const loadClass = loadPercent > 70 ? 'high' : (loadPercent > 40 ? 'medium' : 'low');
+        
+        return `
+          <div class="agent-card">
+            <div class="agent-header">
+              <div class="agent-avatar ${statusClass}">
+                ${agent.id?.[0]?.toUpperCase() || 'A'}
+              </div>
+              <div class="agent-info">
+                <div class="agent-name">${agent.id || 'Unknown'}</div>
+                <div class="agent-status">
+                  <span class="agent-status-indicator ${statusClass}">
+                    <i class="ri-circle-fill" style="font-size: 8px;"></i>
+                    ${statusText}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="agent-stats">
+              <div class="agent-stat">
+                <div class="agent-stat-value">${isBusy ? '1' : '0'}</div>
+                <div class="agent-stat-label">进行中</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-value">${isBusy ? '1' : '0'}</div>
+                <div class="agent-stat-label">已完成</div>
+              </div>
+              <div class="agent-stat">
+                <div class="agent-stat-value">${loadPercent}%</div>
+                <div class="agent-stat-label">负载</div>
+              </div>
+            </div>
+            <div class="load-bar">
+              <div class="load-fill ${loadClass}" style="width: ${loadPercent}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ========== 主加载函数 ==========
+    async function loadAllData() {
+      const btn = document.querySelector('.refresh-btn');
+      btn?.classList.add('refreshing');
+      
+      await Promise.all([
+        loadTasks(),
+        loadAgents()
+      ]);
+      
+      setTimeout(() => {
+        btn?.classList.remove('refreshing');
+      }, 500);
+    }
+
+    // ========== 初始化 ==========
+    loadAllData();
+    setInterval(loadAllData, 5000); // 5 秒刷新
+
+    console.log('✅ 队列可视化页面已加载');
+  </script>
+<script>FieldTips.init({pageType:"task"});</script></body>
+</html>

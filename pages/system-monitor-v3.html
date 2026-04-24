@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统监控中心 v3.0 - 全面监控解决方案</title>
+    <link href="assets/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0f1a;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1f2937;
+            --bg-card: #1a2234;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #2d3748;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --purple: #8b5cf6;
+            --cyan: #06b6d4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 16px; }
+
+        .logo {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+        }
+
+        .header h1 { font-size: 18px; font-weight: 600; }
+
+        .header-right { display: flex; align-items: center; gap: 12px; }
+
+        .health-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .health-badge.healthy { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .health-badge.warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .health-badge.critical { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+
+        .refresh-btn {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover { background: var(--primary); border-color: var(--primary); }
+        .refresh-btn.spinning i { animation: spin 1s linear infinite; }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .main { padding: 24px; max-width: 1800px; margin: 0 auto; }
+
+        .system-info {
+            display: flex; gap: 24px;
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .system-info-item { display: flex; align-items: center; gap: 12px; }
+        .system-info-item i { font-size: 20px; color: var(--primary); }
+        .system-info-item .label { color: var(--text-secondary); font-size: 12px; }
+        .system-info-item .value { font-weight: 600; }
+
+        .tabs {
+            display: flex; gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .tab:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+        .tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .grid { display: grid; gap: 24px; }
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+        @media (max-width: 1200px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 768px) { .grid-2, .grid-4 { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 15px; font-weight: 600;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .card-title i { color: var(--primary); }
+        .card-body { padding: 20px; }
+
+        .stat-card { text-align: center; padding: 24px; }
+
+        .stat-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+        }
+
+        .stat-icon.cpu { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+        .stat-icon.memory { background: rgba(139, 92, 246, 0.2); color: var(--purple); }
+        .stat-icon.disk { background: rgba(6, 182, 212, 0.2); color: var(--cyan); }
+        .stat-icon.network { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+
+        .stat-value { font-size: 32px; font-weight: 700; margin-bottom: 4px; }
+        .stat-label { color: var(--text-secondary); font-size: 13px; }
+
+        .progress-container { margin-top: 16px; }
+        .progress-bar { height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+        .progress-fill.low { background: var(--success); }
+        .progress-fill.medium { background: var(--warning); }
+        .progress-fill.high { background: var(--danger); }
+
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; }
+        tr:hover { background: var(--bg-tertiary); }
+
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.running { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .status-badge.stopped { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .status-badge.warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+
+        .service-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .service-item:last-child { border-bottom: none; }
+        .service-name { display: flex; align-items: center; gap: 12px; }
+        .service-name i { font-size: 18px; color: var(--primary); }
+
+        .gauge-container { display: flex; justify-content: center; padding: 20px 0; }
+        .gauge { width: 150px; height: 150px; position: relative; }
+        .gauge-circle { fill: none; stroke-width: 12; }
+        .gauge-bg { stroke: var(--bg-tertiary); }
+        .gauge-fill {
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: center;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .gauge-text {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .gauge-value { font-size: 32px; font-weight: 700; }
+        .gauge-unit { font-size: 14px; color: var(--text-secondary); }
+
+        .latency-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        @media (max-width: 768px) { .latency-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .latency-item {
+            text-align: center;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+        }
+
+        .latency-value { font-size: 24px; font-weight: 600; }
+        .latency-value.ok { color: var(--success); }
+        .latency-value.warning { color: var(--warning); }
+        .latency-value.error { color: var(--danger); }
+        .latency-name { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .issues-list { margin-top: 16px; }
+
+        .issue-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .issue-item.critical { border-left: 3px solid var(--danger); }
+        .issue-item.warning { border-left: 3px solid var(--warning); }
+        .issue-item i { font-size: 18px; }
+        .issue-item.critical i { color: var(--danger); }
+        .issue-item.warning i { color: var(--warning); }
+
+        .temp-display { display: flex; align-items: center; gap: 8px; }
+        .temp-value { font-size: 20px; font-weight: 600; }
+        .temp-value.cool { color: var(--success); }
+        .temp-value.warm { color: var(--warning); }
+        .temp-value.hot { color: var(--danger); }
+
+        .loading {
+            display: flex; align-items: center; justify-content: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .loading i {
+            font-size: 24px;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+    </style>
+  <script src="js/auth-guard.js"></script>
+<script src="js/field-tips.js"></script></head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <div class="logo"><i class="ri-dashboard-3-line"></i></div>
+            <div><h1>系统监控中心 v3.0</h1></div>
+        </div>
+        <div class="header-right">
+            <div class="health-badge healthy" id="healthBadge">
+                <i class="ri-heart-pulse-line"></i>
+                <span>系统健康</span>
+            </div>
+            <button class="refresh-btn" onclick="refreshAll()">
+                <i class="ri-refresh-line"></i>
+                <span>刷新</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="system-info" id="systemInfo">
+            <div class="system-info-item">
+                <i class="ri-computer-line"></i>
+                <div><div class="label">主机名</div><div class="value" id="hostname">-</div></div>
+            </div>
+            <div class="system-info-item">
+                <i class="ri-os-line"></i>
+                <div><div class="label">系统</div><div class="value" id="distro">-</div></div>
+            </div>
+            <div class="system-info-item">
+                <i class="ri-timer-line"></i>
+                <div><div class="label">运行时间</div><div class="value" id="uptime">-</div></div>
+            </div>
+            <div class="system-info-item">
+                <i class="ri-cpu-line"></i>
+                <div><div class="label">CPU</div><div class="value" id="cpuModel">-</div></div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="overview"><i class="ri-dashboard-line"></i> 总览</button>
+            <button class="tab" data-tab="hardware"><i class="ri-hard-drive-2-line"></i> 硬件层</button>
+            <button class="tab" data-tab="network"><i class="ri-wifi-line"></i> 网络层</button>
+            <button class="tab" data-tab="services"><i class="ri-service-line"></i> 服务层</button>
+        </div>
+
+        <div id="tabContents">
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview">
+                <div class="grid grid-4">
+                    <div class="card stat-card">
+                        <div class="stat-icon cpu"><i class="ri-cpu-line"></i></div>
+                        <div class="stat-value" id="cpuUsage">-</div>
+                        <div class="stat-label">CPU 使用率</div>
+                        <div class="progress-container">
+                            <div class="progress-bar"><div class="progress-fill low" id="cpuProgress" style="width: 0%"></div></div>
+                        </div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-icon memory"><i class="ri-ram-line"></i></div>
+                        <div class="stat-value" id="memUsage">-</div>
+                        <div class="stat-label">内存使用率</div>
+                        <div class="progress-container">
+                            <div class="progress-bar"><div class="progress-fill low" id="memProgress" style="width: 0%"></div></div>
+                        </div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-icon disk"><i class="ri-hard-drive-line"></i></div>
+                        <div class="stat-value" id="diskUsage">-</div>
+                        <div class="stat-label">磁盘使用率</div>
+                        <div class="progress-container">
+                            <div class="progress-bar"><div class="progress-fill medium" id="diskProgress" style="width: 0%"></div></div>
+                        </div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-icon network"><i class="ri-links-line"></i></div>
+                        <div class="stat-value" id="connections">-</div>
+                        <div class="stat-label">网络连接</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <div class="card-title"><i class="ri-alert-line"></i> 系统状态</div>
+                        <div id="healthScore">健康分数: 100</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="issues-list" id="issuesList">
+                            <div class="loading"><i class="ri-loader-4-line"></i> 加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hardware Tab -->
+            <div class="tab-content" id="hardware">
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title"><i class="ri-cpu-line"></i> CPU 监控</div></div>
+                        <div class="card-body">
+                            <div class="gauge-container">
+                                <div class="gauge">
+                                    <svg viewBox="0 0 150 150">
+                                        <circle class="gauge-circle gauge-bg" cx="75" cy="75" r="60"/>
+                                        <circle class="gauge-circle gauge-fill" id="cpuGauge" cx="75" cy="75" r="60" stroke="#3b82f6" stroke-dasharray="377" stroke-dashoffset="377"/>
+                                    </svg>
+                                    <div class="gauge-text">
+                                        <div class="gauge-value" id="cpuGaugeValue">0%</div>
+                                        <div class="gauge-unit">使用率</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 16px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>负载 1分钟</span><span id="load1">-</span></div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>负载 5分钟</span><span id="load5">-</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>负载 15分钟</span><span id="load15">-</span></div>
+                            </div>
+                            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                                <div class="temp-display">
+                                    <i class="ri-temp-hot-line"></i>
+                                    <span>CPU 温度:</span>
+                                    <span class="temp-value" id="cpuTemp">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><div class="card-title"><i class="ri-ram-line"></i> 内存监控</div></div>
+                        <div class="card-body">
+                            <div class="gauge-container">
+                                <div class="gauge">
+                                    <svg viewBox="0 0 150 150">
+                                        <circle class="gauge-circle gauge-bg" cx="75" cy="75" r="60"/>
+                                        <circle class="gauge-circle gauge-fill" id="memGauge" cx="75" cy="75" r="60" stroke="#8b5cf6" stroke-dasharray="377" stroke-dashoffset="377"/>
+                                    </svg>
+                                    <div class="gauge-text">
+                                        <div class="gauge-value" id="memGaugeValue">0%</div>
+                                        <div class="gauge-unit">使用率</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 16px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>总计</span><span id="memTotal">-</span></div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>已用</span><span id="memUsed">-</span></div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span>可用</span><span id="memAvailable">-</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>缓存</span><span id="memCached">-</span></div>
+                            </div>
+                            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                                <div style="display: flex; justify-content: space-between;"><span>Swap 使用</span><span id="swapUsage">-</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header"><div class="card-title"><i class="ri-hard-drive-line"></i> 磁盘监控</div></div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>设备</th><th>挂载点</th><th>大小</th><th>已用</th><th>可用</th><th>使用率</th><th>状态</th></tr></thead>
+                                <tbody id="diskTable"><tr><td colspan="7" class="loading"><i class="ri-loader-4-line"></i> 加载中...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Tab -->
+            <div class="tab-content" id="network">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="ri-signal-tower-line"></i> 网络延迟测试</div>
+                        <button class="refresh-btn" onclick="testLatency()"><i class="ri-refresh-line"></i> 测试</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="latency-grid" id="latencyGrid">
+                            <div class="latency-item"><div class="latency-value">-</div><div class="latency-name">localhost</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2" style="margin-top: 24px;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title"><i class="ri-network-line"></i> 网络接口</div></div>
+                        <div class="card-body">
+                            <div id="interfacesList"><div class="loading"><i class="ri-loader-4-line"></i> 加载中...</div></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><div class="card-title"><i class="ri-links-line"></i> 连接统计</div></div>
+                        <div class="card-body">
+                            <div id="connectionStats"><div class="loading"><i class="ri-loader-4-line"></i> 加载中...</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services Tab -->
+            <div class="tab-content" id="services">
+                <div class="card">
+                    <div class="card-header"><div class="card-title"><i class="ri-service-line"></i> 系统服务</div></div>
+                    <div class="card-body">
+                        <div id="servicesList"><div class="loading"><i class="ri-loader-4-line"></i> 加载中...</div></div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header"><div class="card-title"><i class="ri-terminal-box-line"></i> 进程监控 (Top 10)</div></div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>PID</th><th>用户</th><th>CPU%</th><th>MEM%</th><th>命令</th></tr></thead>
+                                <tbody id="processTable"><tr><td colspan="5" class="loading"><i class="ri-loader-4-line"></i> 加载中...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header"><div class="card-title"><i class="ri-git-branch-line"></i> 端口监听</div></div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>协议</th><th>端口</th><th>地址</th><th>状态</th></tr></thead>
+                                <tbody id="portsTable"><tr><td colspan="4" class="loading"><i class="ri-loader-4-line"></i> 加载中...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = '/api/system';
+        let refreshInterval = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTabs();
+            refreshAll();
+            startAutoRefresh();
+        });
+
+        function initTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab).classList.add('active');
+                });
+            });
+        }
+
+        function startAutoRefresh() {
+            refreshInterval = setInterval(refreshAll, 30000);
+        }
+
+        async function refreshAll() {
+            const btn = document.querySelector('.refresh-btn');
+            btn.classList.add('spinning');
+
+            try {
+                const response = await fetch(`${API_BASE}/overview`);
+                const data = await response.json();
+                if (data.success) {
+                    updateSystemInfo(data);
+                    updateOverview(data);
+                    updateHardware(data);
+                    updateNetwork(data);
+                    updateServices(data);
+                    updateHealth(data.health);
+                }
+            } catch (error) {
+                console.error('Failed to refresh:', error);
+            } finally {
+                btn.classList.remove('spinning');
+            }
+        }
+
+        function updateSystemInfo(data) {
+            document.getElementById('hostname').textContent = data.system?.hostname || '-';
+            document.getElementById('distro').textContent = data.system?.distro || '-';
+            document.getElementById('uptime').textContent = data.uptime?.formatted || '-';
+            document.getElementById('cpuModel').textContent = data.hardware?.cpu?.model?.split(' ')[0] || '-';
+        }
+
+        function updateOverview(data) {
+            const cpu = data.hardware?.cpu || {};
+            const mem = data.hardware?.memory || {};
+            const disk = data.hardware?.disk?.disks?.[0] || {};
+            const connections = data.network?.connections?.total || 0;
+
+            document.getElementById('cpuUsage').textContent = `${cpu.usage || 0}%`;
+            updateProgress('cpuProgress', cpu.usage || 0);
+            document.getElementById('memUsage').textContent = `${mem.percent || 0}%`;
+            updateProgress('memProgress', mem.percent || 0);
+            document.getElementById('diskUsage').textContent = `${disk.percent || 0}%`;
+            updateProgress('diskProgress', disk.percent || 0);
+            document.getElementById('connections').textContent = connections;
+            updateIssues(data.health);
+        }
+
+        function updateProgress(id, percent) {
+            const el = document.getElementById(id);
+            el.style.width = `${percent}%`;
+            el.classList.remove('low', 'medium', 'high');
+            el.classList.add(percent < 50 ? 'low' : percent < 80 ? 'medium' : 'high');
+        }
+
+        function updateHealth(health) {
+            const badge = document.getElementById('healthBadge');
+            badge.className = `health-badge ${health.status}`;
+            const icon = health.status === 'healthy' ? 'ri-heart-pulse-line' : health.status === 'warning' ? 'ri-alert-line' : 'ri-error-warning-line';
+            badge.innerHTML = `<i class="${icon}"></i><span>${health.status === 'healthy' ? '系统健康' : health.status === 'warning' ? '需要关注' : '存在问题'}</span>`;
+            document.getElementById('healthScore').textContent = `健康分数: ${health.score}`;
+        }
+
+        function updateIssues(health) {
+            const container = document.getElementById('issuesList');
+            if (!health.issues || health.issues.length === 0) {
+                container.innerHTML = '<div class="issue-item" style="border-left-color: var(--success);"><i class="ri-checkbox-circle-line" style="color: var(--success);"></i><span>系统运行正常，没有发现问题</span></div>';
+                return;
+            }
+            container.innerHTML = health.issues.map(issue => `
+                <div class="issue-item ${issue.level}">
+                    <i class="ri-${issue.level === 'critical' ? 'error-warning' : 'alert'}-line"></i>
+                    <span>${issue.message}</span>
+                </div>
+            `).join('');
+        }
+
+        function updateHardware(data) {
+            const cpu = data.hardware?.cpu || {};
+            const mem = data.hardware?.memory || {};
+            const disks = data.hardware?.disk?.disks || [];
+
+            const circumference = 2 * Math.PI * 60;
+            const cpuPercent = cpu.usage || 0;
+            document.getElementById('cpuGauge').style.strokeDashoffset = circumference - (circumference * cpuPercent / 100);
+            document.getElementById('cpuGaugeValue').textContent = `${cpuPercent}%`;
+
+            document.getElementById('load1').textContent = cpu.load?.load1?.toFixed(2) || '-';
+            document.getElementById('load5').textContent = cpu.load?.load5?.toFixed(2) || '-';
+            document.getElementById('load15').textContent = cpu.load?.load15?.toFixed(2) || '-';
+
+            const temp = cpu.temperature?.package;
+            const tempEl = document.getElementById('cpuTemp');
+            if (temp) {
+                tempEl.textContent = `${temp.toFixed(1)}°C`;
+                tempEl.classList.remove('cool', 'warm', 'hot');
+                tempEl.classList.add(temp < 50 ? 'cool' : temp < 70 ? 'warm' : 'hot');
+            } else {
+                tempEl.textContent = 'N/A';
+            }
+
+            const memPercent = mem.percent || 0;
+            document.getElementById('memGauge').style.strokeDashoffset = circumference - (circumference * memPercent / 100);
+            document.getElementById('memGaugeValue').textContent = `${memPercent}%`;
+
+            document.getElementById('memTotal').textContent = `${mem.total || 0} MB`;
+            document.getElementById('memUsed').textContent = `${mem.used || 0} MB`;
+            document.getElementById('memAvailable').textContent = `${mem.available || 0} MB`;
+            document.getElementById('memCached').textContent = `${mem.cached || 0} MB`;
+            document.getElementById('swapUsage').textContent = `${mem.swapUsed || 0} / ${mem.swapTotal || 0} MB`;
+
+            const diskTable = document.getElementById('diskTable');
+            if (disks.length > 0) {
+                diskTable.innerHTML = disks.map(disk => `
+                    <tr>
+                        <td><code>${disk.device}</code></td>
+                        <td>${disk.mount}</td>
+                        <td>${disk.size}</td>
+                        <td>${disk.used}</td>
+                        <td>${disk.available}</td>
+                        <td><div class="progress-bar" style="width: 100px; height: 6px; display: inline-block;"><div class="progress-fill ${disk.percent > 80 ? 'high' : disk.percent > 50 ? 'medium' : 'low'}" style="width: ${disk.percent}%"></div></div><span style="font-size: 12px; margin-left: 8px;">${disk.percent}%</span></td>
+                        <td><span class="status-badge ${disk.status === 'critical' ? 'stopped' : disk.status === 'warning' ? 'warning' : 'running'}">${disk.status === 'critical' ? '危险' : disk.status === 'warning' ? '警告' : '正常'}</span></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function updateNetwork(data) {
+            const interfaces = data.network?.interfaces || [];
+            const connections = data.network?.connections || {};
+
+            const interfacesEl = document.getElementById('interfacesList');
+            if (interfaces.length > 0) {
+                interfacesEl.innerHTML = interfaces.map(iface => `
+                    <div class="service-item">
+                        <div class="service-name">
+                            <i class="ri-network-line"></i>
+                            <div><div style="font-weight: 500;">${iface.name}</div><div style="font-size: 12px; color: var(--text-secondary);">${iface.addresses?.map(a => a.address).join(', ') || 'No IP'}</div></div>
+                        </div>
+                        <span class="status-badge ${iface.operstate === 'UP' ? 'running' : 'stopped'}">${iface.operstate || 'Unknown'}</span>
+                    </div>
+                `).join('');
+            }
+
+            const connEl = document.getElementById('connectionStats');
+            connEl.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <div style="text-align: center; padding: 16px; background: var(--bg-tertiary); border-radius: 8px;"><div style="font-size: 24px; font-weight: 600; color: var(--primary);">${connections.tcp?.established || 0}</div><div style="font-size: 12px; color: var(--text-secondary);">TCP 已建立</div></div>
+                    <div style="text-align: center; padding: 16px; background: var(--bg-tertiary); border-radius: 8px;"><div style="font-size: 24px; font-weight: 600; color: var(--purple);">${connections.tcp?.timeWait || 0}</div><div style="font-size: 12px; color: var(--text-secondary);">TCP 等待</div></div>
+                    <div style="text-align: center; padding: 16px; background: var(--bg-tertiary); border-radius: 8px;"><div style="font-size: 24px; font-weight: 600; color: var(--cyan);">${connections.tcp?.listen || 0}</div><div style="font-size: 12px; color: var(--text-secondary);">TCP 监听</div></div>
+                    <div style="text-align: center; padding: 16px; background: var(--bg-tertiary); border-radius: 8px;"><div style="font-size: 24px; font-weight: 600; color: var(--success);">${connections.udp?.total || 0}</div><div style="font-size: 12px; color: var(--text-secondary);">UDP 连接</div></div>
+                </div>
+            `;
+        }
+
+        function updateServices(data) {
+            const services = data.services?.system || [];
+            const processes = data.services?.processes || [];
+            const ports = data.services?.ports || [];
+
+            const servicesEl = document.getElementById('servicesList');
+            servicesEl.innerHTML = services.map(svc => `
+                <div class="service-item">
+                    <div class="service-name"><i class="ri-${svc.name.includes('openclaw') ? 'robot' : 'server'}-line"></i><span>${svc.name}</span></div>
+                    <span class="status-badge ${svc.status === 'running' ? 'running' : 'stopped'}">${svc.status === 'running' ? '运行中' : '已停止'}</span>
+                </div>
+            `).join('');
+
+            const processTable = document.getElementById('processTable');
+            processTable.innerHTML = processes.slice(0, 10).map(proc => `
+                <tr>
+                    <td><code>${proc.pid}</code></td>
+                    <td>${proc.user}</td>
+                    <td style="color: ${proc.cpu > 50 ? 'var(--danger)' : proc.cpu > 20 ? 'var(--warning)' : 'inherit'}">${proc.cpu.toFixed(1)}%</td>
+                    <td style="color: ${proc.mem > 50 ? 'var(--danger)' : proc.mem > 20 ? 'var(--warning)' : 'inherit'}">${proc.mem.toFixed(1)}%</td>
+                    <td style="font-family: monospace; font-size: 12px;">${proc.command}</td>
+                </tr>
+            `).join('');
+
+            const portsTable = document.getElementById('portsTable');
+            portsTable.innerHTML = ports.slice(0, 15).map(port => `
+                <tr>
+                    <td><span class="status-badge" style="background: ${port.protocol === 'tcp' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(139, 92, 246, 0.2)'}; color: ${port.protocol === 'tcp' ? 'var(--primary)' : 'var(--purple)'};">${port.protocol.toUpperCase()}</span></td>
+                    <td><code>${port.port}</code></td>
+                    <td>${port.address}</td>
+                    <td><span class="status-badge running">${port.state}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        async function testLatency() {
+            const grid = document.getElementById('latencyGrid');
+            grid.innerHTML = '<div class="loading"><i class="ri-loader-4-line"></i> 测试中...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/network/latency`);
+                const data = await response.json();
+                if (data.success) {
+                    grid.innerHTML = data.latency.map(item => `
+                        <div class="latency-item">
+                            <div class="latency-value ${item.status === 'ok' ? (item.latency < 10 ? 'ok' : 'warning') : 'error'}">${item.latency ? `${item.latency.toFixed(1)}ms` : '超时'}</div>
+                            <div class="latency-name">${item.name}</div>
+                            <div style="font-size: 11px; color: var(--text-secondary);">${item.host}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                grid.innerHTML = '<div style="text-align: center; color: var(--danger);">测试失败</div>';
+            }
+        }
+    </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

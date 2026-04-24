@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PreText 文本布局演示 - 任务系统</title>
+  
+  <!-- 统一框架样式 (必须在最前面) -->
+  <link rel="stylesheet" href="css/frame.css">
+  
+  <!-- 侧边栏组件 -->
+  <link rel="stylesheet" href="css/sidebar.css">
+  <script src="js/sidebar.js"></script>
+  
+  <!-- 页面专用样式 (在框架之后) -->
+  <style>
+    .demo-container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 24px;
+    }
+    
+    .demo-header {
+      margin-bottom: 32px;
+    }
+    
+    .demo-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    
+    .demo-desc {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    
+    /* 对比区域 */
+    .comparison-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    
+    .comparison-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    
+    .comparison-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .comparison-title .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    
+    .badge.old {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+    
+    .badge.new {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+    }
+    
+    /* 技能卡片网格 - 传统方式 */
+    .skills-grid-old {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    
+    .skill-card-old {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 140px;  /* 固定最小高度 */
+    }
+    
+    .skill-card-old .skill-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 18px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    /* 技能卡片网格 - PreText 方式 */
+    .skills-grid-new {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .skill-card-new {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      /* 高度由 JS 动态计算 */
+    }
+    
+    .skill-card-new .skill-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 18px;
+    }
+    
+    /* 性能统计 */
+    .perf-stats {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    
+    .perf-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .perf-row:last-child {
+      border-bottom: none;
+    }
+    
+    .perf-label {
+      color: var(--text-secondary);
+    }
+    
+    .perf-value {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .perf-value.fast {
+      color: #10b981;
+    }
+    
+    .perf-value.slow {
+      color: #ef4444;
+    }
+    
+    /* 测试区域 */
+    .test-section {
+      margin-top: 40px;
+    }
+    
+    .test-input {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+      resize: vertical;
+    }
+    
+    .test-controls {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .test-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .test-btn.primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .test-result {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    
+    .skill-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    
+    .skill-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .skill-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .skill-meta {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <!-- 侧边栏容器 -->
+  <div id="sidebar-container"></div>
+  
+  <!-- 主内容区 -->
+  <main class="main-content">
+    <div class="demo-container">
+    <div class="demo-header">
+      <h1 class="demo-title">PreText 文本布局演示</h1>
+      <p class="demo-desc">
+        PreText 是一个高性能文本测量库，无需 DOM 操作即可精确计算文本高度。
+        本页面对比传统 DOM 测量方式和 PreText 方式的性能差异。
+      </p>
+    </div>
+    
+    <!-- 对比区域 -->
+    <div class="comparison-section">
+      <!-- 传统方式 -->
+      <div class="comparison-box">
+        <h3 class="comparison-title">
+          传统方式
+          <span class="badge old">DOM 测量</span>
+        </h3>
+        
+        <div class="skills-grid-old" id="oldGrid">
+          <!-- JS 动态生成 -->
+        </div>
+        
+        <div class="perf-stats">
+          <div class="perf-row">
+            <span class="perf-label">渲染时间</span>
+            <span class="perf-value slow" id="oldRenderTime">-</span>
+          </div>
+          <div class="perf-row">
+            <span class="perf-label">DOM 操作次数</span>
+            <span class="perf-value" id="oldDomOps">-</span>
+          </div>
+          <div class="perf-row">
+            <span class="perf-label">布局重排次数</span>
+            <span class="perf-value slow" id="oldReflows">-</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- PreText 方式 -->
+      <div class="comparison-box">
+        <h3 class="comparison-title">
+          PreText 方式
+          <span class="badge new">纯计算</span>
+        </h3>
+        
+        <div class="skills-grid-new" id="newGrid">
+          <!-- JS 动态生成 -->
+        </div>
+        
+        <div class="perf-stats">
+          <div class="perf-row">
+            <span class="perf-label">测量时间</span>
+            <span class="perf-value fast" id="newMeasureTime">-</span>
+          </div>
+          <div class="perf-row">
+            <span class="perf-label">DOM 操作次数</span>
+            <span class="perf-value fast" id="newDomOps">-</span>
+          </div>
+          <div class="perf-row">
+            <span class="perf-label">布局重排次数</span>
+            <span class="perf-value fast" id="newReflows">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 测试区域 -->
+    <div class="test-section">
+      <h3 style="margin-bottom: 16px;">实时测试</h3>
+      
+      <textarea class="test-input" id="testInput" placeholder="输入任意文本，测试 PreText 计算性能...">
+这是一个技能描述，可以很长，也可以很短。PreText 会精确计算这段文本在不同宽度下的高度。
+支持中文、英文、emoji 🎉，以及混合文本。
+      </textarea>
+      
+      <div class="test-controls">
+        <input type="number" id="testWidth" value="280" min="100" max="600" 
+               style="width: 100px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary);">
+        <span style="color: var(--text-secondary); line-height: 36px;">px 宽度</span>
+        
+        <button class="test-btn primary" onclick="runTest()">测试 PreText</button>
+      </div>
+      
+      <div class="test-result" id="testResult" style="display: none;">
+        <div class="result-item">
+          <span>文本长度:</span>
+          <span id="textLength">-</span>
+        </div>
+        <div class="result-item">
+          <span>计算高度:</span>
+          <span id="calculatedHeight">-</span>
+        </div>
+        <div class="result-item">
+          <span>行数:</span>
+          <span id="lineCount">-</span>
+        </div>
+        <div class="result-item">
+          <span>计算耗时:</span>
+          <span id="measureTime">-</span>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- 引入 PreText -->
+  <script src="https://cdn.jsdelivr.net/npm/@chenglou/pretext/dist/pretext.min.js"></script>
+  
+  <script>
+    // 模拟技能数据
+    const skills = [
+      {
+        name: '任务管理',
+        icon: '📋',
+        description: '任务的创建、分配、执行、监控全流程管理。支持优先级分类、四象限分类、任务分解等功能。',
+        tags: ['任务', '管理']
+      },
+      {
+        name: 'Agent 协作',
+        icon: '🤖',
+        description: '多 Agent 协作能力，支持任务分配、故障转移、负载均衡。提供 Agent 状态监控和健康检查。',
+        tags: ['Agent', '协作']
+      },
+      {
+        name: '文档系统',
+        icon: '📄',
+        description: '文档管理、版本控制、知识库集成。支持 Markdown 格式、自动摘要生成、全文搜索。',
+        tags: ['文档', '知识库']
+      },
+      {
+        name: '监控告警',
+        icon: '📊',
+        description: '实时监控系统状态，包括任务执行、Agent 健康、资源使用。支持自定义告警规则和通知渠道。',
+        tags: ['监控', '告警']
+      },
+      {
+        name: '数据分析',
+        icon: '📈',
+        description: '任务执行统计、性能分析、趋势预测。提供可视化报表和决策支持。',
+        tags: ['数据', '分析']
+      },
+      {
+        name: '自动化工作流',
+        icon: '⚡',
+        description: '自动化任务执行、定时调度、事件驱动。支持复杂工作流编排和条件触发。',
+        tags: ['自动化', '工作流']
+      }
+    ]
+    
+    // 传统方式渲染
+    function renderOldWay() {
+      const startTime = performance.now()
+      const grid = document.getElementById('oldGrid')
+      
+      let html = ''
+      skills.forEach(skill => {
+        html += `
+          <div class="skill-card-old">
+            <div class="skill-header">
+              <div class="skill-icon">${skill.icon}</div>
+              <span class="skill-name">${skill.name}</span>
+            </div>
+            <div class="skill-desc">${skill.description}</div>
+            <div class="skill-meta">${skill.tags.map(t => `#${t}`).join(' ')}</div>
+          </div>
+        `
+      })
+      
+      grid.innerHTML = html
+      
+      // 强制布局计算
+      const cards = grid.querySelectorAll('.skill-card-old')
+      let reflows = 0
+      cards.forEach(card => {
+        // 每次访问 offsetHeight 都会触发重排
+        const height = card.offsetHeight
+        reflows++
+      })
+      
+      const endTime = performance.now()
+      
+      document.getElementById('oldRenderTime').textContent = `${(endTime - startTime).toFixed(2)}ms`
+      document.getElementById('oldDomOps').textContent = skills.length
+      document.getElementById('oldReflows').textContent = reflows
+    }
+    
+    // PreText 方式渲染
+    async function renderNewWay() {
+      const startTime = performance.now()
+      const grid = document.getElementById('newGrid')
+      
+      // 预计算所有卡片高度（无需 DOM）
+      const heights = []
+      const prepared = []
+      
+      for (const skill of skills) {
+        // 使用 PreText 计算高度
+        const preparedText = pretext.prepare(skill.description, '13px Inter, sans-serif')
+        const { height } = pretext.layout(preparedText, 280 - 32, 18)  // 280px 卡片宽度，32px padding
+        
+        // 卡片总高度 = 头部(48) + 描述(min(height, 36)) + meta(28) + padding(32)
+        const totalHeight = 48 + Math.min(height, 36) + 28 + 32
+        heights.push(totalHeight)
+        prepared.push(preparedText)
+      }
+      
+      const measureTime = performance.now() - startTime
+      
+      // 一次性渲染（无重排）
+      let html = ''
+      skills.forEach((skill, i) => {
+        html += `
+          <div class="skill-card-new" style="height: ${heights[i]}px">
+            <div class="skill-header">
+              <div class="skill-icon">${skill.icon}</div>
+              <span class="skill-name">${skill.name}</span>
+            </div>
+            <div class="skill-desc">${skill.description}</div>
+            <div class="skill-meta">${skill.tags.map(t => `#${t}`).join(' ')}</div>
+          </div>
+        `
+      })
+      
+      grid.innerHTML = html
+      
+      const endTime = performance.now()
+      
+      document.getElementById('newMeasureTime').textContent = `${measureTime.toFixed(2)}ms`
+      document.getElementById('newDomOps').textContent = skills.length
+      document.getElementById('newReflows').textContent = '0'
+    }
+    
+    // 实时测试
+    async function runTest() {
+      const text = document.getElementById('testInput').value
+      const width = parseInt(document.getElementById('testWidth').value)
+      
+      if (!text.trim()) return
+      
+      const startTime = performance.now()
+      
+      // 使用 PreText 计算
+      const prepared = pretext.prepare(text, '13px Inter, sans-serif')
+      const { height, lineCount } = pretext.layout(prepared, width, 18)
+      
+      const measureTime = performance.now() - startTime
+      
+      // 显示结果
+      document.getElementById('testResult').style.display = 'block'
+      document.getElementById('textLength').textContent = `${text.length} 字符`
+      document.getElementById('calculatedHeight').textContent = `${height.toFixed(1)}px`
+      document.getElementById('lineCount').textContent = lineCount
+      document.getElementById('measureTime').textContent = `${measureTime.toFixed(2)}ms`
+    }
+    
+    // 初始化
+    window.onload = async function() {
+      // 初始化侧边栏
+      Sidebar.init({ activePage: 'pretext-demo' });
+      
+      renderOldWay()
+      await renderNewWay()
+    }
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

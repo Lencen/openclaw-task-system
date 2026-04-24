@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务反思编辑器 - 任务管理系统</title>
+  
+  <!-- 图标库 -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+  
+  <!-- 统一框架样式（必须引入） -->
+  <link rel="stylesheet" href="css/frame.css">
+  
+  <!-- 侧边栏组件 -->
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <!-- 页面专用样式 -->
+  <style>
+    .reflection-form {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .form-group {
+      margin-bottom: 24px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    
+    .question-group {
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+    
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .category-tag {
+      background: var(--primary);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border-radius: 4px;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    
+    .btn-warning {
+      background: var(--warning);
+      color: white;
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .status-pending { background: #6b7280; color: white; }
+    .status-in-progress { background: #f59e0b; color: white; }
+    .status-completed { background: #10b981; color: white; }
+    .status-skipped { background: #ef4444; color: white; }
+    
+    .task-info {
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+    }
+    
+    .task-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--text-primary);
+      margin: 0 0 8px 0;
+    }
+    
+    .task-description {
+      color: var(--text-secondary);
+      margin: 0 0 12px 0;
+      line-height: 1.5;
+    }
+    
+    .task-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      display: none;
+    }
+    
+    .loading-content {
+      background: var(--bg-secondary);
+      padding: 24px;
+      border-radius: 8px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- 统一侧边栏容器 -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容区 -->
+    <main class="main">
+      <!-- 顶部栏 -->
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <a href="reflection-monitor.html">Reflection 监控</a>
+            <span>/</span>
+            <span>反思编辑器</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="保存草稿">
+            <i class="ri-save-line"></i>
+          </button>
+          <button class="header-btn" title="帮助">
+            <i class="ri-question-line"></i>
+          </button>
+        </div>
+      </header>
+      
+      <!-- 内容区 -->
+      <div class="content">
+        <div class="page-header">
+          <h1>任务反思编辑器</h1>
+          <p>填写任务反思，总结经验教训</p>
+        </div>
+        
+        <!-- 任务信息 -->
+        <div class="task-info" id="taskInfo">
+          <h3 class="task-title">加载中...</h3>
+          <p class="task-description">任务描述加载中...</p>
+          <div class="task-meta">
+            <span>ID: <span id="taskId">-</span></span>
+            <span>状态: <span id="taskStatus" class="status-indicator status-pending">加载中</span></span>
+            <span>创建时间: <span id="taskCreatedAt">-</span></span>
+          </div>
+        </div>
+        
+        <!-- 反思表单 -->
+        <form class="reflection-form" id="reflectionForm">
+          <div class="form-group">
+            <label for="reflectionStatus">反思状态</label>
+            <select id="reflectionStatus" name="status">
+              <option value="in_progress">进行中</option>
+              <option value="completed">已完成</option>
+              <option value="skipped">已跳过</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="reflectionContent">反思内容</label>
+            <textarea id="reflectionContent" name="content" placeholder="请输入您的反思内容..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>反思问题</label>
+            <div id="questionsContainer">
+              <!-- 问题将通过JavaScript动态加载 -->
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="reflectionLesson">经验教训</label>
+            <textarea id="reflectionLesson" name="lesson" placeholder="总结从此次任务中学到的经验教训..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="reflectionScore">反思评分 (1-10)</label>
+            <input type="number" id="reflectionScore" name="score" min="1" max="10" value="5">
+          </div>
+          
+          <div class="form-group">
+            <label for="skipReason">跳过原因 (仅在跳过时填写)</label>
+            <textarea id="skipReason" name="skippedReason" placeholder="如果选择跳过反思，请说明原因..."></textarea>
+          </div>
+        </form>
+        
+        <!-- 操作按钮 -->
+        <div class="action-buttons">
+          <button type="button" class="btn btn-outline" id="cancelBtn">
+            <i class="ri-arrow-left-line"></i>
+            返回
+          </button>
+          <button type="button" class="btn btn-warning" id="saveDraftBtn">
+            <i class="ri-save-line"></i>
+            保存草稿
+          </button>
+          <button type="button" class="btn btn-primary" id="saveBtn">
+            <i class="ri-check-line"></i>
+            保存
+          </button>
+          <button type="button" class="btn btn-success" id="completeBtn">
+            <i class="ri-check-double-line"></i>
+            完成并关闭任务
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 加载遮罩 -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+      <i class="ri-loader-4-line ri-2x" style="animation: spin 1s linear infinite;"></i>
+      <p style="margin-top: 12px;">加载中...</p>
+    </div>
+  </div>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'reflection-editor' });
+  </script>
+  
+  <!-- 页面专用脚本 -->
+  <script>
+    class ReflectionEditor {
+      constructor() {
+        this.taskId = this.getTaskIdFromUrl();
+        this.reflectionData = null;
+        this.init();
+      }
+      
+      init() {
+        if (!this.taskId) {
+          alert('未指定任务ID');
+          return;
+        }
+        
+        this.bindEvents();
+        this.loadTaskAndReflection();
+      }
+      
+      getTaskIdFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('taskId');
+      }
+      
+      bindEvents() {
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+          history.back();
+        });
+        
+        document.getElementById('saveDraftBtn').addEventListener('click', () => {
+          this.saveReflection(false);
+        });
+        
+        document.getElementById('saveBtn').addEventListener('click', () => {
+          this.saveReflection(false);
+        });
+        
+        document.getElementById('completeBtn').addEventListener('click', () => {
+          this.completeReflection();
+        });
+        
+        // 监听状态变化，调整跳过原因字段的可见性
+        document.getElementById('reflectionStatus').addEventListener('change', (e) => {
+          const skipReasonDiv = document.getElementById('skipReason').closest('.form-group');
+          if (e.target.value === 'skipped') {
+            skipReasonDiv.style.display = 'block';
+          } else {
+            skipReasonDiv.style.display = 'none';
+          }
+        });
+      }
+      
+      async loadTaskAndReflection() {
+        this.showLoading(true);
+        
+        try {
+          // 加载任务信息
+          const tasksResponse = await fetch('/api/tasks');
+          const tasksData = await tasksResponse.json();
+          
+          const task = tasksData.tasks ? tasksData.tasks.find(t => t.id === this.taskId) : null;
+          
+          if (task) {
+            document.getElementById('taskTitle').textContent = task.title;
+            document.getElementById('taskDescription').textContent = task.description || '无描述';
+            document.getElementById('taskId').textContent = task.id;
+            document.getElementById('taskCreatedAt').textContent = new Date(task.created_at).toLocaleString();
+            
+            // 设置任务状态标签
+            const statusEl = document.getElementById('taskStatus');
+            statusEl.textContent = this.getStatusText(task.status);
+            statusEl.className = `status-indicator ${this.getStatusClass(task.status)}`;
+          } else {
+            // 如果在活跃任务中找不到，尝试获取已完成的任务信息
+            document.getElementById('taskTitle').textContent = `任务 ${this.taskId}`;
+            document.getElementById('taskDescription').textContent = '任务已完成，正在加载反思信息...';
+            document.getElementById('taskId').textContent = this.taskId;
+          }
+          
+          // 加载反思信息
+          const reflectionResponse = await fetch(`/api/reflection/task/${this.taskId}`);
+          const reflectionData = await reflectionResponse.json();
+          
+          if (reflectionData.success) {
+            this.reflectionData = reflectionData.data.template || reflectionData.data;
+            this.populateForm(this.reflectionData);
+          } else {
+            console.error('加载反思数据失败:', reflectionData.error);
+          }
+        } catch (error) {
+          console.error('加载任务和反思信息失败:', error);
+          alert('加载数据失败: ' + error.message);
+        } finally {
+          this.showLoading(false);
+        }
+      }
+      
+      getStatusText(status) {
+        const statusMap = {
+          'pending': '待处理',
+          'doing': '进行中',
+          'completed': '已完成',
+          'done': '已结束',
+          'reflection_pending': '待反思',
+          'cancelled': '已取消',
+          'failed': '失败'
+        };
+        return statusMap[status] || status;
+      }
+      
+      getStatusClass(status) {
+        const classMap = {
+          'pending': 'status-pending',
+          'doing': 'status-in-progress',
+          'completed': 'status-in-progress',
+          'done': 'status-completed',
+          'reflection_pending': 'status-pending',
+          'cancelled': 'status-skipped',
+          'failed': 'status-skipped'
+        };
+        return classMap[status] || 'status-pending';
+      }
+      
+      populateForm(reflectionData) {
+        if (reflectionData.status) {
+          document.getElementById('reflectionStatus').value = reflectionData.status;
+          
+          // 如果是跳过状态，显示跳过原因字段
+          if (reflectionData.status === 'skipped') {
+            document.getElementById('skipReason').closest('.form-group').style.display = 'block';
+          }
+        }
+        
+        if (reflectionData.content) {
+          document.getElementById('reflectionContent').value = reflectionData.content;
+        }
+        
+        if (reflectionData.questions && Array.isArray(reflectionData.questions)) {
+          this.renderQuestions(reflectionData.questions);
+        }
+        
+        // 如果是现有反思，尝试填充其他字段
+        if (reflectionData.lesson) {
+          document.getElementById('reflectionLesson').value = reflectionData.lesson;
+        }
+        
+        if (reflectionData.score) {
+          document.getElementById('reflectionScore').value = reflectionData.score;
+        }
+        
+        if (reflectionData.skippedReason) {
+          document.getElementById('skipReason').value = reflectionData.skippedReason;
+        }
+      }
+      
+      renderQuestions(questions) {
+        const container = document.getElementById('questionsContainer');
+        container.innerHTML = '';
+        
+        questions.forEach((question, index) => {
+          const questionEl = document.createElement('div');
+          questionEl.className = 'question-group';
+          
+          questionEl.innerHTML = `
+            <div class="question-header">
+              <h4>${index + 1}. ${question.content}</h4>
+              <span class="category-tag">${question.category}</span>
+            </div>
+            <div class="form-group">
+              <textarea 
+                class="question-answer" 
+                data-question-id="${question.id}" 
+                placeholder="请输入答案...">${question.answer || ''}</textarea>
+            </div>
+          `;
+          
+          container.appendChild(questionEl);
+        });
+      }
+      
+      async saveReflection(complete = false) {
+        this.showLoading(true);
+        
+        try {
+          // 收集表单数据
+          const formData = new FormData(document.getElementById('reflectionForm'));
+          const data = Object.fromEntries(formData);
+          
+          // 收集问题答案
+          const questionAnswers = {};
+          document.querySelectorAll('.question-answer').forEach(el => {
+            const questionId = el.getAttribute('data-question-id');
+            questionAnswers[questionId] = el.value;
+          });
+          
+          // 更新问题答案到模板
+          if (this.reflectionData && this.reflectionData.questions) {
+            this.reflectionData.questions.forEach(q => {
+              if (questionAnswers[q.id]) {
+                q.answer = questionAnswers[q.id];
+              }
+            });
+          }
+          
+          // 准备请求数据
+          const requestData = {
+            ...data,
+            template: this.reflectionData,
+            autoComplete: complete  // 如果是完成操作，则自动将任务设为 done
+          };
+          
+          // 发送保存请求
+          const response = await fetch(`/api/reflection/task/${this.taskId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            alert(complete ? '反思已完成并关闭任务！' : '反思已保存');
+            
+            if (complete) {
+              // 如果是完成操作，返回到监控页面
+              window.location.href = 'reflection-monitor.html';
+            }
+          } else {
+            alert('保存失败: ' + (result.error || '未知错误'));
+          }
+        } catch (error) {
+          console.error('保存反思失败:', error);
+          alert('保存失败: ' + error.message);
+        } finally {
+          this.showLoading(false);
+        }
+      }
+      
+      async completeReflection() {
+        // 确认完成操作
+        if (confirm('确定要完成反思并关闭任务吗？完成反思后任务将被标记为 done。')) {
+          await this.saveReflection(true);
+        }
+      }
+      
+      showLoading(show) {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.style.display = show ? 'flex' : 'none';
+      }
+    }
+    
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      new ReflectionEditor();
+    });
+  </script>
+</body>
+</html>

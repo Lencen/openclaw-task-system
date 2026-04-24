@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>项目列表 - 任务系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  
+  <!-- 统一框架样式（必须引入） -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    
+    /* 任务卡片 */
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .task-priority {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    
+    .priority-P0 { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .priority-P1 { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .priority-P2 { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .priority-P3 { background: var(--bg-secondary); color: var(--text-secondary); }
+    
+    .task-status {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+    
+    .status-planning { background: var(--bg-secondary); color: var(--text-secondary); }
+    .status-active { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .status-completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .status-archived { background: var(--bg-tertiary); color: var(--text-tertiary); }
+    
+    .task-info { flex: 1; }
+    .task-title { font-weight: 500; font-size: 14px; margin-bottom: 4px; }
+    .task-meta {
+      font-size: 11px;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 12px;
+    }
+    
+    .task-actions { display: flex; gap: 8px; }
+    
+    /* 进度条 */
+    .progress-bar {
+      height: 4px;
+      background: var(--bg-tertiary);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--success), var(--primary));
+      transition: width 0.3s;
+    }
+    
+    /* 筛选器 */
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .filter-label { font-size: 13px; color: var(--text-secondary); }
+    
+    .filter-select {
+      padding: 6px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state-text { font-size: 14px; }
+    
+    /* 按钮 */
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: #2563eb; }
+    
+    .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--bg-secondary); }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <!-- 统一侧边栏容器 -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容区 -->
+    <main class="main">
+      <!-- 顶部栏 -->
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <span>项目</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadProjects()">
+            <i class="ri-refresh-line"></i>
+          </button>
+          <button class="header-btn" title="新建项目" onclick="showModal('project-modal')">
+            <i class="ri-add-line"></i>
+          </button>
+        </div>
+      </header>
+      
+      <!-- 内容区 -->
+      <div class="content">
+        <div class="page-container">
+          <!-- 页面标题 -->
+          <div class="page-header">
+            <h1 class="page-title">项目列表</h1>
+          </div>
+          
+          <!-- 筛选器 -->
+          <div class="filters">
+            <div class="filter-group">
+              <label class="filter-label">状态</label>
+              <select class="filter-select" id="filter-status">
+                <option value="">全部</option>
+                <option value="planning">规划中</option>
+                <option value="active">进行中</option>
+                <option value="completed">已完成</option>
+                <option value="archived">已归档</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">环境</label>
+              <select class="filter-select" id="filter-environment">
+                <option value="">全部</option>
+                <option value="develop">开发</option>
+                <option value="test">测试</option>
+                <option value="staging">预发布</option>
+                <option value="production">生产</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- 项目列表 -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">项目列表</span>
+            </div>
+            <div class="card-body">
+              <div id="project-list">
+                <div class="loading"><div class="spinner"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 项目模态框 -->
+  <div class="modal-overlay" id="project-modal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">新建项目</h3>
+        <button class="modal-close" onclick="closeModal('project-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="project-form">
+          <div class="form-group">
+            <label class="form-label">项目名称 *</label>
+            <input type="text" class="form-input" id="project-name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">描述</label>
+            <textarea class="form-textarea" id="project-description"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">优先级</label>
+            <select class="form-select" id="project-priority">
+              <option value="P2">P2 中</option>
+              <option value="P1">P1 高</option>
+              <option value="P3">P3 低</option>
+              <option value="P0">P0 紧急</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">版本</label>
+            <input type="text" class="form-input" id="project-version" value="1.0.0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">计划发布日期</label>
+            <input type="date" class="form-input" id="project-plan-release">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('project-modal')">取消</button>
+        <button class="btn btn-primary" onclick="saveProject()">保存</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'projects' });
+  </script>
+  
+  <!-- 页面专用脚本 -->
+  <script>
+    // 全局变量
+    
+    // DOM 加载完成
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 加载项目列表
+      loadProjects();
+    });
+    
+    // 加载项目列表
+    async function loadProjects() {
+      try {
+        // 查询所有项目，不带 scenario_id 过滤（后端已处理）
+        const projects = await API.getProjects({});
+        const container = document.getElementById('project-list');
+        
+        if (projects.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📁</div><div class="empty-state-text">暂无项目</div></div>';
+          return;
+        }
+        
+        // 获取过滤条件
+        const status = document.getElementById('filter-status').value;
+        const env = document.getElementById('filter-environment').value;
+        
+        // 前端过滤
+        let filteredProjects = projects;
+        if (status) {
+          filteredProjects = filteredProjects.filter(p => p.status === status);
+        }
+        if (env) {
+          filteredProjects = filteredProjects.filter(p => p.environment === env);
+        }
+        
+        if (filteredProjects.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📁</div><div class="empty-state-text">暂无项目</div></div>';
+          return;
+        }
+        
+        container.innerHTML = filteredProjects.map(p => {
+          // 计算智能状态：如果所有任务都完成，显示已完成
+          const totalTasks = p.total_tasks || 0;
+          const completedTasks = p.completed_tasks || 0;
+          const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+          const smartStatus = (totalTasks > 0 && completedTasks >= totalTasks) ? 'completed' : p.status;
+          
+          return `
+          <div class="task-item">
+            <span class="task-priority priority-${p.priority || 'P2'}">${p.priority || 'P2'}</span>
+            <span class="task-status status-${smartStatus || 'planning'}">${getStatusLabel(smartStatus)}</span>
+            <div class="task-info">
+              <div class="task-title">${p.name}</div>
+              <div class="task-meta">
+                <span>进度: ${completedTasks}/${totalTasks} (${progressPercent}%)</span>
+                <span>版本: ${p.version || '1.0.0'}</span>
+                <span>创建: ${p.created_at || '未知'}</span>
+              </div>
+              ${totalTasks > 0 ? `
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${progressPercent}%"></div>
+              </div>
+              ` : ''}
+            </div>
+            <div class="task-actions">
+              <button class="btn btn-secondary" onclick="viewProject('${p.id}')">查看</button>
+            </div>
+          </div>
+        `}).join('');
+      } catch (error) {
+        console.error('加载项目失败:', error);
+        showToast('加载项目失败', 'error');
+      }
+    }
+    
+    // 获取状态标签
+    function getStatusLabel(status) {
+      const labels = { 
+        planning: '规划中', 
+        active: '进行中', 
+        completed: '已完成', 
+        archived: '已归档' 
+      };
+      return labels[status] || status;
+    }
+    
+    // 保存项目
+    async function saveProject() {
+      const data = {
+        name: document.getElementById('project-name').value,
+        description: document.getElementById('project-description').value,
+        priority: document.getElementById('project-priority').value,
+        version: document.getElementById('project-version').value,
+        plan_release_date: document.getElementById('project-plan-release').value,
+        scenario_id: currentScenarioId
+      };
+      
+      if (!data.name) { showToast('请输入项目名称', 'error'); return; }
+      
+      try {
+        await API.createProject(data);
+        showToast('项目创建成功', 'success');
+        closeModal('project-modal');
+        loadProjects();
+        document.getElementById('project-form').reset();
+      } catch (error) {
+        showToast(error.message || '创建失败', 'error');
+      }
+    }
+    
+    // 查看项目
+    function viewProject(id) {
+      showToast('项目详情功能开发中', 'info');
+    }
+    
+    // 过滤变化
+    document.getElementById('filter-status').addEventListener('change', loadProjects);
+    document.getElementById('filter-environment').addEventListener('change', loadProjects);
+    
+    // 模态框相关函数
+    function showModal(id) {
+      document.getElementById(id).style.display = 'flex';
+    }
+    
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+    
+    // Toast 提示
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-size: 14px;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+        background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6'};
+      `;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 2000);
+    }
+    
+    // API 调用封装
+    const API = {
+      async getScenarios() {
+        try {
+          const response = await fetch('/api/scenarios');
+          const data = await response.json();
+          return data.scenarios || [];
+        } catch (error) {
+          console.error('获取场景失败:', error);
+          return [];
+        }
+      },
+      
+      async getProjects(params = {}) {
+        try {
+          const query = new URLSearchParams(params);
+          const response = await fetch(`/api/projects?${query}`);
+          const data = await response.json();
+          return data.projects || [];
+        } catch (error) {
+          console.error('获取项目失败:', error);
+          return [];
+        }
+      },
+      
+      async createProject(data) {
+        try {
+          const response = await fetch('/api/projects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.message || '创建失败');
+          return result;
+        } catch (error) {
+          console.error('创建项目失败:', error);
+          throw error;
+        }
+      }
+    };
+  </script>
+<script>FieldTips.init({pageType:"project"});</script></body>
+</html>

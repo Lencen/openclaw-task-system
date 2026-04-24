@@ -1,0 +1,155 @@
+/* Tips 弹窗组件样式 */
+.tips-btn {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.tips-btn:hover {
+  background: #2563eb;
+}
+
+.tips-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+}
+
+.tips-modal.open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tips-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.tips-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: 12px;
+}
+
+.tips-header h2 {
+  font-size: 20px;
+  color: var(--text-primary);
+}
+
+.tips-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.tips-section {
+  margin-bottom: 20px;
+}
+
+.tips-section h3 {
+  font-size: 16px;
+  color: var(--primary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tips-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tips-table th,
+.tips-table td {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.tips-table th {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.tips-table td {
+  color: var(--text-secondary);
+}
+
+.tips-table .field-name {
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.tips-table .auto-fill {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.tips-table .manual-fill {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+}
+
+.tips-flow {
+  background: var(--bg-secondary);
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.tips-flow-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.tips-flow-step .step-num {
+  background: var(--primary);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.tips-flow-arrow {
+  color: var(--text-muted);
+  margin-left: 8px;
+}

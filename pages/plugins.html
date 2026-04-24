@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>插件管理 - 任务系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content {
+      padding: 24px;
+    }
+    
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    
+    .tips-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: all 0.2s;
+    }
+    
+    .tips-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    
+    /* Tips 弹窗 */
+    .tips-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+    
+    .tips-modal.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .tips-content {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      max-width: 700px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 24px;
+      transform: translateY(20px);
+      transition: all 0.3s;
+    }
+    
+    .tips-modal.show .tips-content {
+      transform: translateY(0);
+    }
+    
+    .tips-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    
+    .tips-title {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .tips-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: var(--text-secondary);
+      padding: 4px;
+    }
+    
+    .tips-close:hover {
+      color: var(--text-primary);
+    }
+    
+    .tips-section {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+    
+    .tips-section-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .tips-section-content {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    
+    .tips-section-content ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+    
+    .tips-section-content li {
+      margin: 6px 0;
+    }
+    
+    .learn-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    
+    .learn-link:hover {
+      text-decoration: underline;
+    }
+    
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      flex: 1;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    
+    .stat-card.success .stat-value { color: var(--success); }
+    
+    .plugins-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    
+    .plugin-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      transition: all 0.2s;
+    }
+    
+    .plugin-card:hover {
+      border-color: var(--primary);
+    }
+    
+    .plugin-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .plugin-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .plugin-info {
+      flex: 1;
+    }
+    
+    .plugin-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .plugin-type {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .plugin-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    
+    .status-dot.installed {
+      background: var(--success);
+    }
+    
+    .plugin-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .btn {
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .category-section {
+      margin-bottom: 24px;
+    }
+    
+    .category-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .category-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .category-count {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <a href="tools-list.html">工具</a>
+            <span>/</span>
+            <span>插件管理</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadPlugins()">
+            <i class="ri-refresh-line"></i>
+          </button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <div class="page-content">
+          <div class="page-header">
+            <h1 class="page-title">插件管理</h1>
+            <button class="tips-btn" onclick="showTips()">
+              <i class="ri-information-line"></i>
+              <span>插件规范与规则</span>
+            </button>
+          </div>
+          
+          <div class="stats-bar">
+            <div class="stat-card">
+              <div class="stat-value" id="stat-total">0</div>
+              <div class="stat-label">插件总数</div>
+            </div>
+            <div class="stat-card success">
+              <div class="stat-value" id="stat-installed">0</div>
+              <div class="stat-label">已安装</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-categories">0</div>
+              <div class="stat-label">分类数</div>
+            </div>
+          </div>
+          
+          <div id="plugins-container">
+            <!-- 由 JS 动态渲染 -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Tips 弹窗 -->
+  <div class="tips-modal" id="tips-modal" onclick="hideTips(event)">
+    <div class="tips-content" onclick="event.stopPropagation()">
+      <div class="tips-header">
+        <div class="tips-title">
+          <i class="ri-plug-line"></i>
+          插件规范与规则
+        </div>
+        <button class="tips-close" onclick="hideTips()">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      
+      <div class="tips-section">
+        <div class="tips-section-title">
+          <i class="ri-download-line"></i>
+          1. 插件安装规则
+        </div>
+        <div class="tips-section-content">
+          <ul>
+            <li><strong>来源验证</strong>：仅从官方扩展目录或可信源安装插件</li>
+            <li><strong>依赖检查</strong>：安装前检查插件依赖与系统版本兼容性</li>
+            <li><strong>权限审核</strong>：审查插件请求的权限是否合理</li>
+            <li><strong>签名验证</strong>：验证插件签名确保未被篡改</li>
+            <li><strong>版本记录</strong>：记录安装的插件版本，便于回滚</li>
+          </ul>
+          <a href="learning-path.html?id=plugin-installation" class="learn-link">
+            <i class="ri-external-link-line"></i>
+            学习插件安装最佳实践
+          </a>
+        </div>
+      </div>
+      
+      <div class="tips-section">
+        <div class="tips-section-title">
+          <i class="ri-shield-check-line"></i>
+          2. 插件安全使用规范
+        </div>
+        <div class="tips-section-content">
+          <ul>
+            <li><strong>权限最小化</strong>：按需授权，避免给予过多权限</li>
+            <li><strong>数据隔离</strong>：插件数据独立存储，不访问其他插件数据</li>
+            <li><strong>审计日志</strong>：记录插件所有操作，便于安全审计</li>
+            <li><strong>异常监控</strong>：监控插件异常行为，及时告警</li>
+            <li><strong>定期更新</strong>：及时更新插件修复安全漏洞</li>
+          </ul>
+          <a href="learning-path.html?id=plugin-security" class="learn-link">
+            <i class="ri-external-link-line"></i>
+            学习插件安全规范
+          </a>
+        </div>
+      </div>
+      
+      <div class="tips-section">
+        <div class="tips-section-title">
+          <i class="ri-code-line"></i>
+          3. 插件开发规范
+        </div>
+        <div class="tips-section-content">
+          <ul>
+            <li><strong>SDK 使用</strong>：使用官方 SDK 开发插件，确保兼容性</li>
+            <li><strong>接口规范</strong>：遵循 OpenClaw 插件接口规范</li>
+            <li><strong>错误处理</strong>：完善错误处理，不泄露敏感信息</li>
+            <li><strong>文档完整</strong>：提供完整的使用文档和配置说明</li>
+            <li><strong>测试覆盖</strong>：提供单元测试和集成测试</li>
+          </ul>
+          <a href="learning-path.html?id=plugin-development" class="learn-link">
+            <i class="ri-external-link-line"></i>
+            学习插件开发规范
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 真实插件数据（来自 OpenClaw extensions 目录）
+    const pluginsData = [
+      // 通信渠道
+      { id: 'discord', name: 'Discord', icon: '🎮', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'feishu', name: '飞书', icon: '🪽', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'googlechat', name: 'Google Chat', icon: '🌐', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'imessage', name: 'iMessage', icon: '🍎', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'irc', name: 'IRC', icon: '💬', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'line', name: 'LINE', icon: '📱', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'matrix', name: 'Matrix', icon: '🔗', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'mattermost', name: 'Mattermost', icon: '💬', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'msteams', name: 'MS Teams', icon: '👥', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'signal', name: 'Signal', icon: '🔒', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'slack', name: 'Slack', icon: '💼', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'synology-chat', name: 'Synology Chat', icon: '💾', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'telegram', name: 'Telegram', icon: '✈️', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'whatsapp', name: 'WhatsApp', icon: '💬', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'zalo', name: 'Zalo', icon: '📱', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'nostr', name: 'Nostr', icon: '⚡', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'tlon', name: 'Tlon', icon: '🌐', category: '通信渠道', type: 'channel', installed: true },
+      { id: 'nextcloud-talk', name: 'Nextcloud Talk', icon: '☁️', category: '通信渠道', type: 'channel', installed: true },
+      
+      // 认证授权
+      { id: 'bluebubbles', name: 'BlueBubbles', icon: '🔵', category: '认证授权', type: 'auth', installed: true },
+      { id: 'google-antigravity-auth', name: 'Google Antigravity', icon: '🔐', category: '认证授权', type: 'auth', installed: true },
+      { id: 'google-gemini-cli-auth', name: 'Gemini CLI Auth', icon: '🤖', category: '认证授权', type: 'auth', installed: true },
+      { id: 'minimax-portal-auth', name: 'MiniMax Portal', icon: '🔑', category: '认证授权', type: 'auth', installed: true },
+      { id: 'qwen-portal-auth', name: 'Qwen Portal', icon: '🔑', category: '认证授权', type: 'auth', installed: true },
+      
+      // AI 能力
+      { id: 'acpx', name: 'ACP X', icon: '🤖', category: 'AI 能力', type: 'ai', installed: true },
+      { id: 'copilot-proxy', name: 'Copilot Proxy', icon: '✈️', category: 'AI 能力', type: 'ai', installed: true },
+      { id: 'nvidia-limited', name: 'NVIDIA Limited', icon: '🟢', category: 'AI 能力', type: 'ai', installed: true },
+      { id: 'open-prose', name: 'Open Prose', icon: '📝', category: 'AI 能力', type: 'ai', installed: true },
+      { id: 'llm-task', name: 'LLM Task', icon: '🧠', category: 'AI 能力', type: 'ai', installed: true },
+      
+      // 设备控制
+      { id: 'device-pair', name: 'Device Pair', icon: '📱', category: '设备控制', type: 'device', installed: true },
+      { id: 'phone-control', name: 'Phone Control', icon: '📞', category: '设备控制', type: 'device', installed: true },
+      { id: 'voice-call', name: 'Voice Call', icon: '🎙️', category: '设备控制', type: 'device', installed: true },
+      { id: 'talk-voice', name: 'Talk Voice', icon: '🔊', category: '设备控制', type: 'device', installed: true },
+      
+      // 诊断工具
+      { id: 'diagnostics-otel', name: 'Diagnostics OTel', icon: '📊', category: '诊断工具', type: 'tool', installed: true },
+      { id: 'diffs', name: 'Diffs', icon: '📝', category: '诊断工具', type: 'tool', installed: true },
+      { id: 'test-utils', name: 'Test Utils', icon: '🧪', category: '诊断工具', type: 'tool', installed: true },
+      
+      // 记忆存储
+      { id: 'memory-core', name: 'Memory Core', icon: '💾', category: '记忆存储', type: 'memory', installed: true },
+      { id: 'memory-lancedb', name: 'Memory LanceDB', icon: '🗄️', category: '记忆存储', type: 'memory', installed: true },
+      
+      // 其他
+      { id: 'shared', name: 'Shared', icon: '🔗', category: '基础设施', type: 'core', installed: true },
+      { id: 'thread-ownership', name: 'Thread Ownership', icon: '🧵', category: '基础设施', type: 'core', installed: true },
+      { id: 'lobster', name: 'Lobster', icon: '🦞', category: '基础设施', type: 'core', installed: true },
+      { id: 'zalouser', name: 'Zalo User', icon: '👤', category: '基础设施', type: 'core', installed: true },
+      { id: 'twitch', name: 'Twitch', icon: '📺', category: '通信渠道', type: 'channel', installed: true }
+    ];
+    
+    // 按分类分组
+    function groupByCategory(plugins) {
+      const groups = {};
+      plugins.forEach(p => {
+        if (!groups[p.category]) {
+          groups[p.category] = [];
+        }
+        groups[p.category].push(p);
+      });
+      return groups;
+    }
+    
+    // 加载插件列表
+    function loadPlugins() {
+      const container = document.getElementById('plugins-container');
+      const groups = groupByCategory(pluginsData);
+      
+      let totalInstalled = 0;
+      pluginsData.forEach(p => { if (p.installed) totalInstalled++; });
+      
+      let html = '';
+      
+      Object.keys(groups).sort().forEach(category => {
+        const plugins = groups[category];
+        
+        html += `
+          <div class="category-section">
+            <div class="category-header">
+              <span class="category-title">${category}</span>
+              <span class="category-count">${plugins.length} 个插件</span>
+            </div>
+            <div class="plugins-grid">
+              ${plugins.map(plugin => `
+                <div class="plugin-card">
+                  <div class="plugin-header">
+                    <div class="plugin-icon">${plugin.icon}</div>
+                    <div class="plugin-info">
+                      <div class="plugin-name">${plugin.name}</div>
+                      <div class="plugin-type">${plugin.type}</div>
+                    </div>
+                    <div class="plugin-status">
+                      <span class="status-dot ${plugin.installed ? 'installed' : ''}"></span>
+                      ${plugin.installed ? '已安装' : '未安装'}
+                    </div>
+                  </div>
+                  <div class="plugin-actions">
+                    <button class="btn btn-secondary" onclick="viewPlugin('${plugin.id}')">
+                      <i class="ri-information-line"></i> 详情
+                    </button>
+                    <button class="btn ${plugin.installed ? 'btn-secondary' : 'btn-primary'}">
+                      ${plugin.installed ? '禁用' : '启用'}
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+      
+      // 更新统计
+      document.getElementById('stat-total').textContent = pluginsData.length;
+      document.getElementById('stat-installed').textContent = totalInstalled;
+      document.getElementById('stat-categories').textContent = Object.keys(groups).length;
+    }
+    
+    // 查看插件详情
+    function viewPlugin(pluginId) {
+      const plugin = pluginsData.find(p => p.id === pluginId);
+      if (plugin) {
+        alert(`插件详情\n\nID: ${plugin.id}\n名称: ${plugin.name}\n分类: ${plugin.category}\n类型: ${plugin.type}\n状态: ${plugin.installed ? '已安装' : '未安装'}`);
+      }
+    }
+    
+    // 显示 Tips
+    function showTips() {
+      document.getElementById('tips-modal').classList.add('show');
+    }
+    
+    // 隐藏 Tips
+    function hideTips(event) {
+      if (!event || event.target === document.getElementById('tips-modal')) {
+        document.getElementById('tips-modal').classList.remove('show');
+      }
+    }
+    
+    // 初始化
+    loadPlugins();
+  </script>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'plugins' });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

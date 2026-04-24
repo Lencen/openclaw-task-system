@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学习路径详情 - Morning 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-content { padding: 24px; }
+    
+    .path-header { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+    .path-title-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+    .path-title { font-size: 24px; font-weight: 600; color: var(--text-primary); }
+    .path-category { padding: 6px 16px; border-radius: 20px; font-size: 12px; background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .path-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px; }
+    .path-meta { display: flex; gap: 24px; }
+    .meta-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
+    .meta-item i { color: var(--primary); }
+    
+    .progress-section { background: var(--bg-tertiary); border-radius: 8px; padding: 20px; margin-top: 20px; }
+    .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .progress-label { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+    .progress-value { font-size: 24px; font-weight: 700; color: var(--primary); }
+    .progress-bar { height: 12px; background: var(--bg-secondary); border-radius: 6px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--success)); border-radius: 6px; transition: width 0.5s; }
+    
+    .section { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+    .section-title { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .section-title i { color: var(--primary); }
+    
+    .milestone-list { display: flex; flex-direction: column; gap: 12px; }
+    .milestone-item { background: var(--bg-tertiary); border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; }
+    .milestone-status-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .milestone-status-icon.completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .milestone-status-icon.current { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .milestone-status-icon.pending { background: var(--bg-secondary); color: var(--text-tertiary); }
+    
+    .milestone-info { flex: 1; }
+    .milestone-title { font-size: 15px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+    .milestone-meta { font-size: 12px; color: var(--text-secondary); }
+    
+    .milestone-status { padding: 6px 14px; border-radius: 20px; font-size: 12px; }
+    .milestone-status.completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .milestone-status.current { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .milestone-status.pending { background: var(--bg-secondary); color: var(--text-tertiary); }
+    
+    /* 资源分类 */
+    .resources-category { margin-bottom: 20px; }
+    .resources-category:last-child { margin-bottom: 0; }
+    .category-label { font-size: 12px; color: var(--text-tertiary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .resources-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+    
+    .resource-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--bg-tertiary); border-radius: 8px; text-decoration: none; color: var(--text-primary); transition: all 0.2s; border: 1px solid transparent; }
+    .resource-item:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    .resource-item:hover .resource-icon { background: rgba(255,255,255,0.2); color: white; }
+    
+    .resource-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .resource-icon.docs { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .resource-icon.tutorial { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .resource-icon.github { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+    .resource-icon.skill { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    
+    .resource-info { flex: 1; min-width: 0; }
+    .resource-title { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div class="header-left"><div class="breadcrumb"><a href="learning-mechanism.html">学习</a> / <span id="breadcrumbTitle">路径详情</span></div></div>
+        <div class="header-right">
+          <button class="header-btn" title="返回" onclick="goBack()"><i class="ri-arrow-left-line"></i></button>
+        </div>
+      </header>
+      <div class="content">
+        <div class="page-content" id="pageContent">
+          <div class="empty-state">
+            <i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i>
+            <p>加载中...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    const API_BASE = window.location.origin;
+    let currentPath = null;
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      Sidebar.init({ activePage: 'learning-path' });
+      loadPath();
+    });
+    
+    async function loadPath() {
+      const params = new URLSearchParams(window.location.search);
+      const pathId = params.get('id');
+      
+      if (!pathId) {
+        showError('未指定学习路径');
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/learning-paths/${pathId}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          currentPath = data.data;
+          renderPath(data.data);
+        } else {
+          showError(data.error);
+        }
+      } catch (error) {
+        showError(error.message);
+      }
+    }
+    
+    function renderPath(path) {
+      document.getElementById('breadcrumbTitle').textContent = path.name;
+      document.title = path.name + ' - 学习路径';
+      
+      const completedCount = path.milestones.filter(m => m.status === 'completed').length;
+      const currentCount = path.milestones.filter(m => m.status === 'current').length;
+      
+      // 分类资源
+      const resources = path.resources || [];
+      const docsResources = resources.filter(r => r.type === '文档');
+      const tutorialResources = resources.filter(r => r.type === '教程');
+      const githubResources = resources.filter(r => r.type === 'GitHub');
+      const skillResources = resources.filter(r => r.type === '技能');
+      
+      document.getElementById('pageContent').innerHTML = `
+        <div class="path-header">
+          <div class="path-title-row">
+            <div class="path-title">${path.name}</div>
+            <span class="path-category">${path.category}</span>
+          </div>
+          <div class="path-desc">${path.description}</div>
+          <div class="path-meta">
+            <div class="meta-item"><i class="ri-time-line"></i> 预计 ${path.estimatedHours} 小时</div>
+            <div class="meta-item"><i class="ri-bar-chart-line"></i> 难度: ${path.difficulty}</div>
+            <div class="meta-item"><i class="ri-flag-line"></i> ${path.milestones.length} 个里程碑</div>
+          </div>
+          <div class="progress-section">
+            <div class="progress-header">
+              <span class="progress-label">学习进度</span>
+              <span class="progress-value">${path.progress}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${path.progress}%"></div>
+            </div>
+            <div style="display: flex; gap: 24px; margin-top: 12px; font-size: 12px; color: var(--text-secondary);">
+              <span><span style="color: var(--success);">●</span> ${completedCount} 已完成</span>
+              <span><span style="color: var(--primary);">●</span> ${currentCount} 进行中</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title"><i class="ri-flag-line"></i> 学习里程碑</div>
+          <div class="milestone-list">
+            ${path.milestones.map(ms => `
+              <div class="milestone-item">
+                <div class="milestone-status-icon ${ms.status}">
+                  ${ms.status === 'completed' ? '<i class="ri-check-line"></i>' : 
+                    ms.status === 'current' ? '<i class="ri-play-line"></i>' : 
+                    '<i class="ri-time-line"></i>'}
+                </div>
+                <div class="milestone-info">
+                  <div class="milestone-title">${ms.title}</div>
+                  <div class="milestone-meta">${ms.hours} 小时 · ${ms.date}</div>
+                </div>
+                <span class="milestone-status ${ms.status}">${getStatusLabel(ms.status)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        ${resources.length > 0 ? `
+        <div class="section">
+          <div class="section-title"><i class="ri-book-open-line"></i> 学习资源 (${resources.length})</div>
+          
+          ${docsResources.length > 0 ? `
+          <div class="resources-category">
+            <div class="category-label">📄 官方文档</div>
+            <div class="resources-grid">
+              ${docsResources.map(r => renderResource(r, 'docs')).join('')}
+            </div>
+          </div>
+          ` : ''}
+          
+          ${tutorialResources.length > 0 ? `
+          <div class="resources-category">
+            <div class="category-label">📚 教程指南</div>
+            <div class="resources-grid">
+              ${tutorialResources.map(r => renderResource(r, 'tutorial')).join('')}
+            </div>
+          </div>
+          ` : ''}
+          
+          ${githubResources.length > 0 ? `
+          <div class="resources-category">
+            <div class="category-label">🔗 GitHub 项目</div>
+            <div class="resources-grid">
+              ${githubResources.map(r => renderResource(r, 'github')).join('')}
+            </div>
+          </div>
+          ` : ''}
+          
+          ${skillResources.length > 0 ? `
+          <div class="resources-category">
+            <div class="category-label">🛠️ 相关技能</div>
+            <div class="resources-grid">
+              ${skillResources.map(r => renderResource(r, 'skill')).join('')}
+            </div>
+          </div>
+          ` : ''}
+        </div>
+        ` : ''}
+      `;
+    }
+    
+    function renderResource(r, type) {
+      const icons = {
+        docs: '<i class="ri-file-text-line"></i>',
+        tutorial: '<i class="ri-book-read-line"></i>',
+        github: '<i class="ri-github-fill"></i>',
+        skill: '<i class="ri-tools-line"></i>'
+      };
+      
+      return `
+        <a href="${r.url}" target="${r.url.startsWith('http') ? '_blank' : '_self'}" class="resource-item">
+          <div class="resource-icon ${type}">${icons[type]}</div>
+          <span class="resource-title">${r.title}</span>
+        </a>
+      `;
+    }
+    
+    function getStatusLabel(status) {
+      const labels = {
+        completed: '已完成',
+        current: '进行中',
+        pending: '待开始'
+      };
+      return labels[status] || status;
+    }
+    
+    function showError(message) {
+      document.getElementById('pageContent').innerHTML = `
+        <div class="empty-state">
+          <i class="ri-error-warning-line"></i>
+          <p>加载失败: ${message}</p>
+        </div>
+      `;
+    }
+    
+    function goBack() {
+      window.location.href = 'learning-mechanism.html';
+    }
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

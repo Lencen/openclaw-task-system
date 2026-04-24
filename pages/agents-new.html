@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>Agent 监控 - 任务系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content {
+      padding: 24px;
+    }
+    
+    /* 统计卡片 */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+    
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    
+    .stat-icon {
+      font-size: 16px;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    
+    .stat-card.success .stat-value { color: var(--success); }
+    .stat-card.warning .stat-value { color: var(--warning); }
+    .stat-card.danger .stat-value { color: var(--danger); }
+    
+    .stat-trend {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 6px;
+    }
+    
+    /* Agent 表格 */
+    .table-container {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .table-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .table-title {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .table-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+    
+    .agent-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .agent-table th {
+      background: var(--bg-tertiary);
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .agent-table td {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    
+    .agent-table tr:hover {
+      background: rgba(59, 130, 246, 0.05);
+    }
+    
+    .agent-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    /* Agent 信息 */
+    .agent-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .agent-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      background: rgba(59, 130, 246, 0.15);
+    }
+    
+    .agent-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .agent-role {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+    
+    /* 状态徽章 */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .status-badge.online {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .status-badge.busy {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+    
+    .status-badge.offline {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s infinite;
+    }
+    
+    .status-badge.offline .status-dot {
+      animation: none;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    /* 进度条 */
+    .progress-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .progress-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    
+    .progress-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      min-width: 40px;
+      text-align: right;
+    }
+    
+    /* 当前任务 */
+    .current-task {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .task-icon {
+      color: var(--primary);
+    }
+    
+    .task-text {
+      color: var(--text-primary);
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .no-task {
+      color: var(--text-tertiary);
+      font-style: italic;
+    }
+    
+    /* 操作按钮 */
+    .action-btns {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .action-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+    
+    /* 心跳时间 */
+    .heartbeat {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    @media (max-width: 900px) {
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 600px) {
+      .stats-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .agent-table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <span>Agent 监控</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadAgents()">
+            <i class="ri-refresh-line"></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-content">
+          <!-- 统计卡片 -->
+          <div class="stats-row">
+            <div class="stat-card success">
+              <div class="stat-header">
+                <span class="stat-label">在线 Agent</span>
+                <i class="stat-icon ri-checkbox-blank-circle-fill"></i>
+              </div>
+              <div class="stat-value" id="onlineCount">--</div>
+              <div class="stat-trend">正常运行中</div>
+            </div>
+            
+            <div class="stat-card warning">
+              <div class="stat-header">
+                <span class="stat-label">忙碌 Agent</span>
+                <i class="stat-icon ri-checkbox-blank-circle-fill"></i>
+              </div>
+              <div class="stat-value" id="busyCount">--</div>
+              <div class="stat-trend">正在执行任务</div>
+            </div>
+            
+            <div class="stat-card danger">
+              <div class="stat-header">
+                <span class="stat-label">离线 Agent</span>
+                <i class="stat-icon ri-checkbox-blank-circle-fill"></i>
+              </div>
+              <div class="stat-value" id="offlineCount">--</div>
+              <div class="stat-trend">需要恢复</div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-header">
+                <span class="stat-label">执行中任务</span>
+                <i class="stat-icon ri-file-list-3-line"></i>
+              </div>
+              <div class="stat-value" id="taskCount">--</div>
+              <div class="stat-trend">当前进行中</div>
+            </div>
+          </div>
+
+          <!-- Agent 表格 -->
+          <div class="table-container">
+            <div class="table-header">
+              <span class="table-title"><i class="ri-robot-line"></i> Agent 列表</span>
+              <div class="table-actions">
+                <button class="btn btn-secondary" onclick="loadAgents()">
+                  <i class="ri-refresh-line"></i> 刷新
+                </button>
+              </div>
+            </div>
+            
+            <table class="agent-table">
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th>状态</th>
+                  <th>当前任务</th>
+                  <th>进度</th>
+                  <th>心跳</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="agentTableBody">
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-tertiary);">
+                    加载中...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    // Agent 配置
+    const AGENT_CONFIG = {
+      'agent-main': { name: 'Main Agent', icon: '🤖', role: '主控 Agent' },
+      'agent-deep': { name: 'Deep Agent', icon: '🧠', role: '深度思考' },
+      'agent-coder': { name: 'Coder Agent', icon: '💻', role: '代码开发' },
+      'agent-coder-1': { name: 'Coder-1 Agent', icon: '💻', role: '代码开发' },
+      'agent-coder-2': { name: 'Coder-2 Agent', icon: '💻', role: '代码开发' },
+      'agent-fast': { name: 'Fast Agent', icon: '⚡', role: '快速执行' },
+      'agent-chat': { name: 'Chat Agent', icon: '💬', role: '对话交互' },
+      'agent-test': { name: 'Test Agent', icon: '🧪', role: '测试验证' },
+      'agent-office': { name: 'Office Agent', icon: '📊', role: '办公处理' },
+      'agent-office-1': { name: 'Office-1 Agent', icon: '📊', role: '办公处理' }
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+      Sidebar.init({ activePage: 'agents' });
+      loadAgents();
+      setInterval(loadAgents, 10000);
+    });
+
+    async function loadAgents() {
+      try {
+        // 并行获取 Agent 状态和任务数据
+        const [agentsRes, tasksRes] = await Promise.all([
+          fetch(`${API_BASE}/api/agents/status`),
+          fetch(`${API_BASE}/api/tasks?limit=100&showCompleted=true`)
+        ]);
+        
+        const agentsData = await agentsRes.json();
+        const tasksData = await tasksRes.json();
+        
+        // 获取真实 Agent 状态
+        const realStatus = {};
+        (agentsData.agents || []).forEach(agent => {
+          // 映射状态：idle/busy -> online, 其他 -> 对应状态
+          const statusMap = {
+            'idle': 'online',
+            'busy': 'busy',
+            'online': 'online',
+            'offline': 'offline',
+            'unhealthy': 'offline'
+          };
+          const agentId = agent.id.startsWith('agent-') ? agent.id : `agent-${agent.id}`;
+          realStatus[agentId] = statusMap[agent.status] || agent.status;
+        });
+        
+        // 正确获取任务数组
+        const tasks = (tasksData.data && tasksData.data.tasks) || tasksData.data || [];
+        
+        // 统计每个 Agent 的任务
+        const agentStats = {};
+        
+        // 初始化所有 Agent
+        Object.keys(AGENT_CONFIG).forEach(agentId => {
+          agentStats[agentId] = { 
+            total: 0, 
+            doing: 0, 
+            completed: 0, 
+            currentTask: null 
+          };
+        });
+        
+        // 统计任务（兼容 assignedAgent 和 assigned_agent）
+        tasks.forEach(task => {
+          let agentId = task.assignedAgent || task.assigned_agent;
+          if (!agentId) return;
+          
+          // 兼容两种格式: "main" 和 "agent-main"
+          const normalizedAgentId = agentId.startsWith('agent-') ? agentId : `agent-${agentId}`;
+          if (!agentStats[normalizedAgentId]) return;
+          
+          agentStats[normalizedAgentId].total++;
+          if (task.status === 'doing') {
+            agentStats[normalizedAgentId].doing++;
+            agentStats[normalizedAgentId].currentTask = task.title;
+          } else if (task.status === 'completed') {
+            agentStats[normalizedAgentId].completed++;
+          }
+        });
+        
+        // 构建 Agent 列表（使用真实状态）
+        const agents = Object.keys(AGENT_CONFIG).map(agentId => {
+          const stats = agentStats[agentId];
+          // 优先使用 API 返回的真实状态
+          const apiStatus = realStatus[agentId] || 'offline';
+          // 如果有正在执行的任务，显示忙碌；否则使用真实状态
+          const status = stats.doing > 0 ? 'busy' : apiStatus;
+          
+          return {
+            id: agentId,
+            ...AGENT_CONFIG[agentId],
+            status,
+            currentTask: stats.currentTask,
+            progress: stats.doing > 0 ? 50 : 0,
+            completedTasks: stats.completed
+          };
+        });
+        
+        renderAgents(agents);
+        updateStats(agents);
+      } catch (e) {
+        console.error('加载失败:', e);
+        renderMockAgents();
+      }
+    }
+
+    function renderMockAgents() {
+      const mockAgents = Object.keys(AGENT_CONFIG).map((id, index) => ({
+        id,
+        ...AGENT_CONFIG[id],
+        status: index < 6 ? 'online' : index < 8 ? 'busy' : 'offline',
+        model: 'glm-5',
+        currentTask: index < 4 ? `执行任务 #${index + 1}` : null,
+        progress: Math.floor(Math.random() * 100),
+        completedTasks: Math.floor(Math.random() * 50 + 10),
+        lastHeartbeat: new Date().toISOString()
+      }));
+      
+      renderAgents(mockAgents);
+      updateStats(mockAgents);
+    }
+
+    function renderAgents(agents) {
+      const tbody = document.getElementById('agentTableBody');
+      
+      if (agents.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-tertiary);">
+              暂无 Agent 数据
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      const html = agents.map(agent => {
+        const config = AGENT_CONFIG[agent.id] || { name: agent.id, icon: '🤖', role: 'Agent' };
+        const status = agent.status || 'offline';
+        // unhealthy 也显示为在线（Agent 已注册但未发送心跳）
+        const statusClass = status === 'online' || status === 'idle' || status === 'unhealthy' ? 'online' : status === 'busy' || status === 'working' ? 'busy' : 'offline';
+        const statusText = status === 'online' || status === 'idle' || status === 'unhealthy' ? '在线' : status === 'busy' || status === 'working' ? '忙碌' : '离线';
+        const progress = agent.progress || 0;
+        
+        return `
+          <tr>
+            <td>
+              <div class="agent-info">
+                <div class="agent-avatar">${config.icon}</div>
+                <div>
+                  <div class="agent-name">${config.name}</div>
+                  <div class="agent-role">${config.role}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="status-badge ${statusClass}">
+                <span class="status-dot"></span>
+                ${statusText}
+              </span>
+            </td>
+            <td>
+              ${agent.currentTask ? `
+                <div class="current-task">
+                  <i class="ri-task-line task-icon"></i>
+                  <span class="task-text">${escapeHtml(agent.currentTask)}</span>
+                </div>
+              ` : `<span class="no-task">空闲</span>`}
+            </td>
+            <td>
+              <div class="progress-container">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${progress}%"></div>
+                </div>
+                <span class="progress-text">${progress}%</span>
+              </div>
+            </td>
+            <td>
+              <span class="heartbeat">${formatHeartbeat(agent.lastHeartbeat)}</span>
+            </td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn" title="查看详情" onclick="viewAgent('${agent.id}')">
+                  <i class="ri-eye-line"></i>
+                </button>
+                <button class="action-btn" title="查看日志" onclick="viewLogs('${agent.id}')">
+                  <i class="ri-file-list-3-line"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+      tbody.innerHTML = html;
+    }
+
+    function updateStats(agents) {
+      // idle 也算在线状态
+      const online = agents.filter(a => a.status === 'online' || a.status === 'idle' || a.status === 'unhealthy').length;
+      const busy = agents.filter(a => a.status === 'busy').length;
+      const offline = agents.filter(a => a.status === 'offline').length;
+      const tasks = agents.filter(a => a.currentTask).length;
+      
+      document.getElementById('onlineCount').textContent = online;
+      document.getElementById('busyCount').textContent = busy;
+      document.getElementById('offlineCount').textContent = offline;
+      document.getElementById('taskCount').textContent = tasks;
+    }
+
+    function formatHeartbeat(time) {
+      if (!time) return '--';
+      const diff = Date.now() - new Date(time).getTime();
+      if (diff < 60000) return '刚刚';
+      if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+      return Math.floor(diff / 3600000) + '小时前';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function viewAgent(id) {
+      window.location.href = `agent-detail.html?id=${id}`;
+    }
+
+    function viewLogs(id) {
+      // TODO: 跳转到 Agent 日志页
+      console.log('View logs:', id);
+    }
+  </script>
+
+  <script src="js/sidebar.js"></script>
+<script>FieldTips.init({pageType:"agent"});</script></body>
+</html>

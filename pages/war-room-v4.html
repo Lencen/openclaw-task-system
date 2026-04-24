@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>War Room v4 - 指挥中心（融合版）</title>
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    /* ========== 设计系统 ========== */
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --bg-hover: #3d4f65;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --border: #334155;
+      --primary: #3b82f6;
+      --primary-light: rgba(59, 130, 246, 0.15);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #8b5cf6;
+      --cyan: #06b6d4;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    /* 布局框架 */
+    .layout { display: flex; min-height: 100vh; }
+    .main { flex: 1; display: flex; flex-direction: column; }
+    .content { flex: 1; padding: 20px; overflow-y: auto; }
+
+    /* ========== 顶部栏增强 ========== */
+    .header {
+      height: 64px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .page-title {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 实时时钟 - 新增 */
+    .live-clock {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      color: var(--cyan);
+    }
+
+    .live-clock i { font-size: 14px; }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* ========== 任务卡片 - 新增核心功能 ========== */
+    .task-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-left: 4px solid var(--primary);
+    }
+
+    .task-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .task-card-title {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .task-card-title i { color: var(--primary); }
+
+    .task-status {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .task-status.doing { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .task-status.completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .task-status.pending { background: rgba(100, 116, 139, 0.15); color: var(--text-secondary); }
+
+    .task-name {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .task-name.idle { color: var(--text-secondary); font-style: italic; }
+
+    .task-step {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    /* 进度条 */
+    .progress-container {
+      margin: 16px 0;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .progress-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .progress-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .progress-bar {
+      height: 10px;
+      background: var(--bg-tertiary);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 5px;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+      transition: width 0.5s ease;
+    }
+
+    /* ETA 预估 */
+    .task-meta {
+      display: flex;
+      gap: 24px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .meta-item i { color: var(--text-secondary); }
+    .meta-item span { font-size: 13px; color: var(--text-secondary); }
+    .meta-item .value { color: var(--text-primary); font-weight: 500; }
+
+    /* 下个任务预览 */
+    .next-task {
+      margin-top: 16px;
+      padding: 12px;
+      background: rgba(245, 158, 11, 0.1);
+      border-radius: 8px;
+      border-left: 3px solid var(--warning);
+    }
+
+    .next-task-label {
+      font-size: 11px;
+      color: var(--warning);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .next-task-name {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .next-task.empty { background: var(--bg-tertiary); border-left-color: var(--text-tertiary); }
+    .next-task.empty .next-task-label { color: var(--text-tertiary); }
+    .next-task.empty .next-task-name { color: var(--text-secondary); font-style: italic; }
+
+    /* ========== 统计网格 ========== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.2s;
+    }
+
+    .stat-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-label i { font-size: 16px; }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .stat-card.cpu .stat-value { color: var(--primary); }
+    .stat-card.memory .stat-value { color: var(--purple); }
+    .stat-card.disk .stat-value { color: var(--warning); }
+    .stat-card.network .stat-value { color: var(--cyan); }
+
+    /* ========== 双栏布局 ========== */
+    .two-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-body {
+      padding: 16px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    /* Agent 列表 */
+    .agent-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .agent-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+
+    .agent-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .agent-avatar.online { background: var(--primary); color: white; }
+    .agent-avatar.busy { background: var(--warning); color: white; }
+    .agent-avatar.offline { background: var(--text-tertiary); color: white; }
+
+    .agent-info { flex: 1; }
+    .agent-name { font-weight: 500; font-size: 13px; }
+    .agent-status { font-size: 11px; color: var(--text-secondary); }
+
+    .agent-tasks {
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--bg-primary);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    /* 日志列表 */
+    .log-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .log-item {
+      display: flex;
+      gap: 12px;
+      padding: 10px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .log-time { color: var(--text-tertiary); white-space: nowrap; }
+    .log-level { font-weight: 600; min-width: 50px; }
+    .log-level.info { color: var(--primary); }
+    .log-level.warn { color: var(--warning); }
+    .log-level.error { color: var(--danger); }
+    .log-message { color: var(--text-primary); flex: 1; }
+
+    /* ========== 响应式 ========== */
+    @media (max-width: 1200px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-columns { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    /* 加载动画 */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .loading i {
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* ========== 健康度面板 ========== */
+    .health-panel {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .health-score-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-right: 24px;
+      border-right: 1px solid var(--border);
+    }
+
+    .health-score-circle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      background: conic-gradient(var(--success) 0deg, var(--success) 288deg, var(--bg-tertiary) 288deg);
+      position: relative;
+    }
+
+    .health-score-circle::before {
+      content: '';
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      background: var(--bg-secondary);
+      border-radius: 50%;
+    }
+
+    .health-score-circle span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .health-score-circle.grade-A { background: conic-gradient(var(--success) 0deg, var(--success) 324deg, var(--bg-tertiary) 324deg); }
+    .health-score-circle.grade-B { background: conic-gradient(var(--success) 0deg, var(--success) 288deg, var(--bg-tertiary) 288deg); }
+    .health-score-circle.grade-C { background: conic-gradient(var(--warning) 0deg, var(--warning) 252deg, var(--bg-tertiary) 252deg); }
+    .health-score-circle.grade-D { background: conic-gradient(var(--warning) 0deg, var(--warning) 216deg, var(--bg-tertiary) 216deg); }
+    .health-score-circle.grade-F { background: conic-gradient(var(--danger) 0deg, var(--danger) 180deg, var(--bg-tertiary) 180deg); }
+
+    .health-info h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .health-info .status {
+      font-size: 12px;
+      color: var(--success);
+    }
+
+    .health-info .status.warning { color: var(--warning); }
+    .health-info .status.danger { color: var(--danger); }
+
+    .health-metrics {
+      display: flex;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .health-metric {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .health-metric-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    .health-metric-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .health-alerts {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(16, 185, 129, 0.1);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--success);
+    }
+
+    .health-alerts.has-alerts {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+    }
+
+    .health-trend {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .health-trend.up { color: var(--success); }
+    .health-trend.down { color: var(--danger); }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <!-- 增强顶部栏 - 添加实时时钟 -->
+      <header class="header">
+        <div class="header-left">
+          <h1 class="page-title">
+            <i class="ri-command-line"></i>
+            War Room v4 指挥中心
+          </h1>
+          <!-- 实时时钟 - 新增功能 -->
+          <div class="live-clock" id="liveClock">
+            <i class="ri-time-line"></i>
+            <span>--:--:--</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="status-badge">
+            <span class="status-dot"></span>
+            <span id="systemStatus">系统正常</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- 健康度面板 - 新增核心功能 -->
+        <div class="health-panel" id="healthPanel">
+          <div class="health-score-wrap">
+            <div class="health-score-circle grade-B" id="healthScoreCircle">
+              <span id="healthScore">80%</span>
+            </div>
+            <div class="health-info">
+              <h3>系统健康度</h3>
+              <div class="status" id="healthStatus">良好</div>
+              <div class="health-trend" id="healthTrend">
+                <i class="ri-arrow-right-line"></i>
+                <span>稳定</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="health-metrics">
+            <div class="health-metric">
+              <span class="health-metric-label">任务</span>
+              <span class="health-metric-value" id="healthTasks">55/60</span>
+            </div>
+            <div class="health-metric">
+              <span class="health-metric-label">卡点</span>
+              <span class="health-metric-value" id="healthBlocked">0</span>
+            </div>
+            <div class="health-metric">
+              <span class="health-metric-label">Agent</span>
+              <span class="health-metric-value" id="healthAgents">6/6</span>
+            </div>
+            <div class="health-metric">
+              <span class="health-metric-label">服务</span>
+              <span class="health-metric-value" id="healthServices">7/7</span>
+            </div>
+          </div>
+          
+          <div class="health-alerts" id="healthAlerts">
+            <i class="ri-check-line"></i>
+            <span>无告警</span>
+          </div>
+        </div>
+
+        <!-- 当前任务卡片 - 新增核心功能 -->
+        <div class="task-card" id="currentTaskCard">
+          <div class="task-card-header">
+            <div class="task-card-title">
+              <i class="ri-rocket-line"></i>
+              当前任务
+            </div>
+            <span class="task-status doing" id="taskStatus">执行中</span>
+          </div>
+          
+          <div class="task-name idle" id="taskName">空闲中</div>
+          <div class="task-step" id="taskStep">等待任务分配...</div>
+          
+          <!-- 进度条 -->
+          <div class="progress-container">
+            <div class="progress-header">
+              <span class="progress-label">整体进度</span>
+              <span class="progress-value" id="progressValue">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+          </div>
+          
+          <!-- 元信息：ETA 等 -->
+          <div class="task-meta">
+            <div class="meta-item">
+              <i class="ri-time-line"></i>
+              <span>预计剩余：</span>
+              <span class="value" id="etaValue">--</span>
+            </div>
+            <div class="meta-item">
+              <i class="ri-timer-flash-line"></i>
+              <span>Token 消耗：</span>
+              <span class="value" id="tokenValue">0</span>
+            </div>
+          </div>
+          
+          <!-- 下个任务预览 - 新增功能 -->
+          <div class="next-task empty" id="nextTaskPreview">
+            <div class="next-task-label">
+              <i class="ri-arrow-right-line"></i>
+              下个任务
+            </div>
+            <div class="next-task-name">暂无安排</div>
+          </div>
+        </div>
+
+        <!-- 系统指标网格 -->
+        <div class="stats-grid">
+          <div class="stat-card cpu">
+            <div class="stat-header">
+              <span class="stat-label">
+                <i class="ri-cpu-line"></i>
+                CPU 使用
+              </span>
+            </div>
+            <div class="stat-value" id="cpuValue">--%</div>
+          </div>
+          
+          <div class="stat-card memory">
+            <div class="stat-header">
+              <span class="stat-label">
+                <i class="ri-stack-line"></i>
+                内存使用
+              </span>
+            </div>
+            <div class="stat-value" id="memoryValue">--%</div>
+          </div>
+          
+          <div class="stat-card disk">
+            <div class="stat-header">
+              <span class="stat-label">
+                <i class="ri-database-2-line"></i>
+                磁盘使用
+              </span>
+            </div>
+            <div class="stat-value" id="diskValue">--%</div>
+          </div>
+          
+          <div class="stat-card network">
+            <div class="stat-header">
+              <span class="stat-label">
+                <i class="ri-wifi-line"></i>
+                网络状态
+              </span>
+            </div>
+            <div class="stat-value" id="networkValue">正常</div>
+          </div>
+        </div>
+
+        <!-- 双栏面板 -->
+        <div class="two-columns">
+          <!-- Agent 状态 -->
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <i class="ri-team-line"></i>
+                Agent 状态
+              </div>
+              <span id="agentCount">0 在线</span>
+            </div>
+            <div class="panel-body">
+              <div class="agent-list" id="agentList">
+                <div class="loading">
+                  <i class="ri-loader-4-line"></i>
+                  加载中...
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 系统日志 -->
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <i class="ri-file-list-3-line"></i>
+                系统日志
+              </div>
+              <span id="logCount">0 条</span>
+            </div>
+            <div class="panel-body">
+              <div class="log-list" id="logList">
+                <div class="loading">
+                  <i class="ri-loader-4-line"></i>
+                  加载中...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = '';
+    const REFRESH_INTERVAL = 5000;
+
+    // ========== 初始化 Sidebar ==========
+    if (typeof Sidebar !== 'undefined') {
+      Sidebar.init({ activePage: 'war-room' });
+    }
+
+    // ========== 实时时钟 - 新增功能 ==========
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      document.querySelector('#liveClock span').textContent = timeStr;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // ========== 格式化 ETA ==========
+    function formatETA(seconds) {
+      if (!seconds || seconds <= 0) return '--';
+      if (seconds < 60) return `${Math.round(seconds)} 秒`;
+      if (seconds < 3600) return `${Math.round(seconds / 60)} 分钟`;
+      const hours = Math.floor(seconds / 3600);
+      const mins = Math.round((seconds % 3600) / 60);
+      return `${hours} 小时 ${mins} 分钟`;
+    }
+
+    // ========== 格式化 Token ==========
+    function formatTokens(num) {
+      if (!num) return '0';
+      if (num < 1000) return num.toString();
+      if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
+      return (num / 1000000).toFixed(1) + 'M';
+    }
+
+    // ========== 加载任务状态 - 核心功能 ==========
+    async function loadTaskState() {
+      try {
+        const res = await fetch(`${API_BASE}/api/state`);
+        const data = await res.json();
+        
+        if (data.success && data.state) {
+          const s = data.state;
+          
+          // 任务名称
+          const taskName = document.getElementById('taskName');
+          if (s.currentTask) {
+            taskName.textContent = s.currentTask;
+            taskName.classList.remove('idle');
+          } else {
+            taskName.textContent = '空闲中';
+            taskName.classList.add('idle');
+          }
+          
+          // 任务状态
+          const taskStatus = document.getElementById('taskStatus');
+          const statusMap = { doing: '执行中', completed: '已完成', pending: '等待中' };
+          taskStatus.textContent = statusMap[s.currentTaskStatus] || '等待中';
+          taskStatus.className = `task-status ${s.currentTaskStatus || 'pending'}`;
+          
+          // 当前步骤
+          document.getElementById('taskStep').textContent = 
+            s.currentStep || '等待任务分配...';
+          
+          // 进度条
+          const progress = s.progress || 0;
+          document.getElementById('progressValue').textContent = `${progress}%`;
+          document.getElementById('progressFill').style.width = `${progress}%`;
+          
+          // ETA 预估
+          document.getElementById('etaValue').textContent = 
+            formatETA(s.estimatedRemaining);
+          
+          // Token 消耗
+          const totalTokens = s.tokens?.total || 0;
+          document.getElementById('tokenValue').textContent = formatTokens(totalTokens);
+          
+          // 下个任务预览
+          const nextTaskEl = document.getElementById('nextTaskPreview');
+          if (s.nextTask) {
+            nextTaskEl.classList.remove('empty');
+            nextTaskEl.querySelector('.next-task-name').textContent = s.nextTask;
+          } else {
+            nextTaskEl.classList.add('empty');
+            nextTaskEl.querySelector('.next-task-name').textContent = '暂无安排';
+          }
+        }
+      } catch (e) {
+        console.error('加载任务状态失败:', e);
+      }
+    }
+
+    // ========== 加载系统指标 ==========
+    async function loadSystemStats() {
+      try {
+        const res = await fetch(`${API_BASE}/api/system/stats`);
+        const data = await res.json();
+        
+        if (data.success) {
+          // CPU - 修复数据结构
+          const cpuUsage = data.cpu?.usagePercent || data.cpu?.usage || 0;
+          document.getElementById('cpuValue').textContent = `${cpuUsage}%`;
+          
+          // 内存
+          const memPercent = data.memory?.percent || 0;
+          document.getElementById('memoryValue').textContent = `${memPercent}%`;
+          
+          // 磁盘 - 修复数据结构
+          const diskPercent = data.disk?.main?.percent || data.disk?.[0]?.percent || 0;
+          document.getElementById('diskValue').textContent = `${diskPercent}%`;
+          
+          // 网络
+          const connections = data.network?.connections || 0;
+          document.getElementById('networkValue').textContent = connections > 0 ? '正常' : '空闲';
+        }
+      } catch (e) {
+        console.error('加载系统指标失败:', e);
+      }
+    }
+
+    // ========== 加载 Agent 状态 ==========
+    async function loadAgents() {
+      try {
+        const res = await fetch(`${API_BASE}/api/agents/status`);
+        const data = await res.json();
+        
+        if (data.success) {
+          const agentList = document.getElementById('agentList');
+          const agents = data.agents || [];
+          const online = agents.filter(a => a.status !== 'offline').length;
+          
+          document.getElementById('agentCount').textContent = `${online} 在线`;
+          
+          agentList.innerHTML = agents.map(agent => {
+            const statusClass = agent.status === 'offline' ? 'offline' : 
+                               agent.busy ? 'busy' : 'online';
+            const statusText = agent.status === 'offline' ? '离线' : 
+                              (agent.busy ? '忙碌中' : '空闲');
+            return `
+              <div class="agent-item">
+                <div class="agent-avatar ${statusClass}">
+                  ${(agent.id || '?')[0].toUpperCase()}
+                </div>
+                <div class="agent-info">
+                  <div class="agent-name">${agent.id}</div>
+                  <div class="agent-status">${statusText}</div>
+                </div>
+                <div class="agent-tasks">${agent.tasks || 0} 任务</div>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        console.error('加载 Agent 状态失败:', e);
+      }
+    }
+
+    // ========== 加载系统日志 ==========
+    async function loadLogs() {
+      try {
+        const res = await fetch(`${API_BASE}/api/logs?limit=10`);
+        const data = await res.json();
+        
+        if (data.success) {
+          const logList = document.getElementById('logList');
+          const logs = data.logs || data.messages || [];
+          
+          document.getElementById('logCount').textContent = `${logs.length} 条`;
+          
+          logList.innerHTML = logs.map(log => {
+            const time = new Date(log.timestamp || log.time).toLocaleTimeString('zh-CN');
+            const level = log.level || 'info';
+            return `
+              <div class="log-item">
+                <span class="log-time">${time}</span>
+                <span class="log-level ${level}">${level.toUpperCase()}</span>
+                <span class="log-message">${log.message || log.text || ''}</span>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        console.error('加载日志失败:', e);
+      }
+    }
+
+    // ========== 加载健康度数据 - 新增功能 ==========
+    async function loadHealthData() {
+      try {
+        // 调用状态汇总 API
+        const res = await fetch('http://localhost:8087/api/status/full');
+        const data = await res.json();
+        
+        // 更新健康度分数
+        const score = data.details?.health?.overall || 80;
+        const grade = data.details?.health?.grade || 'B';
+        const status = data.details?.health?.status || 'good';
+        
+        document.getElementById('healthScore').textContent = `${score}%`;
+        
+        const circle = document.getElementById('healthScoreCircle');
+        circle.className = `health-score-circle grade-${grade}`;
+        
+        // 更新状态文本
+        const statusEl = document.getElementById('healthStatus');
+        const statusMap = {
+          'excellent': '优秀',
+          'good': '良好',
+          'fair': '一般',
+          'poor': '较差',
+          'critical': '严重'
+        };
+        statusEl.textContent = statusMap[status] || '良好';
+        statusEl.className = `status ${status === 'critical' || status === 'poor' ? 'danger' : status === 'fair' ? 'warning' : ''}`;
+        
+        // 更新指标
+        const tasks = data.summary?.tasks || {};
+        document.getElementById('healthTasks').textContent = 
+          `${tasks.completed || 0}/${tasks.total || 0}`;
+        
+        document.getElementById('healthBlocked').textContent = 
+          data.summary?.blocked || 0;
+        
+        document.getElementById('healthAgents').textContent = 
+          `${data.summary?.agents?.online || 0}/${data.summary?.agents?.total || 0}`;
+        
+        document.getElementById('healthServices').textContent = 
+          `${data.summary?.services?.healthy || 0}/${data.details?.services?.total || 7}`;
+        
+        // 更新告警
+        const alertsEl = document.getElementById('healthAlerts');
+        const alerts = data.alerts || [];
+        
+        if (alerts.length > 0) {
+          alertsEl.classList.add('has-alerts');
+          alertsEl.innerHTML = `<i class="ri-error-warning-line"></i><span>${alerts.length} 个告警</span>`;
+        } else {
+          alertsEl.classList.remove('has-alerts');
+          alertsEl.innerHTML = `<i class="ri-check-line"></i><span>无告警</span>`;
+        }
+        
+        // 更新趋势
+        const trend = data.details?.health?.trend || 'stable';
+        const trendEl = document.getElementById('healthTrend');
+        const trendMap = {
+          'improving': { icon: 'ri-arrow-up-line', text: '上升', class: 'up' },
+          'declining': { icon: 'ri-arrow-down-line', text: '下降', class: 'down' },
+          'stable': { icon: 'ri-arrow-right-line', text: '稳定', class: '' }
+        };
+        const t = trendMap[trend] || trendMap['stable'];
+        trendEl.className = `health-trend ${t.class}`;
+        trendEl.innerHTML = `<i class="${t.icon}"></i><span>${t.text}</span>`;
+        
+      } catch (e) {
+        console.error('加载健康度数据失败:', e);
+        // 设置默认值
+        document.getElementById('healthScore').textContent = '--';
+        document.getElementById('healthStatus').textContent = '获取中...';
+      }
+    }
+
+    // ========== 主加载函数 ==========
+    async function loadAllData() {
+      await Promise.all([
+        loadTaskState(),
+        loadSystemStats(),
+        loadAgents(),
+        loadLogs(),
+        loadHealthData()
+      ]);
+      
+      // 更新最后更新时间
+      document.getElementById('lastUpdated').textContent = 
+        new Date().toLocaleTimeString('zh-CN');
+    }
+
+    // ========== 初始化 ==========
+    loadAllData();
+    setInterval(loadAllData, REFRESH_INTERVAL);
+
+    console.log('✅ War Room v4 融合版已启动');
+  </script>
+  
+  <!-- 菜单权限控制 -->
+  <script src="js/menu-permission.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/sidebar-permission-integration.js"></script>
+  <script>
+    // 初始化菜单权限
+    document.addEventListener('DOMContentLoaded', function() {
+      // 从 localStorage 获取角色，默认 guest
+      const savedRole = localStorage.getItem('currentRole') || 'guest';
+      MenuPermission.init({ currentRole: savedRole });
+      
+      // 初始化侧边栏
+      Sidebar.init({ activePage: 'warroom' });      
+      console.log('[WarRoom] 菜单权限初始化完成，当前角色:', savedRole);
+    });
+  </script>
+<!-- 实时工作面板融合 -->
+<link rel="stylesheet" href="css/realtime-warroom-integration.css">
+<script src="js/realtime-warroom-integration.js"></script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

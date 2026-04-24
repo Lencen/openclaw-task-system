@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Projects Test</title>
+  <script src="/js/app.js"></script>
+  <script src="js/auth-guard.js"></script>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <h1>Projects API Test</h1>
+  <div id="result"></div>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        console.log('Testing API...');
+        
+        // 调用 API
+        const projects = await API.getProjects({});
+        console.log('Projects:', projects);
+        
+        document.getElementById('result').innerHTML = `
+          <p><strong>Projects count:</strong> ${Array.isArray(projects) ? projects.length : 'Not an array'}</p>
+          <p><strong>Data type:</strong> ${typeof projects}</p>
+          ${Array.isArray(projects) ? `
+            <p><strong>First project:</strong> ${projects[0] ? projects[0].name : 'N/A'}</p>
+            <ul>
+              ${projects.slice(0, 3).map(p => `<li>${p.name}</li>`).join('')}
+            </ul>
+          ` : ''}
+        `;
+        
+        if (Array.isArray(projects) && projects.length > 0) {
+          alert(`成功加载 ${projects.length} 个项目！`);
+        } else {
+          alert('没有加载到项目数据');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('result').innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+      }
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

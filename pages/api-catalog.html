@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API 目录 - Morning 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+      
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      flex: 1;
+      min-width: 150px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+    }
+    
+    .stat-card.get .stat-value { color: var(--success); }
+    .stat-card.post .stat-value { color: var(--primary); }
+    .stat-card.put .stat-value { color: var(--warning); }
+    .stat-card.delete .stat-value { color: var(--danger); }
+    
+    /* 筛选工具栏 */
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .filter-tab {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 16px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    
+    .filter-tab:hover {
+      border-color: var(--primary);
+      color: var(--text-primary);
+    }
+    
+    .filter-tab.active {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    
+    /* API 分组 */
+    .api-group {
+      margin-bottom: 32px;
+    }
+    
+    .group-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .group-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(59, 130, 246, 0.15);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      font-size: 18px;
+    }
+    
+    .group-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .group-count {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      background: var(--bg-tertiary);
+      padding: 4px 10px;
+      border-radius: 9999px;
+    }
+    
+    /* API 列表 */
+    .api-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+      gap: 12px;
+    }
+    
+    .api-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .api-card:hover {
+      border-color: var(--primary);
+      transform: translateX(4px);
+    }
+    
+    .api-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .method-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      min-width: 60px;
+      text-align: center;
+    }
+    
+    .method-badge.get {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .method-badge.post {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+    }
+    
+    .method-badge.put {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+    
+    .method-badge.delete {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+    
+    .api-path {
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 13px;
+      color: var(--text-primary);
+      flex: 1;
+    }
+    
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+    }
+    
+    .status-badge.online {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .status-badge.offline {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+    
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    
+    .api-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    
+    .api-description {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+    
+    .api-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .meta-item i {
+      font-size: 14px;
+    }
+    
+    .tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+    
+    .tag.core {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+    }
+    
+    .tag.agent {
+      background: rgba(139, 92, 246, 0.15);
+      color: #8b5cf6;
+    }
+    
+    /* 依赖关系 */
+    .dependencies {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .dependencies-title {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-bottom: 8px;
+    }
+    
+    .dependency-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    
+    .dependency-item {
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 11px;
+      background: var(--bg-tertiary);
+      padding: 4px 10px;
+      border-radius: 4px;
+      color: var(--text-secondary);
+    }
+    
+    /* 页面列表 */
+    .pages-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    
+    .page-tag {
+      font-size: 11px;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: var(--text-tertiary);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    /* 刷新按钮 */
+    .refresh-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+    
+    .refresh-btn:hover {
+      opacity: 0.9;
+    }
+    
+    .refresh-btn.loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    
+    .refresh-btn i {
+      transition: transform 0.3s;
+    }
+    
+    .refresh-btn.loading i {
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <!-- 统一侧边栏容器 -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容区 -->
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <a href="system-guide.html">系统</a>
+            <span>/</span>
+            <span>API 目录</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="refreshAll()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <!-- 统计卡片 -->
+        <div class="stats-row" id="stats">
+          <div class="stat-card">
+            <div class="stat-value" id="totalCount">-</div>
+            <div class="stat-label">总 API 数</div>
+          </div>
+          <div class="stat-card get">
+            <div class="stat-value" id="getCount">-</div>
+            <div class="stat-label">GET</div>
+          </div>
+          <div class="stat-card post">
+            <div class="stat-value" id="postCount">-</div>
+            <div class="stat-label">POST</div>
+          </div>
+          <div class="stat-card put">
+            <div class="stat-value" id="putCount">-</div>
+            <div class="stat-label">PUT</div>
+          </div>
+          <div class="stat-card delete">
+            <div class="stat-value" id="deleteCount">-</div>
+            <div class="stat-label">DELETE</div>
+          </div>
+        </div>
+        
+        <!-- 工具栏 -->
+        <div class="toolbar">
+          <input type="text" class="search-input" placeholder="搜索 API..." id="searchInput" oninput="filterAPIs()">
+          <div class="filter-tabs" id="groupTabs">
+            <button class="filter-tab active" onclick="filterByGroup('all')">全部</button>
+          </div>
+          <button class="refresh-btn" id="refreshBtn" onclick="refreshAll()">
+            <i class="ri-refresh-line"></i>
+            <span>刷新状态</span>
+          </button>
+        </div>
+        
+        <!-- API 列表 -->
+        <div id="apiContainer"></div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'api-catalog' });
+  </script>
+  
+  <script>
+    const API_BASE = window.location.origin;
+    let allAPIs = [];
+    let allStatuses = {};
+    let currentGroup = 'all';
+    let currentSearch = '';
+    
+    // 加载 API 目录
+    async function loadAPICatalog() {
+      try {
+        const res = await fetch(`${API_BASE}/api/api-catalog/catalog`);
+        const data = await res.json();
+        
+        if (data.success) {
+          allAPIs = data.data.flat;
+          updateStats(data.data.stats);
+          renderGroupTabs(data.data.groups);
+          renderAPIs();
+        }
+      } catch (e) {
+        console.error('加载 API 目录失败:', e);
+        document.getElementById('apiContainer').innerHTML = `
+          <div class="empty-state">
+            <i class="ri-error-warning-line"></i>
+            <p>加载失败: ${e.message}</p>
+          </div>
+        `;
+      }
+    }
+    
+    // 加载 API 状态
+    async function loadAPIStatus() {
+      try {
+        const res = await fetch(`${API_BASE}/api/api-catalog/status`);
+        const data = await res.json();
+        
+        if (data.success) {
+          allStatuses = data.data;
+          renderAPIs();
+        }
+      } catch (e) {
+        console.error('加载状态失败:', e);
+      }
+    }
+    
+    // 更新统计
+    function updateStats(stats) {
+      document.getElementById('totalCount').textContent = stats.total;
+      document.getElementById('getCount').textContent = stats.methods.GET;
+      document.getElementById('postCount').textContent = stats.methods.POST;
+      document.getElementById('putCount').textContent = stats.methods.PUT;
+      document.getElementById('deleteCount').textContent = stats.methods.DELETE;
+    }
+    
+    // 渲染分组标签
+    function renderGroupTabs(groups) {
+      const container = document.getElementById('groupTabs');
+      let html = '<button class="filter-tab active" onclick="filterByGroup(\'all\')">全部</button>';
+      
+      groups.forEach(g => {
+        const icon = getGroupIcon(g.group);
+        html += `<button class="filter-tab" onclick="filterByGroup('${g.group}')">${icon} ${g.group}</button>`;
+      });
+      
+      container.innerHTML = html;
+    }
+    
+    // 获取分组图标
+    function getGroupIcon(group) {
+      const icons = {
+        '任务管理': '📋',
+        '日历': '📅',
+        'Agent 管理': '🤖',
+        '项目管理': '📦',
+        '文档和技能': '📚',
+        '系统监控': '📊',
+        '通知': '🔔',
+        '进度推送': '📡',
+        '文件': '📁',
+        '工作日志': '📝',
+        '代码审查': '👁️',
+        '聊天': '💬',
+        '知识库': '🧠'
+      };
+      return icons[group] || '📁';
+    }
+    
+    // 筛选分组
+    function filterByGroup(group) {
+      currentGroup = group;
+      
+      // 更新标签状态
+      document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      renderAPIs();
+    }
+    
+    // 搜索筛选
+    function filterAPIs() {
+      currentSearch = document.getElementById('searchInput').value.toLowerCase();
+      renderAPIs();
+    }
+    
+    // 渲染 API 列表
+    function renderAPIs() {
+      const container = document.getElementById('apiContainer');
+      
+      // 筛选
+      let apis = allAPIs;
+      
+      if (currentGroup !== 'all') {
+        apis = apis.filter(api => api.group === currentGroup);
+      }
+      
+      if (currentSearch) {
+        apis = apis.filter(api => 
+          api.name.toLowerCase().includes(currentSearch) ||
+          api.path.toLowerCase().includes(currentSearch) ||
+          api.description.toLowerCase().includes(currentSearch)
+        );
+      }
+      
+      // 按分组组织
+      const groups = {};
+      apis.forEach(api => {
+        if (!groups[api.group]) {
+          groups[api.group] = [];
+        }
+        groups[api.group].push(api);
+      });
+      
+      // 渲染
+      let html = '';
+      
+      Object.keys(groups).forEach(groupName => {
+        const icon = getGroupIcon(groupName);
+        
+        html += `
+          <div class="api-group">
+            <div class="group-header">
+              <div class="group-icon">${icon}</div>
+              <div class="group-title">${groupName}</div>
+              <span class="group-count">${groups[groupName].length} 个 API</span>
+            </div>
+            <div class="api-list">
+        `;
+        
+        groups[groupName].forEach(api => {
+          const status = allStatuses[`${api.method} ${api.path}`] || { status: 'unknown' };
+          const statusClass = status.status === 'online' ? 'online' : 'offline';
+          const statusText = status.status === 'online' ? '在线' : '离线';
+          
+          html += `
+            <div class="api-card" onclick="toggleDetail(this)">
+              <div class="api-header">
+                <span class="method-badge ${api.method.toLowerCase()}">${api.method}</span>
+                <span class="api-path">${api.path}</span>
+                <span class="status-badge ${statusClass}">
+                  <span class="status-dot"></span>
+                  ${statusText}
+                </span>
+              </div>
+              <div class="api-name">${api.name}</div>
+              <div class="api-description">${api.description}</div>
+              <div class="api-meta">
+                <div class="meta-item">
+                  <i class="ri-file-list-line"></i>
+                  <span>用于 ${api.pages.length} 个页面</span>
+                </div>
+                ${api.tags.map(tag => `<span class="tag ${tag === '核心' ? 'core' : tag === 'Agent' ? 'agent' : ''}">${tag}</span>`).join('')}
+              </div>
+              ${api.pages.length > 0 ? `
+                <div class="pages-list">
+                  ${api.pages.map(page => `<span class="page-tag">${page}</span>`).join('')}
+                </div>
+              ` : ''}
+              ${api.dependencies.length > 0 ? `
+                <div class="dependencies">
+                  <div class="dependencies-title"><i class="ri-link"></i> 依赖的 API:</div>
+                  <div class="dependency-list">
+                    ${api.dependencies.map(dep => `<span class="dependency-item">${dep}</span>`).join('')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+        
+        html += `
+            </div>
+          </div>
+        `;
+      });
+      
+      if (apis.length === 0) {
+        html = `
+          <div class="empty-state">
+            <i class="ri-search-line"></i>
+            <p>没有找到匹配的 API</p>
+          </div>
+        `;
+      }
+      
+      container.innerHTML = html;
+    }
+    
+    // 切换详情
+    function toggleDetail(card) {
+      card.classList.toggle('expanded');
+    }
+    
+    // 刷新全部
+    async function refreshAll() {
+      const btn = document.getElementById('refreshBtn');
+      btn.classList.add('loading');
+      
+      await Promise.all([
+        loadAPICatalog(),
+        loadAPIStatus()
+      ]);
+      
+      setTimeout(() => {
+        btn.classList.remove('loading');
+      }, 500);
+    }
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAPICatalog();
+      loadAPIStatus();
+      
+      // 每 30 秒自动刷新状态
+      setInterval(loadAPIStatus, 30000);
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

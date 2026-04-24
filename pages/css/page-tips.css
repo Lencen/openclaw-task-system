@@ -1,0 +1,350 @@
+/**
+ * 页面 Tips 组件样式
+ * 用于显示业务规则、自动化流程说明
+ */
+
+/* Tips 按钮 */
+.tips-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+  color: var(--primary);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.tips-btn:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(139, 92, 246, 0.25));
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.tips-btn i {
+  font-size: 16px;
+}
+
+/* Tips 弹窗 */
+.tips-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.tips-modal.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tips-content {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: tipsSlideIn 0.3s ease;
+}
+
+@keyframes tipsSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tips 头部 */
+.tips-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+}
+
+.tips-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tips-header h2 i {
+  color: var(--primary);
+}
+
+.tips-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tips-close:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* Tips 主体 */
+.tips-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Tips 分区 */
+.tips-section {
+  margin-bottom: 24px;
+}
+
+.tips-section:last-child {
+  margin-bottom: 0;
+}
+
+.tips-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.tips-section-title i {
+  color: var(--primary);
+  font-size: 16px;
+}
+
+/* 规则列表 */
+.tips-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tips-rule {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+  border-left: 3px solid var(--primary);
+}
+
+.tips-rule-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--primary);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.tips-rule-content {
+  flex: 1;
+}
+
+.tips-rule-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.tips-rule-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* 流程图 */
+.tips-flow {
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.tips-flow-title {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.tips-flow-diagram {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.flow-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.flow-node {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.flow-node.trigger {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.flow-node.process {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--primary);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.flow-node.action {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.flow-node.result {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.flow-arrow {
+  color: var(--text-tertiary);
+  font-size: 16px;
+}
+
+.flow-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+/* 横向流程 */
+.tips-flow-horizontal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+}
+
+/* 关键指标 */
+.tips-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.tips-metric {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.tips-metric-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.tips-metric-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* 自动化标签 */
+.auto-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  margin-left: 8px;
+}
+
+.auto-badge i {
+  font-size: 11px;
+}
+
+/* Tips 代码块 */
+.tips-code {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+  color: #a5b4fc;
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+/* 响应式 */
+@media (max-width: 600px) {
+  .tips-content {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .tips-flow-horizontal {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .flow-arrow {
+    transform: rotate(90deg);
+  }
+}

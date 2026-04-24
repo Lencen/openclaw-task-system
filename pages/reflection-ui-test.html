@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reflection UI 测试 - 任务系统</title>
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-content {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .reflection-container {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 24px;
+      margin: 20px 0;
+    }
+    
+    .reflection-header {
+      margin-bottom: 20px;
+    }
+    
+    .reflection-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+    
+    .reflection-question {
+      margin-bottom: 20px;
+    }
+    
+    .question-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    
+    .question-textarea {
+      width: 100%;
+      min-height: 100px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+    }
+    
+    .reflection-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      justify-content: flex-end;
+    }
+    
+    .reflection-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    
+    .reflection-btn.primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .reflection-btn.primary:hover {
+      background: #2563eb;
+    }
+    
+    .reflection-btn:hover {
+      background: var(--bg-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <span>Reflection 测试</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadReflectionData()">
+            <i class="ri-refresh-line"></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-content">
+          <h2 class="reflection-title">Reflection UI 测试页面</h2>
+          
+          <div class="reflection-container">
+            <div class="reflection-header">
+              <h3>任务：实现 Reflection 自动化流程</h3>
+              <p>状态: <span id="taskStatus">completed</span></p>
+            </div>
+            
+            <div class="reflection-question">
+              <div class="question-label">1. 本次任务的核心目标是什么？是否达成？</div>
+              <textarea class="question-textarea" placeholder="请输入回答..."></textarea>
+            </div>
+            
+            <div class="reflection-question">
+              <div class="question-label">2. 执行过程中遇到了哪些问题？是如何解决的？</div>
+              <textarea class="question-textarea" placeholder="请输入回答..."></textarea>
+            </div>
+            
+            <div class="reflection-question">
+              <div class="question-label">3. 任务结果是否符合预期？有哪些可以改进的地方？</div>
+              <textarea class="question-textarea" placeholder="请输入回答..."></textarea>
+            </div>
+            
+            <div class="reflection-question">
+              <div class="question-label">4. 本次任务中学到了什么？有哪些最佳实践可以复用？</div>
+              <textarea class="question-textarea" placeholder="请输入回答..."></textarea>
+            </div>
+            
+            <div class="reflection-question">
+              <div class="question-label">5. 针对本次任务的反思，未来有哪些改进计划？</div>
+              <textarea class="question-textarea" placeholder="请输入回答..."></textarea>
+            </div>
+            
+            <div class="reflection-actions">
+              <button class="reflection-btn" onclick="saveReflection()">
+                <i class="ri-save-line"></i> 保存
+              </button>
+              <button class="reflection-btn primary" onclick="submitReflection()">
+                <i class="ri-checkbox-circle-line"></i> 提交 Reflection
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    // 初始化侧边栏
+    Sidebar.init({ activePage: 'reflection-test' });
+    
+    // 页面加载完成后获取任务状态
+    document.addEventListener('DOMContentLoaded', function() {
+      loadReflectionData();
+    });
+    
+    // 加载 Reflection 数据
+    function loadReflectionData() {
+      console.log('加载 Reflection 数据...');
+      // 这里可以添加实际的数据加载逻辑
+    }
+    
+    // 保存 Reflection
+    function saveReflection() {
+      console.log('保存 Reflection...');
+      alert('Reflection 已保存');
+    }
+    
+    // 提交 Reflection
+    function submitReflection() {
+      console.log('提交 Reflection...');
+      alert('Reflection 已提交');
+    }
+  </script>
+</body>
+</html>

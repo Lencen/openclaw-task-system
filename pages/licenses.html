@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>许可证管理 - 任务管理系统</title>
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .page-title { font-size: 24px; font-weight: 600; color: var(--text-primary); }
+    .search-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--primary-color); }
+    .stat-label { color: var(--text-secondary); margin-top: 4px; font-size: 13px; }
+    .table-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+    .data-table th { background: var(--bg-secondary); font-weight: 600; color: var(--text-secondary); }
+    .data-table tr:hover { background: var(--hover-bg); }
+    .status-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .status-active { background: #e6f7ee; color: #00a854; }
+    .status-inactive { background: #f0f0f0; color: #666; }
+    .status-expired { background: #fff7e6; color: #fa8c16; }
+    .status-revoked { background: #fff1f0; color: #f5222d; }
+    .edition-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 11px; }
+    .edition-basic { background: #f0f0f0; color: #666; }
+    .edition-professional { background: #e6f7ff; color: #1890ff; }
+    .edition-enterprise { background: #f9f0ff; color: #722ed1; }
+    .action-btn { padding: 3px 6px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-right: 4px; }
+    .btn-view { background: var(--primary-color); color: white; }
+    .btn-renew { background: #52c41a; color: white; }
+    .btn-revoke { background: #f5222d; color: white; }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 12px; }
+    .page-btn { padding: 6px 10px; border: 1px solid var(--border-color); background: white; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .page-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+    .page-info { color: var(--text-secondary); font-size: 13px; }
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.show { display: flex; }
+    .modal-content { background: white; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+    .modal-header { padding: 14px 18px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 16px; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-secondary); }
+    .modal-body { padding: 18px; }
+    .modal-footer { padding: 14px 18px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 8px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; margin-bottom: 4px; font-weight: 500; font-size: 13px; }
+    .form-input, .form-select { width: 100%; padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn { padding: 6px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .btn-primary { background: var(--primary-color); color: white; }
+    .btn-secondary { background: var(--bg-secondary); color: var(--text-primary); }
+    .btn-success { background: #52c41a; color: white; }
+    .license-key { font-family: monospace; background: #f5f5f5; padding: 2px 4px; border-radius: 2px; font-size: 11px; }
+    .expiring-soon { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar" id="sidebar"></aside>
+    
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">许可证管理</h1>
+        <button class="btn btn-primary" onclick="showCreateModal()">+ 生成许可证</button>
+      </div>
+      
+      <div class="stats-cards" id="statsCards">
+        <div class="stat-card">
+          <div class="stat-value" id="totalLicenses">-</div>
+          <div class="stat-label">许可证总数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="activeLicenses">-</div>
+          <div class="stat-label">已激活</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="inactiveLicenses">-</div>
+          <div class="stat-label">未激活</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="expiredLicenses" style="color: #fa8c16;">-</div>
+          <div class="stat-label">已过期</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="expiringLicenses" style="color: #f5222d;">-</div>
+          <div class="stat-label">即将到期 (30天内)</div>
+        </div>
+      </div>
+      
+      <div class="search-bar">
+        <input type="text" class="form-input" id="searchInput" placeholder="搜索许可证、激活码..." style="max-width: 200px;">
+        <select class="form-select" id="statusFilter" style="width: 120px;">
+          <option value="">全部状态</option>
+          <option value="active">已激活</option>
+          <option value="inactive">未激活</option>
+          <option value="expired">已过期</option>
+          <option value="revoked">已作废</option>
+        </select>
+        <select class="form-select" id="editionFilter" style="width: 120px;">
+          <option value="">全部版本</option>
+          <option value="basic">基础版</option>
+          <option value="professional">专业版</option>
+          <option value="enterprise">企业版</option>
+        </select>
+        <button class="btn btn-primary" onclick="loadLicenses()">搜索</button>
+      </div>
+      
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>许可证ID</th>
+              <th>激活码</th>
+              <th>客户</th>
+              <th>产品/版本</th>
+              <th>有效期</th>
+              <th>设备</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="licenseTableBody">
+            <tr><td colspan="8" style="text-align: center; padding: 40px;">加载中...</td></tr>
+          </tbody>
+        </table>
+        <div class="pagination" id="pagination">
+          <span class="page-info">第 1 页，共 0 条</span>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 创建许可证模态框 -->
+  <div class="modal" id="licenseModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">生成许可证</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="licenseForm">
+          <div class="form-group">
+            <label class="form-label">选择客户 *</label>
+            <select class="form-select" id="licenseCustomer" required>
+              <option value="">请选择客户</option>
+            </select>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">产品</label>
+              <select class="form-select" id="licenseProduct">
+                <option value="TaskSystem">TaskSystem</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">版本</label>
+              <select class="form-select" id="licenseEdition">
+                <option value="basic">基础版</option>
+                <option value="professional" selected>专业版</option>
+                <option value="enterprise">企业版</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">授权类型</label>
+              <select class="form-select" id="licenseType">
+                <option value="annual">年度订阅</option>
+                <option value="permanent">永久授权</option>
+                <option value="trial">试用版</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">到期日期</label>
+              <input type="date" class="form-input" id="licenseEndDate">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">最大用户数</label>
+              <input type="number" class="form-input" id="licenseMaxUsers" value="10">
+            </div>
+            <div class="form-group">
+              <label class="form-label">最大设备数</label>
+              <input type="number" class="form-input" id="licenseMaxDevices" value="1">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+        <button class="btn btn-primary" onclick="createLicense()">生成</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 续期模态框 -->
+  <div class="modal" id="renewModal">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3 class="modal-title">许可证续期</h3>
+        <button class="modal-close" onclick="closeRenewModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="renewLicenseId">
+        <div class="form-group">
+          <label class="form-label">新的到期日期</label>
+          <input type="date" class="form-input" id="renewEndDate">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeRenewModal()">取消</button>
+        <button class="btn btn-success" onclick="renewLicense()">确认续期</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    const API_BASE = '/api';
+    let currentPage = 1;
+    const pageSize = 20;
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStats();
+      loadLicenses();
+      loadCustomers();
+    });
+    
+    async function loadStats() {
+      try {
+        const response = await fetch(`${API_BASE}/stats/overview`);
+        const result = await response.json();
+        if (result.success) {
+          document.getElementById('totalLicenses').textContent = result.data.licenses.total;
+          document.getElementById('activeLicenses').textContent = result.data.licenses.active;
+          document.getElementById('inactiveLicenses').textContent = result.data.licenses.total - result.data.licenses.active - result.data.licenses.expired;
+          document.getElementById('expiredLicenses').textContent = result.data.licenses.expired;
+          document.getElementById('expiringLicenses').textContent = result.data.licenses.expiringSoon;
+        }
+      } catch (error) {
+        console.error('加载统计数据失败:', error);
+      }
+    }
+    
+    async function loadLicenses() {
+      const keyword = document.getElementById('searchInput').value;
+      const status = document.getElementById('statusFilter').value;
+      const edition = document.getElementById('editionFilter').value;
+      
+      try {
+        const params = new URLSearchParams({ page: currentPage, pageSize });
+        if (keyword) params.append('keyword', keyword);
+        if (status) params.append('status', status);
+        if (edition) params.append('edition', edition);
+        
+        const response = await fetch(`${API_BASE}/licenses?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          renderLicenses(result.data);
+        }
+      } catch (error) {
+        console.error('加载许可证列表失败:', error);
+      }
+    }
+    
+    async function renderLicenses(data) {
+      const tbody = document.getElementById('licenseTableBody');
+      
+      if (data.list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">暂无数据</td></tr>';
+        return;
+      }
+      
+      const rows = await Promise.all(data.list.map(async license => {
+        let customerName = '-';
+        if (license.customer_id) {
+          try {
+            const custRes = await fetch(`${API_BASE}/customers/${license.customer_id}`);
+            const custData = await custRes.json();
+            if (custData.success) customerName = custData.data.name;
+          } catch (e) {}
+        }
+        
+        const isExpiringSoon = license.end_date && new Date(license.end_date) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        
+        return `
+          <tr class="${isExpiringSoon && license.status === 'active' ? 'expiring-soon' : ''}">
+            <td><span class="license-key">${license.license_key}</span></td>
+            <td><span class="license-key">${license.activation_code || '-'}</span></td>
+            <td>${customerName}</td>
+            <td>
+              <span class="edition-badge edition-${license.edition}">${getEditionLabel(license.edition)}</span>
+            </td>
+            <td>${license.end_date ? formatDate(license.end_date) : '永久'}</td>
+            <td>${license.activated_devices}/${license.max_devices}</td>
+            <td><span class="status-badge status-${license.status}">${getStatusLabel(license.status)}</span></td>
+            <td>
+              <button class="action-btn btn-view" onclick="viewLicense('${license.id}')">详情</button>
+              ${license.status === 'active' ? `<button class="action-btn btn-renew" onclick="showRenewModal('${license.id}', '${license.end_date}')">续期</button>` : ''}
+              ${license.status !== 'revoked' ? `<button class="action-btn btn-revoke" onclick="revokeLicense('${license.id}')">作废</button>` : ''}
+            </td>
+          </tr>
+        `;
+      }));
+      
+      tbody.innerHTML = rows.join('');
+      renderPagination(data);
+    }
+    
+    function renderPagination(data) {
+      const totalPages = Math.ceil(data.total / pageSize);
+      let html = `<span class="page-info">第 ${currentPage} 页，共 ${data.total} 条</span>`;
+      
+      if (totalPages > 1) {
+        if (currentPage > 1) html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})">上一页</button>`;
+        for (let i = 1; i <= Math.min(totalPages, 5); i++) {
+          html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+        if (currentPage < totalPages) html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})">下一页</button>`;
+      }
+      
+      document.getElementById('pagination').innerHTML = html;
+    }
+    
+    function goToPage(page) { currentPage = page; loadLicenses(); }
+    
+    async function loadCustomers() {
+      try {
+        const response = await fetch(`${API_BASE}/customers?pageSize=100`);
+        const result = await response.json();
+        if (result.success) {
+          const select = document.getElementById('licenseCustomer');
+          result.data.list.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            select.appendChild(opt);
+          });
+        }
+      } catch (error) {
+        console.error('加载客户列表失败:', error);
+      }
+    }
+    
+    function showCreateModal() {
+      document.getElementById('licenseForm').reset();
+      document.getElementById('licenseModal').classList.add('show');
+      
+      // 设置默认到期日期为一年后
+      const oneYearLater = new Date();
+      oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
+      document.getElementById('licenseEndDate').value = oneYearLater.toISOString().split('T')[0];
+    }
+    
+    function closeModal() { document.getElementById('licenseModal').classList.remove('show'); }
+    
+    async function createLicense() {
+      const data = {
+        customer_id: document.getElementById('licenseCustomer').value,
+        product_id: document.getElementById('licenseProduct').value,
+        product_name: document.getElementById('licenseProduct').value,
+        edition: document.getElementById('licenseEdition').value,
+        validity_type: document.getElementById('licenseType').value,
+        end_date: document.getElementById('licenseEndDate').value,
+        max_users: parseInt(document.getElementById('licenseMaxUsers').value),
+        max_devices: parseInt(document.getElementById('licenseMaxDevices').value)
+      };
+      
+      if (!data.customer_id) { alert('请选择客户'); return; }
+      
+      try {
+        const response = await fetch(`${API_BASE}/licenses`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          closeModal();
+          loadLicenses();
+          loadStats();
+          alert('许可证生成成功！\n\n许可证ID: ' + result.data.license_key + '\n激活码: ' + result.data.activation_code);
+        } else {
+          alert('生成失败: ' + result.error);
+        }
+      } catch (error) {
+        alert('生成失败: ' + error.message);
+      }
+    }
+    
+    function viewLicense(id) {
+      window.location.href = `license-detail.html?id=${id}`;
+    }
+    
+    function showRenewModal(id, currentEndDate) {
+      document.getElementById('renewLicenseId').value = id;
+      if (currentEndDate) {
+        const newDate = new Date(currentEndDate);
+        newDate.setFullYear(newDate.getFullYear() + 1);
+        document.getElementById('renewEndDate').value = newDate.toISOString().split('T')[0];
+      }
+      document.getElementById('renewModal').classList.add('show');
+    }
+    
+    function closeRenewModal() { document.getElementById('renewModal').classList.remove('show'); }
+    
+    async function renewLicense() {
+      const id = document.getElementById('renewLicenseId').value;
+      const end_date = document.getElementById('renewEndDate').value;
+      
+      try {
+        const response = await fetch(`${API_BASE}/licenses/${id}/renew`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ end_date })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          closeRenewModal();
+          loadLicenses();
+          loadStats();
+          alert('许可证续期成功！');
+        } else {
+          alert('续期失败: ' + result.error);
+        }
+      } catch (error) {
+        alert('续期失败: ' + error.message);
+      }
+    }
+    
+    async function revokeLicense(id) {
+      if (!confirm('确定要作废这个许可证吗？此操作不可恢复！')) return;
+      
+      const reason = prompt('请输入作废原因：');
+      if (!reason) return;
+      
+      try {
+        const response = await fetch(`${API_BASE}/licenses/${id}/revoke`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          loadLicenses();
+          loadStats();
+          alert('许可证已作废');
+        } else {
+          alert('操作失败: ' + result.error);
+        }
+      } catch (error) {
+        alert('操作失败: ' + error.message);
+      }
+    }
+    
+    function getEditionLabel(edition) {
+      const labels = { basic: '基础版', professional: '专业版', enterprise: '企业版' };
+      return labels[edition] || edition;
+    }
+    
+    function getStatusLabel(status) {
+      const labels = { active: '已激活', inactive: '未激活', expired: '已过期', revoked: '已作废' };
+      return labels[status] || status;
+    }
+    
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      return new Date(dateStr).toLocaleDateString('zh-CN');
+    }
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

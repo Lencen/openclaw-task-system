@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>信息中心 - Morning 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-content { padding: 24px; }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 24px; }
+    
+    /* Tab 切换 */
+    .tab-bar { display: flex; gap: 4px; background: var(--bg-secondary); padding: 4px; border-radius: 10px; margin-bottom: 24px; width: fit-content; }
+    .tab-btn { padding: 10px 20px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary); font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s; }
+    .tab-btn:hover { color: var(--text-primary); }
+    .tab-btn.active { background: var(--primary); color: white; }
+    .tab-badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .tab-btn.active .tab-badge { background: rgba(255,255,255,0.2); }
+    .tab-btn:not(.active) .tab-badge { background: var(--bg-tertiary); }
+    
+    /* 内容区 */
+    .content-section { display: none; }
+    .content-section.active { display: block; }
+    
+    /* 消息卡片 */
+    .message-list { display: flex; flex-direction: column; gap: 12px; }
+    .message-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; display: flex; gap: 16px; cursor: pointer; transition: all 0.15s; }
+    .message-card:hover { border-color: var(--primary); }
+    .message-card.unread { border-left: 3px solid var(--primary); }
+    
+    .message-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .message-icon.task { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .message-icon.alert { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .message-icon.system { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .message-icon.agent { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+    
+    .message-content { flex: 1; min-width: 0; }
+    .message-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .message-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .message-time { font-size: 12px; color: var(--text-secondary); flex-shrink: 0; }
+    .message-body { font-size: 13px; color: var(--text-secondary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .message-meta { display: flex; gap: 12px; margin-top: 8px; font-size: 12px; color: var(--text-secondary); }
+    
+    /* 公告卡片 */
+    .announcement-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+    .announcement-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .announcement-title { font-size: 16px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+    .announcement-date { font-size: 12px; color: var(--text-secondary); }
+    .announcement-body { padding: 16px 20px; font-size: 14px; color: var(--text-secondary); line-height: 1.8; }
+    .announcement-tag { padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+    .announcement-tag.important { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .announcement-tag.normal { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    
+    /* 统计卡片 */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { flex: 1; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+    .stat-label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+    
+    /* 操作按钮 */
+    .action-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+    .action-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
+    .action-btn:hover { border-color: var(--primary); color: var(--text-primary); }
+    .action-btn.primary { background: var(--primary); border-color: var(--primary); color: white; }
+    
+    /* 空状态 */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div class="header-left"><div class="breadcrumb"><span>消息</span> / <span>信息中心</span></div></div>
+        <div class="header-right">
+          <button class="header-btn" title="全部已读" onclick="markAllRead()"><i class="ri-mail-check-line"></i></button>
+          <button class="header-btn" title="刷新" onclick="loadData()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      <div class="content">
+        <div class="page-content">
+          <h1 class="page-title"><i class="ri-notification-3-line"></i> 信息中心</h1>
+          
+          <!-- Tab 切换 -->
+          <div class="tab-bar">
+            <button class="tab-btn active" data-tab="notifications" onclick="switchTab('notifications')">
+              <i class="ri-notification-line"></i> 通知
+              <span class="tab-badge">5</span>
+            </button>
+            <button class="tab-btn" data-tab="announcements" onclick="switchTab('announcements')">
+              <i class="ri-megaphone-line"></i> 公告
+              <span class="tab-badge">2</span>
+            </button>
+            <button class="tab-btn" data-tab="alerts" onclick="switchTab('alerts')">
+              <i class="ri-alarm-warning-line"></i> 告警
+              <span class="tab-badge">3</span>
+            </button>
+            <button class="tab-btn" data-tab="tasks" onclick="switchTab('tasks')">
+              <i class="ri-task-line"></i> 任务
+              <span class="tab-badge">8</span>
+            </button>
+          </div>
+          
+          <!-- 通知 -->
+          <div class="content-section active" id="notifications-section">
+            <div class="action-bar">
+              <button class="action-btn" onclick="filterMessages('all')">全部</button>
+              <button class="action-btn" onclick="filterMessages('unread')">未读</button>
+              <button class="action-btn primary" onclick="markAllRead()">全部已读</button>
+            </div>
+            <div class="message-list" id="notificationList">
+              <div class="message-card unread">
+                <div class="message-icon task"><i class="ri-task-line"></i></div>
+                <div class="message-content">
+                  <div class="message-header">
+                    <div class="message-title">任务 #2850 已完成</div>
+                    <div class="message-time">5 分钟前</div>
+                  </div>
+                  <div class="message-body">「修复任务系统 UI 问题」任务已由 agent-coder 完成，请查看结果并确认。</div>
+                  <div class="message-meta"><span><i class="ri-robot-line"></i> agent-coder</span></div>
+                </div>
+              </div>
+              <div class="message-card unread">
+                <div class="message-icon alert"><i class="ri-error-warning-line"></i></div>
+                <div class="message-content">
+                  <div class="message-header">
+                    <div class="message-title">系统告警</div>
+                    <div class="message-time">15 分钟前</div>
+                  </div>
+                  <div class="message-body">Gateway 内存使用率达到 87%，已接近阈值 90%，请及时处理。</div>
+                  <div class="message-meta"><span><i class="ri-server-line"></i> system-monitor</span></div>
+                </div>
+              </div>
+              <div class="message-card">
+                <div class="message-icon agent"><i class="ri-robot-line"></i></div>
+                <div class="message-content">
+                  <div class="message-header">
+                    <div class="message-title">Agent 上线通知</div>
+                    <div class="message-time">1 小时前</div>
+                  </div>
+                  <div class="message-body">agent-office-1 已成功注册并上线，当前活跃 Agent 数量: 8</div>
+                  <div class="message-meta"><span><i class="ri-shield-check-line"></i> agent-manager</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 公告 -->
+          <div class="content-section" id="announcements-section">
+            <div class="announcement-card">
+              <div class="announcement-header">
+                <div class="announcement-title">
+                  <i class="ri-megaphone-line"></i>
+                  系统升级通知
+                  <span class="announcement-tag important">重要</span>
+                </div>
+                <div class="announcement-date">2026-03-20</div>
+              </div>
+              <div class="announcement-body">
+                系统将于 2026-03-21 02:00-04:00 进行例行维护升级，届时服务将暂停访问。本次升级内容包括：性能优化、Bug 修复、新增监控功能。请提前做好相关准备。
+              </div>
+            </div>
+            <div class="announcement-card">
+              <div class="announcement-header">
+                <div class="announcement-title">
+                  <i class="ri-file-list-3-line"></i>
+                  新功能上线：统一监控中心
+                  <span class="announcement-tag normal">功能</span>
+                </div>
+                <div class="announcement-date">2026-03-19</div>
+              </div>
+              <div class="announcement-body">
+                统一监控中心已上线，整合了系统概览、项目进展、Agent 状态、服务状态等模块，提供全局监控视图。欢迎体验并反馈意见。
+              </div>
+            </div>
+          </div>
+          
+          <!-- 告警 -->
+          <div class="content-section" id="alerts-section">
+            <div class="stats-row">
+              <div class="stat-card">
+                <div class="stat-value" style="color: var(--danger);">2</div>
+                <div class="stat-label">未处理</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" style="color: var(--warning);">1</div>
+                <div class="stat-label">处理中</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" style="color: var(--success);">5</div>
+                <div class="stat-label">已解决</div>
+              </div>
+            </div>
+            <div class="message-list">
+              <div class="message-card unread">
+                <div class="message-icon alert"><i class="ri-error-warning-line"></i></div>
+                <div class="message-content">
+                  <div class="message-header">
+                    <div class="message-title">Gateway 内存使用超过 85%</div>
+                    <div class="message-time">15 分钟前</div>
+                  </div>
+                  <div class="message-body">Gateway 进程内存使用率达到 87%，接近阈值 90%</div>
+                  <div class="message-meta"><span><i class="ri-time-line"></i> 持续 10 分钟</span></div>
+                </div>
+              </div>
+              <div class="message-card">
+                <div class="message-icon alert"><i class="ri-error-warning-line"></i></div>
+                <div class="message-content">
+                  <div class="message-header">
+                    <div class="message-title">Agent task-dispatcher 心跳丢失</div>
+                    <div class="message-time">30 分钟前</div>
+                  </div>
+                  <div class="message-body">task-dispatcher-v2 进程心跳超时，可能已崩溃</div>
+                  <div class="message-meta"><span><i class="ri-time-line"></i> 持续 25 分钟</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 任务 -->
+          <div class="content-section" id="tasks-section">
+            <div class="stats-row">
+              <div class="stat-card">
+                <div class="stat-value" style="color: var(--primary);">3</div>
+                <div class="stat-label">待处理</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" style="color: var(--warning);">4</div>
+                <div class="stat-label">进行中</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" style="color: var(--success);">1</div>
+                <div class="stat-label">已完成</div>
+              </div>
+            </div>
+            <div class="message-list">
+              <div class="message-card unread">
+                <div class="message-icon task"><i class="ri-task-line"></i></div>
+                <div class="message-content">
+                  <div class="message-header">
+                    <div class="message-title">任务 #2851 待处理</div>
+                    <div class="message-time">刚刚</div>
+                  </div>
+                  <div class="message-body">「添加用户权限管理功能」已创建，等待分配执行者</div>
+                  <div class="message-meta"><span><i class="ri-flag-line"></i> 优先级: 高</span></div>
+                </div>
+              </div>
+              <div class="message-card">
+                <div class="message-icon task"><i class="ri-loader-4-line"></i></div>
+                <div class="message-content">
+                  <div class="message-header">
+                    <div class="message-title">任务 #2850 进行中</div>
+                    <div class="message-time">10 分钟前</div>
+                  </div>
+                  <div class="message-body">「修复任务系统 UI 问题」正在执行，当前进度 90%</div>
+                  <div class="message-meta"><span><i class="ri-robot-line"></i> agent-coder</span></div>
+                </div>
+              </div>
+              <div class="message-card">
+                <div class="message-icon task"><i class="ri-check-line"></i></div>
+                <div class="message-content">
+                  <div class="message-header">
+                    <div class="message-title">任务 #2849 已完成</div>
+                    <div class="message-time">1 小时前</div>
+                  </div>
+                  <div class="message-body">「优化数据库查询性能」已完成，性能提升 40%</div>
+                  <div class="message-meta"><span><i class="ri-robot-line"></i> agent-deep</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      Sidebar.init({ activePage: 'info-center' });
+    });
+    
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+      });
+      document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.toggle('active', section.id === tab + '-section');
+      });
+    }
+    
+    function markAllRead() {
+      document.querySelectorAll('.message-card.unread').forEach(card => {
+        card.classList.remove('unread');
+      });
+      alert('已全部标记为已读');
+    }
+    
+    function filterMessages(type) {
+      // 实现过滤逻辑
+      console.log('Filter:', type);
+    }
+    
+    function loadData() {
+      console.log('Loading data...');
+    }
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>聊天记录 - 任务管理系统</title>
+  <link rel="stylesheet" href="frame.css">
+  <link rel="stylesheet" href="sidebar.css">
+  <style>
+    .chat-container {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .stat-card h3 {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+    
+    .filters {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    
+    .filters input, .filters select {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--input-bg);
+      color: var(--text-primary);
+    }
+    
+    .messages-list {
+      background: var(--card-bg);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .message-item {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      gap: 12px;
+    }
+    
+    .message-item:hover {
+      background: var(--hover-bg);
+    }
+    
+    .message-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    
+    .message-avatar.human {
+      background: #4CAF50;
+    }
+    
+    .message-avatar.agent {
+      background: #2196F3;
+    }
+    
+    .message-content {
+      flex: 1;
+    }
+    
+    .message-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    
+    .message-sender {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .message-time {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    .message-text {
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+    }
+    
+    .pagination button {
+      padding: 8px 16px;
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+      color: var(--text-primary);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    
+    .pagination button:hover {
+      background: var(--hover-bg);
+    }
+    
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .sender-stats {
+      margin-top: 24px;
+    }
+    
+    .sender-stats h3 {
+      margin-bottom: 16px;
+      color: var(--text-primary);
+    }
+    
+    .sender-bar {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .sender-name {
+      width: 120px;
+      color: var(--text-secondary);
+    }
+    
+    .bar-container {
+      flex: 1;
+      height: 24px;
+      background: var(--input-bg);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .bar-fill {
+      height: 100%;
+      background: #4CAF50;
+      transition: width 0.3s;
+    }
+    
+    .sender-count {
+      width: 60px;
+      text-align: right;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div id="sidebar-container"></div>
+  
+  <main class="main-content">
+    <div class="chat-container">
+      <h1>💬 聊天记录</h1>
+      
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <h3>总消息数</h3>
+          <div class="value" id="totalMessages">-</div>
+        </div>
+        <div class="stat-card">
+          <h3>发送者</h3>
+          <div class="value" id="totalSenders">-</div>
+        </div>
+        <div class="stat-card">
+          <h3>最早消息</h3>
+          <div class="value" id="oldestDate" style="font-size: 16px;">-</div>
+        </div>
+        <div class="stat-card">
+          <h3>最新消息</h3>
+          <div class="value" id="latestDate" style="font-size: 16px;">-</div>
+        </div>
+      </div>
+      
+      <div class="filters">
+        <input type="text" id="searchInput" placeholder="搜索消息内容...">
+        <select id="senderFilter">
+          <option value="">所有发送者</option>
+        </select>
+        <select id="typeFilter">
+          <option value="">所有类型</option>
+          <option value="human">人类</option>
+          <option value="agent">Agent</option>
+        </select>
+        <button onclick="loadMessages()">刷新</button>
+      </div>
+      
+      <div class="messages-list" id="messagesList">
+        <div style="padding: 40px; text-align: center; color: var(--text-muted);">
+          加载中...
+        </div>
+      </div>
+      
+      <div class="pagination" id="pagination"></div>
+      
+      <div class="sender-stats">
+        <h3>发送者统计</h3>
+        <div id="senderStats"></div>
+      </div>
+    </div>
+  </main>
+  
+  <script src="sidebar.js"></script>
+  <script>
+    let currentPage = 0;
+    const pageSize = 30;
+    let totalMessages = 0;
+    
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/chat-messages/stats');
+        const data = await res.json();
+        
+        if (data.success) {
+          document.getElementById('totalMessages').textContent = data.data.total;
+          document.getElementById('totalSenders').textContent = data.data.bySender.length;
+          
+          if (data.data.oldest) {
+            document.getElementById('oldestDate').textContent = formatDate(data.data.oldest.timestamp);
+          }
+          if (data.data.latest) {
+            document.getElementById('latestDate').textContent = formatDate(data.data.latest.timestamp);
+          }
+          
+          // 更新发送者筛选
+          const senderFilter = document.getElementById('senderFilter');
+          senderFilter.innerHTML = '<option value="">所有发送者</option>';
+          data.data.bySender.forEach(s => {
+            senderFilter.innerHTML += `<option value="${s.sender}">${s.sender} (${s.count})</option>`;
+          });
+          
+          // 发送者统计图
+          const maxCount = Math.max(...data.data.bySender.map(s => s.count));
+          const senderStats = document.getElementById('senderStats');
+          senderStats.innerHTML = data.data.bySender.slice(0, 10).map(s => `
+            <div class="sender-bar">
+              <div class="sender-name">${s.sender}</div>
+              <div class="bar-container">
+                <div class="bar-fill" style="width: ${(s.count / maxCount * 100)}%"></div>
+              </div>
+              <div class="sender-count">${s.count}</div>
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        console.error('加载统计失败:', e);
+      }
+    }
+    
+    async function loadMessages() {
+      const search = document.getElementById('searchInput').value;
+      const sender = document.getElementById('senderFilter').value;
+      const type = document.getElementById('typeFilter').value;
+      
+      let url = `/api/chat-messages?limit=${pageSize}&offset=${currentPage * pageSize}`;
+      if (sender) url += `&sender=${encodeURIComponent(sender)}`;
+      
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (data.success) {
+          totalMessages = data.data.total;
+          renderMessages(data.data.messages, search, type);
+          renderPagination();
+        }
+      } catch (e) {
+        console.error('加载消息失败:', e);
+      }
+    }
+    
+    function renderMessages(messages, search, type) {
+      const container = document.getElementById('messagesList');
+      
+      if (messages.length === 0) {
+        container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">没有消息</div>';
+        return;
+      }
+      
+      // 过滤
+      let filtered = messages;
+      if (search) {
+        const searchLower = search.toLowerCase();
+        filtered = filtered.filter(m => m.text && m.text.toLowerCase().includes(searchLower));
+      }
+      if (type) {
+        filtered = filtered.filter(m => m.sender_type === type);
+      }
+      
+      container.innerHTML = filtered.map(m => `
+        <div class="message-item">
+          <div class="message-avatar ${m.sender_type || 'human'}">
+            ${m.sender_type === 'agent' ? '🤖' : '👤'}
+          </div>
+          <div class="message-content">
+            <div class="message-header">
+              <span class="message-sender">${m.sender}</span>
+              <span class="message-time">${formatDate(m.timestamp)}</span>
+              ${m.target_agent ? `<span class="tag">→ ${m.target_agent}</span>` : ''}
+            </div>
+            <div class="message-text">${escapeHtml(m.text || '')}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function renderPagination() {
+      const totalPages = Math.ceil(totalMessages / pageSize);
+      const container = document.getElementById('pagination');
+      
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+      
+      let html = `<button onclick="goToPage(0)" ${currentPage === 0 ? 'disabled' : ''}>首页</button>`;
+      html += `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>上一页</button>`;
+      html += `<span style="color: var(--text-muted);">第 ${currentPage + 1} / ${totalPages} 页</span>`;
+      html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>下一页</button>`;
+      html += `<button onclick="goToPage(${totalPages - 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>末页</button>`;
+      
+      container.innerHTML = html;
+    }
+    
+    function goToPage(page) {
+      currentPage = page;
+      loadMessages();
+    }
+    
+    function formatDate(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // 初始化
+    loadStats();
+    loadMessages();
+    
+    // 搜索防抖
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        currentPage = 0;
+        loadMessages();
+      }, 300);
+    });
+    
+    document.getElementById('senderFilter').addEventListener('change', () => {
+      currentPage = 0;
+      loadMessages();
+    });
+    
+    document.getElementById('typeFilter').addEventListener('change', () => {
+      currentPage = 0;
+      loadMessages();
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>页面结构 - 任务系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content {
+      padding: 24px;
+    }
+    
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      flex: 1;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    
+    .tree-container {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+    }
+    
+    .tree-module {
+      margin-bottom: 16px;
+    }
+    
+    .module-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .module-header:hover {
+      background: var(--bg-hover);
+    }
+    
+    .module-icon {
+      font-size: 18px;
+    }
+    
+    .module-name {
+      font-weight: 600;
+      flex: 1;
+    }
+    
+    .module-count {
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--bg-primary);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    
+    .module-toggle {
+      transition: transform 0.2s;
+    }
+    
+    .module-header.collapsed .module-toggle {
+      transform: rotate(-90deg);
+    }
+    
+    .module-children {
+      margin-left: 20px;
+      margin-top: 8px;
+      border-left: 2px solid var(--border);
+      padding-left: 12px;
+    }
+    
+    .module-children.hidden {
+      display: none;
+    }
+    
+    .page-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+    
+    .page-item:hover {
+      background: var(--bg-hover);
+    }
+    
+    .page-icon {
+      font-size: 14px;
+    }
+    
+    .page-name {
+      flex: 1;
+      font-size: 14px;
+    }
+    
+    .page-file {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-family: monospace;
+    }
+    
+    .page-status {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    
+    .page-status.active {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+    }
+    
+    .page-status.legacy {
+      background: rgba(234, 179, 8, 0.2);
+      color: #eab308;
+    }
+    
+    .page-status.deprecated {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+    
+    /* 未分类页面区域 */
+    .unassigned-section {
+      margin-top: 24px;
+      padding: 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    
+    .unassigned-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    
+    .unassigned-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--warning);
+    }
+    
+    .unassigned-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 8px;
+    }
+    
+    .unassigned-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+    }
+    
+    .unassigned-item .filename {
+      font-family: monospace;
+      font-size: 13px;
+    }
+    
+    /* 图例 */
+    .legend {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+    
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+    
+    .legend-dot.active { background: #22c55e; }
+    .legend-dot.legacy { background: #eab308; }
+    .legend-dot.deprecated { background: #ef4444; }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <a href="system-guide.html">系统</a>
+            <span>/</span>
+            <span>页面结构</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadPageStructure()">
+            <i class="ri-refresh-line"></i>
+          </button>
+          <button class="header-btn" title="展开全部" onclick="expandAll()">
+            <i class="ri-add-line"></i>
+          </button>
+          <button class="header-btn" title="折叠全部" onclick="collapseAll()">
+            <i class="ri-subtract-line"></i>
+          </button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <div class="page-content">
+          <div class="stats-bar">
+            <div class="stat-card">
+              <div class="stat-value" id="stat-total">0</div>
+              <div class="stat-label">总页面数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-modules">0</div>
+              <div class="stat-label">模块数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-assigned">0</div>
+              <div class="stat-label">已归类</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-unassigned">0</div>
+              <div class="stat-label">未分类</div>
+            </div>
+          </div>
+          
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-dot active"></div>
+              <span>活跃页面</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot legacy"></div>
+              <span>旧版本</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot deprecated"></div>
+              <span>已废弃</span>
+            </div>
+          </div>
+          
+          <div class="tree-container" id="tree-container">
+            <!-- 由 JS 动态渲染 -->
+          </div>
+          
+          <div class="unassigned-section" id="unassigned-section" style="display: none;">
+            <div class="unassigned-header">
+              <i class="ri-alert-line" style="font-size: 20px; color: var(--warning);"></i>
+              <span class="unassigned-title">未分类页面</span>
+              <span style="color: var(--text-secondary); font-size: 13px;">（需要归类或清理）</span>
+            </div>
+            <div class="unassigned-grid" id="unassigned-grid">
+              <!-- 由 JS 动态渲染 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // 模块定义（与 sidebar.js 一致）
+    const modules = [
+      {
+        id: 'dashboard',
+        name: 'Dashboard',
+        icon: '🏠',
+        pages: [
+          { file: 'dashboard-new.html', name: 'Dashboard', icon: '🏠', status: 'active', desc: '主仪表盘' },
+          { file: 'dashboard-unified.html', name: '统一仪表盘', icon: '📊', status: 'active', desc: '统一视图仪表盘' },
+          { file: 'index.html', name: '首页', icon: '🏠', status: 'active', desc: '系统首页' },
+          { file: 'index-new.html', name: '新版首页', icon: '🏠', status: 'legacy', desc: '新版首页入口' }
+        ]
+      },
+      {
+        id: 'tasks',
+        name: '任务管理',
+        icon: '📋',
+        pages: [
+          { file: 'tasks-v2.html', name: '任务列表', icon: '📋', status: 'active', desc: '任务管理列表' },
+          { file: 'tasks-kanban.html', name: '看板视图', icon: '📊', status: 'active', desc: '任务看板' },
+          { file: 'task-detail.html', name: '任务详情', icon: '📄', status: 'active', desc: '任务详细信息' },
+          { file: 'quadrant-dashboard.html', name: '象限视图', icon: '🎯', status: 'active', desc: '四象限任务视图' },
+          { file: 'quadrant-new.html', name: '新版象限', icon: '🎯', status: 'legacy', desc: '新版四象限' },
+          { file: 'quadrant-v2.html', name: '象限V2', icon: '🎯', status: 'legacy', desc: '象限视图V2' },
+          { file: 'today-workspace.html', name: '今日工作', icon: '📅', status: 'active', desc: '今日工作台' },
+          { file: 'execution-queue.html', name: '执行队列', icon: '⚡', status: 'active', desc: '任务执行队列' },
+          { file: 'task-execution-queue.html', name: '任务队列', icon: '⚡', status: 'legacy', desc: '任务执行队列' }
+        ]
+      },
+      {
+        id: 'resources',
+        name: '资源',
+        icon: '📦',
+        pages: [
+          { file: 'agents-new.html', name: 'Agent列表', icon: '🤖', status: 'active', desc: 'Agent管理' },
+          { file: 'agent-detail.html', name: 'Agent详情', icon: '🤖', status: 'active', desc: 'Agent详细信息' },
+          { file: 'projects-new.html', name: '项目列表', icon: '📁', status: 'active', desc: '项目管理' },
+          { file: 'projects.html', name: '项目（旧）', icon: '📁', status: 'legacy', desc: '旧版项目管理' },
+          { file: 'project-detail.html', name: '项目详情', icon: '📄', status: 'active', desc: '项目详细信息' },
+          { file: 'project-monitor.html', name: '项目监控', icon: '📊', status: 'active', desc: '项目监控视图' },
+          { file: 'devops-products.html', name: '产品列表', icon: '📦', status: 'active', desc: '产品管理' },
+          { file: 'devops-product-detail.html', name: '产品详情', icon: '📄', status: 'active', desc: '产品详细信息' },
+          { file: 'devops-releases.html', name: '版本发布', icon: '🚀', status: 'active', desc: '版本发布管理' },
+          { file: 'release-management.html', name: '发布管理', icon: '🚀', status: 'active', desc: '发布流程管理' },
+          { file: 'customers.html', name: '客户管理', icon: '👥', status: 'active', desc: '客户信息管理' },
+          { file: 'licenses.html', name: '许可证', icon: '📜', status: 'active', desc: '许可证管理' }
+        ]
+      },
+      {
+        id: 'tools',
+        name: '工具',
+        icon: '🛠️',
+        pages: [
+          { file: 'tools-list.html', name: '工具列表', icon: '🔧', status: 'active', desc: '工具管理' },
+          { file: 'plugins.html', name: '插件', icon: '🔌', status: 'active', desc: '插件管理（42个已安装）' },
+          { file: 'mcp-servers.html', name: 'MCP', icon: '🔗', status: 'active', desc: 'MCP服务管理' },
+          { file: 'channels.html', name: '通信渠道', icon: '📡', status: 'active', desc: '通信渠道管理' }
+        ]
+      },
+      {
+        id: 'capability',
+        name: '能力积累',
+        icon: '🧠',
+        pages: [
+          { file: 'memory-dashboard.html', name: '记忆', icon: '💾', status: 'active', desc: '记忆系统' },
+          { file: 'knowledge-dashboard.html', name: '知识', icon: '💡', status: 'active', desc: '知识库管理' },
+          { file: 'skills-new.html', name: '技能', icon: '🛠️', status: 'active', desc: '技能管理' },
+          { file: 'skill-detail.html', name: '技能详情', icon: '📄', status: 'active', desc: '技能详细信息' },
+          { file: 'docs-new.html', name: '文档', icon: '📚', status: 'active', desc: '文档管理' },
+          { file: 'doc-detail.html', name: '文档详情', icon: '📄', status: 'active', desc: '文档详细内容' },
+          { file: 'learning-mechanism.html', name: '学习', icon: '🎯', status: 'active', desc: '学习机制' },
+          { file: 'learning-path.html', name: '学习路径', icon: '🎯', status: 'active', desc: '学习路径详情' },
+          { file: 'reflection-dashboard.html', name: '反思', icon: '🔮', status: 'active', desc: '反思系统' },
+          { file: 'faq-troubleshoot.html', name: 'FAQ', icon: '❓', status: 'active', desc: '常见问题解答' }
+        ]
+      },
+      {
+        id: 'automation',
+        name: '自动化',
+        icon: '⚙️',
+        pages: [
+          { file: 'automation-guide.html', name: '自动化机制', icon: '📖', status: 'active', desc: '自动化流程说明' },
+          { file: 'automation-flow-v6.html', name: '流程V6', icon: '📈', status: 'active', desc: '自动化流程V6' },
+          { file: 'cron-jobs.html', name: '定时任务', icon: '⏰', status: 'active', desc: 'Cron任务管理' },
+          { file: 'cron-tasks.html', name: '任务调度', icon: '⏰', status: 'active', desc: '定时任务调度' },
+          { file: 'evolution-monitor.html', name: '进化监控', icon: '🧬', status: 'active', desc: 'Agent进化监控' },
+          { file: 'evolution-log.html', name: '进化记录', icon: '📈', status: 'active', desc: '进化历史记录' }
+        ]
+      },
+      {
+        id: 'monitor',
+        name: '监控',
+        icon: '📊',
+        pages: [
+          { file: 'business-monitor.html', name: '业务监控', icon: '💼', status: 'active', desc: '业务状态监控' },
+          { file: 'business-monitor-flow.html', name: '业务流程', icon: '📈', status: 'active', desc: '业务流程监控' },
+          { file: 'monitor-new.html', name: '系统监控', icon: '🖥️', status: 'active', desc: '系统状态监控' },
+          { file: 'system-monitor-v3.html', name: '监控V3', icon: '📊', status: 'active', desc: '系统监控V3' },
+          { file: 'service-monitor.html', name: '服务监控', icon: '🔧', status: 'active', desc: '服务状态监控' },
+          { file: 'service-monitor-v2.html', name: '服务监控V2', icon: '🔧', status: 'legacy', desc: '服务监控V2' },
+          { file: 'unified-monitor.html', name: '统一监控', icon: '📊', status: 'active', desc: '统一监控面板' },
+          { file: 'checklist.html', name: '检查清单', icon: '✅', status: 'active', desc: '检查清单管理' },
+          { file: 'check-records.html', name: '检查记录', icon: '📋', status: 'active', desc: '检查历史记录' },
+          { file: 'check-report.html', name: '检查报告', icon: '📄', status: 'active', desc: '检查报告详情' },
+          { file: 'alert-history.html', name: '告警历史', icon: '🚨', status: 'active', desc: '告警历史记录' }
+        ]
+      },
+      {
+        id: 'organization',
+        name: '组织',
+        icon: '🏛️',
+        pages: [
+          { file: 'organization.html', name: '组织架构', icon: '👥', status: 'active', desc: '组织架构管理' },
+          { file: 'chat-groups.html', name: '沟通小组', icon: '💬', status: 'active', desc: '沟通小组管理' },
+          { file: 'agents-new.html', name: 'Agent列表', icon: '🤖', status: 'active', desc: 'Agent管理' },
+          { file: 'agent-detail.html', name: 'Agent详情', icon: '🤖', status: 'active', desc: 'Agent详细信息' },
+          { file: 'agent-chat-room.html', name: 'Agent聊天', icon: '💬', status: 'active', desc: 'Agent聊天室' },
+          { file: 'war-room.html', name: '作战室', icon: '🚨', status: 'active', desc: '作战指挥室' },
+          { file: 'war-room-v3.html', name: '作战室V3', icon: '🚨', status: 'legacy', desc: '作战室V3' },
+          { file: 'war-room-v4.html', name: '作战室V4', icon: '🚨', status: 'legacy', desc: '作战室V4' }
+        ]
+      },
+      {
+        id: 'system',
+        name: '系统',
+        icon: '🔧',
+        pages: [
+          { file: 'system-guide.html', name: '系统说明', icon: '📖', status: 'active', desc: '系统使用说明' },
+          { file: 'page-structure.html', name: '页面结构', icon: '🗺️', status: 'active', desc: '页面结构导图' },
+          { file: 'api-catalog.html', name: 'API目录', icon: '🔌', status: 'active', desc: 'API接口文档' },
+          { file: 'notifications.html', name: '通知中心', icon: '🔔', status: 'active', desc: '通知管理' },
+          { file: 'notification-center-v2.html', name: '通知V2', icon: '🔔', status: 'legacy', desc: '通知中心V2' },
+          { file: 'settings-new.html', name: '系统设置', icon: '⚙️', status: 'active', desc: '系统配置' },
+          { file: 'deploy.html', name: '远程部署', icon: '🚀', status: 'active', desc: '远程部署管理' },
+          { file: 'audit-log.html', name: '审计日志', icon: '📝', status: 'active', desc: '操作审计日志' }
+        ]
+      }
+    ];
+    
+    // 已归类的页面文件集合
+    const assignedPages = new Set();
+    modules.forEach(m => m.pages.forEach(p => assignedPages.add(p.file)));
+    
+    // 未分类页面
+    const unassignedPages = [
+      { file: 'activations.html', name: '激活管理', status: 'active', desc: '激活码管理' },
+      { file: 'calendar.html', name: '日历', status: 'legacy', desc: '日历视图' },
+      { file: 'calendar-new.html', name: '新版日历', status: 'active', desc: '新版日历视图' },
+      { file: 'info-center.html', name: '信息中心', status: 'active', desc: '信息汇总中心' },
+      { file: 'issues.html', name: '问题管理', status: 'active', desc: '问题追踪管理' },
+      { file: 'login.html', name: '登录页', status: 'active', desc: '用户登录' },
+      { file: 'quick-start.html', name: '快速开始', status: 'active', desc: '快速入门指南' },
+      { file: 'backup-guide.html', name: '备份指南', status: 'active', desc: '备份操作指南' },
+      { file: 'PAGE-TEMPLATE.html', name: '页面模板', status: 'active', desc: '页面开发模板' },
+      { file: 'test-menu-permission.html', name: '菜单权限测试', status: 'active', desc: '菜单权限测试页' }
+    ];
+    
+    // 加载页面结构
+    function loadPageStructure() {
+      const container = document.getElementById('tree-container');
+      
+      let totalAssigned = 0;
+      
+      let html = modules.map(mod => {
+        const activeCount = mod.pages.filter(p => p.status === 'active').length;
+        totalAssigned += mod.pages.length;
+        
+        return `
+          <div class="tree-module">
+            <div class="module-header" onclick="toggleModule(this)">
+              <i class="ri-arrow-down-s-line module-toggle"></i>
+              <span class="module-icon">${mod.icon}</span>
+              <span class="module-name">${mod.name}</span>
+              <span class="module-count">${mod.pages.length} 页面 · ${activeCount} 活跃</span>
+            </div>
+            <div class="module-children">
+              ${mod.pages.map(page => `
+                <div class="page-item">
+                  <span class="page-icon">${page.icon || '📄'}</span>
+                  <a href="${page.file}" class="page-name" target="_blank">${page.name}</a>
+                  <span class="page-file">${page.file}</span>
+                  <span class="page-status ${page.status}">${page.status === 'active' ? '活跃' : page.status === 'legacy' ? '旧版' : '废弃'}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      container.innerHTML = html;
+      
+      // 更新统计
+      document.getElementById('stat-total').textContent = totalAssigned + unassignedPages.length;
+      document.getElementById('stat-modules').textContent = modules.length;
+      document.getElementById('stat-assigned').textContent = totalAssigned;
+      document.getElementById('stat-unassigned').textContent = unassignedPages.length;
+      
+      // 渲染未分类页面
+      if (unassignedPages.length > 0) {
+        document.getElementById('unassigned-section').style.display = 'block';
+        document.getElementById('unassigned-grid').innerHTML = unassignedPages.map(page => `
+          <div class="unassigned-item">
+            <i class="ri-file-line" style="color: var(--warning);"></i>
+            <a href="${page.file}" class="filename" target="_blank">${page.file}</a>
+            <span style="color: var(--text-secondary); font-size: 12px;">${page.desc || ''}</span>
+          </div>
+        `).join('');
+      }
+    }
+    
+    // 切换模块展开/折叠
+    function toggleModule(header) {
+      header.classList.toggle('collapsed');
+      const children = header.nextElementSibling;
+      children.classList.toggle('hidden');
+    }
+    
+    // 展开全部
+    function expandAll() {
+      document.querySelectorAll('.module-header').forEach(h => {
+        h.classList.remove('collapsed');
+        h.nextElementSibling.classList.remove('hidden');
+      });
+    }
+    
+    // 折叠全部
+    function collapseAll() {
+      document.querySelectorAll('.module-header').forEach(h => {
+        h.classList.add('collapsed');
+        h.nextElementSibling.classList.add('hidden');
+      });
+    }
+    
+    // 初始化
+    loadPageStructure();
+  </script>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'page-structure' });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

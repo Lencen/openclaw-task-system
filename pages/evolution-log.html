@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>进化记录 - Morning 任务管理系统</title>
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    .page-content { padding: 24px; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--text-primary); }
+    
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { flex: 1; background: var(--bg-secondary); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid var(--border); }
+    .stat-value { font-size: 32px; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
+    
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 24px; }
+    .filter-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer; font-size: 13px; transition: all 0.15s; }
+    .filter-btn:hover { border-color: var(--primary); color: var(--text-primary); }
+    .filter-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+    
+    .timeline { position: relative; padding-left: 24px; }
+    .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+    
+    .timeline-item { position: relative; padding: 20px 0; border-bottom: 1px solid var(--border); }
+    .timeline-dot { position: absolute; left: -20px; top: 24px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--primary); background: var(--bg-secondary); }
+    
+    .evolution-card { background: var(--bg-secondary); border-radius: 12px; padding: 20px; border: 1px solid var(--border); }
+    .evolution-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .evolution-title { font-size: 16px; font-weight: 600; color: var(--text-primary); cursor: pointer; }
+    .evolution-title:hover { color: var(--primary); }
+    .evolution-type { padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+    .evolution-type.skill { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+    .evolution-type.fix { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .evolution-type.optimize { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .evolution-type.learn { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+    
+    .evolution-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+    .evolution-meta { display: flex; gap: 16px; margin-top: 12px; font-size: 12px; color: var(--text-secondary); }
+    .evolution-meta i { margin-right: 4px; }
+    .evolution-tags { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+    .evolution-tag { padding: 2px 8px; background: var(--bg-tertiary); border-radius: 4px; font-size: 11px; color: var(--text-secondary); }
+    
+    .detail-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
+    .detail-modal.show { display: flex; }
+    .modal-content { background: var(--bg-secondary); border-radius: 16px; width: 600px; max-height: 80vh; overflow-y: auto; border: 1px solid var(--border); }
+    .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 18px; font-weight: 600; }
+    .modal-close { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 20px; }
+    .modal-body { padding: 20px; }
+    .modal-section { margin-bottom: 16px; }
+    .modal-section-title { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; }
+    .modal-files { background: var(--bg-tertiary); border-radius: 8px; padding: 12px; }
+    .modal-file { display: flex; align-items: center; gap: 8px; padding: 8px 0; color: var(--primary); font-size: 13px; }
+    
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <div class="header-left"><div class="breadcrumb"><span>能力积累</span> / <span>进化记录</span></div></div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadEvolutions()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      <div class="content">
+        <div class="page-content">
+          <div class="page-header">
+            <h1 class="page-title"><i class="ri-line-chart-line"></i> 进化记录</h1>
+          </div>
+          
+          <div class="stats-row" id="statsRow">
+            <div class="stat-card">
+              <div class="stat-value" id="totalEvolutions">-</div>
+              <div class="stat-label">总进化次数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="skillCount">-</div>
+              <div class="stat-label">新增技能</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="fixCount">-</div>
+              <div class="stat-label">Bug 修复</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="optimizeCount">-</div>
+              <div class="stat-label">性能优化</div>
+            </div>
+          </div>
+          
+          <div class="filter-bar">
+            <button class="filter-btn active" data-type="all" onclick="filterByType('all')">全部</button>
+            <button class="filter-btn" data-type="skill" onclick="filterByType('skill')">新增技能</button>
+            <button class="filter-btn" data-type="fix" onclick="filterByType('fix')">Bug 修复</button>
+            <button class="filter-btn" data-type="optimize" onclick="filterByType('optimize')">性能优化</button>
+            <button class="filter-btn" data-type="learn" onclick="filterByType('learn')">学习成长</button>
+          </div>
+          
+          <div class="timeline" id="timeline">
+            <div class="empty-state">
+              <i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i>
+              <p>加载中...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 详情弹窗 -->
+  <div class="detail-modal" id="detailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">进化详情</div>
+        <button class="modal-close" onclick="closeModal()"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    const API_BASE = window.location.origin;
+    let currentFilter = 'all';
+    let allRecords = [];
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      Sidebar.init({ activePage: 'evolution-log' });
+      loadEvolutions();
+    });
+    
+    async function loadEvolutions() {
+      try {
+        const res = await fetch(`${API_BASE}/api/evolution/list?type=${currentFilter}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          allRecords = data.data;
+          renderTimeline(data.data);
+          updateStats(data.stats);
+        } else {
+          showError(data.error);
+        }
+      } catch (error) {
+        showError(error.message);
+      }
+    }
+    
+    function renderTimeline(records) {
+      const timeline = document.getElementById('timeline');
+      
+      if (!records.length) {
+        timeline.innerHTML = '<div class="empty-state"><i class="ri-inbox-line"></i><p>暂无进化记录</p></div>';
+        return;
+      }
+      
+      timeline.innerHTML = records.map(evo => `
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="evolution-card">
+            <div class="evolution-header">
+              <div class="evolution-title" onclick="showDetail('${evo.id}')">${evo.title}</div>
+              <span class="evolution-type ${evo.type}">${getTypeName(evo.type)}</span>
+            </div>
+            <div class="evolution-desc">
+              ⏰ ${evo.date} ${evo.time}<br>
+              📊 ${evo.description}
+            </div>
+            <div class="evolution-meta">
+              <span><i class="ri-calendar-line"></i> ${evo.date}</span>
+            </div>
+            ${evo.tags && evo.tags.length ? `
+              <div class="evolution-tags">
+                ${evo.tags.map(tag => `<span class="evolution-tag">${tag}</span>`).join('')}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function updateStats(stats) {
+      document.getElementById('totalEvolutions').textContent = stats.total || 0;
+      document.getElementById('skillCount').textContent = stats.byType?.skill || 0;
+      document.getElementById('fixCount').textContent = stats.byType?.fix || 0;
+      document.getElementById('optimizeCount').textContent = (stats.byType?.optimize || 0) + (stats.byType?.learn || 0);
+    }
+    
+    function getTypeName(type) {
+      const types = {
+        skill: '新增技能',
+        fix: 'Bug 修复',
+        optimize: '性能优化',
+        learn: '学习成长'
+      };
+      return types[type] || type;
+    }
+    
+    function filterByType(type) {
+      currentFilter = type;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.type === type);
+      });
+      loadEvolutions();
+    }
+    
+    async function showDetail(id) {
+      try {
+        const res = await fetch(`${API_BASE}/api/evolution/${id}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          const evo = data.data;
+          document.getElementById('modalTitle').textContent = evo.title;
+          
+          // 解析原始数据
+          const raw = evo.raw || {};
+          const summary = raw.summary || {};
+          const details = raw.details || {};
+          const review = details.review || {};
+          
+          document.getElementById('modalBody').innerHTML = `
+            <div class="modal-section">
+              <div class="modal-section-title">执行时间</div>
+              <p style="color: var(--text-primary); font-size: 16px;">
+                📅 ${evo.date} ${evo.time}
+              </p>
+            </div>
+            
+            <div class="modal-section">
+              <div class="modal-section-title">进化摘要</div>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 24px; font-weight: bold; color: var(--primary);">${summary.tasksReviewed || 0}</div>
+                  <div style="font-size: 12px; color: var(--text-secondary);">任务回顾</div>
+                </div>
+                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 24px; font-weight: bold; color: var(--success);">${summary.knowledgePoints || 0}</div>
+                  <div style="font-size: 12px; color: var(--text-secondary);">知识点</div>
+                </div>
+                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 24px; font-weight: bold; color: var(--warning);">${summary.skillsGenerated || 0}</div>
+                  <div style="font-size: 12px; color: var(--text-secondary);">技能生成</div>
+                </div>
+                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 24px; font-weight: bold; color: #8b5cf6;">${summary.patternsIdentified || 0}</div>
+                  <div style="font-size: 12px; color: var(--text-secondary);">模式识别</div>
+                </div>
+              </div>
+            </div>
+            
+            ${review.improvementSuggestions && review.improvementSuggestions.length > 0 ? `
+              <div class="modal-section">
+                <div class="modal-section-title">改进建议</div>
+                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px;">
+                  ${review.improvementSuggestions.slice(0, 3).map(s => `
+                    <div style="padding: 8px 0; border-bottom: 1px solid var(--border);">
+                      <div style="font-size: 13px; color: var(--text-primary);">${s.suggestion}</div>
+                      <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">优先级: ${s.priority}</div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+            
+            <div class="modal-section">
+              <div class="modal-section-title">标签</div>
+              <div class="evolution-tags">${evo.tags.map(t => `<span class="evolution-tag">${t}</span>`).join('')}</div>
+            </div>
+          `;
+          document.getElementById('detailModal').classList.add('show');
+        }
+      } catch (error) {
+        alert('加载详情失败: ' + error.message);
+      }
+    }
+    
+    function closeModal() {
+      document.getElementById('detailModal').classList.remove('show');
+    }
+    
+    function showError(message) {
+      document.getElementById('timeline').innerHTML = `
+        <div class="empty-state">
+          <i class="ri-error-warning-line"></i>
+          <p>加载失败: ${message}</p>
+        </div>
+      `;
+    }
+    
+    // 点击弹窗外部关闭
+    document.getElementById('detailModal').addEventListener('click', (e) => {
+      if (e.target.id === 'detailModal') closeModal();
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

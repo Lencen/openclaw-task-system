@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>工具列表 - 任务系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content { padding: 24px; }
+    
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .page-title { font-size: 24px; font-weight: 700; }
+    
+    .tips-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: all 0.2s;
+    }
+    
+    .tips-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    
+    .tips-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+    
+    .tips-modal.show { opacity: 1; visibility: visible; }
+    
+    .tips-content {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      max-width: 700px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 24px;
+      transform: translateY(20px);
+      transition: all 0.3s;
+    }
+    
+    .tips-modal.show .tips-content { transform: translateY(0); }
+    
+    .tips-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    
+    .tips-title {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .tips-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: var(--text-secondary);
+      padding: 4px;
+    }
+    
+    .tips-section {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+    
+    .tips-section-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .tips-section-content {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    
+    .tips-section-content ul { margin: 8px 0; padding-left: 20px; }
+    .tips-section-content li { margin: 6px 0; }
+    
+    .learn-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    
+    .learn-link:hover { text-decoration: underline; }
+    
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      flex: 1;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+    
+    .stat-value { font-size: 28px; font-weight: 700; }
+    .stat-label { font-size: 13px; color: var(--text-secondary); }
+    
+    .category-section { margin-bottom: 24px; }
+    
+    .category-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .category-title { font-size: 16px; font-weight: 600; }
+    .category-count { font-size: 12px; color: var(--text-secondary); }
+    
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    
+    .tool-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      transition: all 0.2s;
+    }
+    
+    .tool-card:hover { border-color: var(--primary); }
+    
+    .tool-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    
+    .tool-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .tool-name { font-size: 14px; font-weight: 600; }
+    .tool-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+    
+    .tool-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    
+    .tool-tag {
+      padding: 2px 6px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <a href="agents-new.html">资源</a>
+            <span>/</span>
+            <span>工具</span>
+          </div>
+        </div>
+      </header>
+      
+      <div class="content">
+        <div class="page-content">
+          <div class="page-header">
+            <h1 class="page-title">工具列表</h1>
+            <button class="tips-btn" onclick="showTips()">
+              <i class="ri-information-line"></i>
+              <span>工具规范与规则</span>
+            </button>
+          </div>
+          
+          <div class="stats-bar">
+            <div class="stat-card">
+              <div class="stat-value" id="stat-total">0</div>
+              <div class="stat-label">工具总数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-categories">0</div>
+              <div class="stat-label">分类数</div>
+            </div>
+          </div>
+          
+          <div id="tools-container"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Tips 弹窗 -->
+  <div class="tips-modal" id="tips-modal" onclick="hideTips(event)">
+    <div class="tips-content" onclick="event.stopPropagation()">
+      <div class="tips-header">
+        <div class="tips-title">
+          <i class="ri-book-open-line"></i>
+          工具规范与规则
+        </div>
+        <button class="tips-close" onclick="hideTips()">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      
+      <div class="tips-section">
+        <div class="tips-section-title">
+          <i class="ri-download-line"></i>
+          1. 工具安装规则
+        </div>
+        <div class="tips-section-content">
+          <ul>
+            <li><strong>内置工具</strong>：OpenClaw 内置工具无需安装，直接可用</li>
+            <li><strong>插件工具</strong>：通过安装插件扩展工具能力</li>
+            <li><strong>MCP 工具</strong>：通过 MCP 协议连接外部服务提供的工具</li>
+            <li><strong>权限配置</strong>：在 openclaw.json 中配置工具权限</li>
+          </ul>
+          <a href="https://docs.openclaw.ai/tools/index.md" class="learn-link" target="_blank">
+            <i class="ri-external-link-line"></i>
+            查看工具文档
+          </a>
+        </div>
+      </div>
+      
+      <div class="tips-section">
+        <div class="tips-section-title">
+          <i class="ri-shield-check-line"></i>
+          2. 工具安全使用规范
+        </div>
+        <div class="tips-section-content">
+          <ul>
+            <li><strong>权限最小化</strong>：使用 allow/deny 列表限制工具权限</li>
+            <li><strong>输入验证</strong>：所有输入参数必须验证</li>
+            <li><strong>审计日志</strong>：所有工具调用都会被记录</li>
+            <li><strong>敏感操作</strong>：exec 等敏感工具需要谨慎使用</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="tips-section">
+        <div class="tips-section-title">
+          <i class="ri-robot-line"></i>
+          3. 工具自动化调用规则
+        </div>
+        <div class="tips-section-content">
+          <ul>
+            <li><strong>频率限制</strong>：遵守 API 调用频率限制</li>
+            <li><strong>重试机制</strong>：失败时指数退避重试</li>
+            <li><strong>超时设置</strong>：设置合理的调用超时时间</li>
+            <li><strong>结果缓存</strong>：相同请求缓存结果</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="tips-section">
+        <div class="tips-section-title">
+          <i class="ri-code-line"></i>
+          4. 工具开发规范
+        </div>
+        <div class="tips-section-content">
+          <ul>
+            <li><strong>SDK 使用</strong>：使用 OpenClaw Plugin SDK 开发</li>
+            <li><strong>接口规范</strong>：定义清晰的输入输出类型</li>
+            <li><strong>文档完整</strong>：提供完整的工具描述和使用示例</li>
+            <li><strong>错误处理</strong>：完善的错误处理和提示</li>
+          </ul>
+          <a href="https://docs.openclaw.ai/plugins/building-plugins" class="learn-link" target="_blank">
+            <i class="ri-external-link-line"></i>
+            查看插件开发文档
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // OpenClaw 内置工具（从官方文档获取）
+    const toolsData = {
+      '核心工具': [
+        { id: 'read', name: 'read', icon: '📄', desc: '读取文件内容，支持文本和图片', type: '内置' },
+        { id: 'write', name: 'write', icon: '✏️', desc: '创建或覆盖文件', type: '内置' },
+        { id: 'edit', name: 'edit', icon: '📝', desc: '精确编辑文件内容', type: '内置' },
+        { id: 'exec', name: 'exec', icon: '💻', desc: '执行 Shell 命令', type: '内置' },
+        { id: 'process', name: 'process', icon: '⚙️', desc: '管理后台进程', type: '内置' }
+      ],
+      '网络工具': [
+        { id: 'web_search', name: 'web_search', icon: '🔍', desc: 'Brave 搜索 API', type: '内置' },
+        { id: 'web_fetch', name: 'web_fetch', icon: '🌐', desc: '抓取网页内容并提取', type: '内置' },
+        { id: 'browser', name: 'browser', icon: '🖥️', desc: '控制浏览器进行自动化操作', type: '内置' }
+      ],
+      '消息工具': [
+        { id: 'message', name: 'message', icon: '💬', desc: '发送消息和渠道操作', type: '内置' },
+        { id: 'tts', name: 'tts', icon: '🔊', desc: '文本转语音', type: '内置' }
+      ],
+      '知识工具': [
+        { id: 'memory_search', name: 'memory_search', icon: '🧠', desc: '搜索记忆和知识库', type: '内置' },
+        { id: 'memory_get', name: 'memory_get', icon: '💾', desc: '获取记忆内容', type: '内置' }
+      ],
+      '设备工具': [
+        { id: 'nodes', name: 'nodes', icon: '📱', desc: '管理配对的设备节点', type: '内置' },
+        { id: 'canvas', name: 'canvas', icon: '🎨', desc: '画布展示和渲染', type: '内置' }
+      ],
+      '会话工具': [
+        { id: 'sessions_list', name: 'sessions_list', icon: '📋', desc: '列出所有会话', type: '内置' },
+        { id: 'sessions_spawn', name: 'sessions_spawn', icon: '🚀', desc: '启动子代理会话', type: '内置' },
+        { id: 'sessions_send', name: 'sessions_send', icon: '📤', desc: '向其他会话发送消息', type: '内置' },
+        { id: 'subagents', name: 'subagents', icon: '🤖', desc: '管理子代理', type: '内置' }
+      ],
+      '飞书工具': [
+        { id: 'feishu_doc', name: 'feishu_doc', icon: '📝', desc: '飞书文档操作', type: '插件' },
+        { id: 'feishu_bitable', name: 'feishu_bitable', icon: '📊', desc: '飞书多维表格操作', type: '插件' },
+        { id: 'feishu_wiki', name: 'feishu_wiki', icon: '📚', desc: '飞书知识库操作', type: '插件' },
+        { id: 'feishu_chat', name: 'feishu_chat', icon: '💬', desc: '飞书群聊操作', type: '插件' },
+        { id: 'feishu_drive', name: 'feishu_drive', icon: '📁', desc: '飞书云存储操作', type: '插件' }
+      ]
+    };
+    
+    // 加载工具列表
+    function loadTools() {
+      const container = document.getElementById('tools-container');
+      
+      let totalTools = 0;
+      let categories = 0;
+      
+      let html = '';
+      
+      Object.keys(toolsData).forEach(category => {
+        const tools = toolsData[category];
+        categories++;
+        totalTools += tools.length;
+        
+        html += `
+          <div class="category-section">
+            <div class="category-header">
+              <span class="category-title">${category}</span>
+              <span class="category-count">${tools.length} 个工具</span>
+            </div>
+            <div class="tools-grid">
+              ${tools.map(tool => `
+                <div class="tool-card">
+                  <div class="tool-header">
+                    <div class="tool-icon">${tool.icon}</div>
+                    <div class="tool-name">${tool.name}</div>
+                  </div>
+                  <div class="tool-desc">${tool.desc}</div>
+                  <div class="tool-meta">
+                    <span class="tool-tag">${tool.type}</span>
+                    <span class="tool-tag">ID: ${tool.id}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+      
+      document.getElementById('stat-total').textContent = totalTools;
+      document.getElementById('stat-categories').textContent = categories;
+    }
+    
+    function showTips() {
+      document.getElementById('tips-modal').classList.add('show');
+    }
+    
+    function hideTips(event) {
+      if (!event || event.target === document.getElementById('tips-modal')) {
+        document.getElementById('tips-modal').classList.remove('show');
+      }
+    }
+    
+    loadTools();
+  </script>
+  
+  <script src="js/sidebar.js"></script>
+  <script>Sidebar.init({ activePage: 'tools-list' });</script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>检查记录 - 任务系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    .page-content {
+      padding: 24px;
+    }
+    
+    .tabs-bar {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+    
+    .tab-btn {
+      padding: 10px 16px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    
+    .tab-btn:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      flex: 1;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .stat-card .label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    
+    .stat-card.success .value {
+      color: var(--success);
+    }
+    
+    .stat-card.warning .value {
+      color: var(--warning);
+    }
+    
+    .stat-card.danger .value {
+      color: var(--danger);
+    }
+    
+    .content-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .records-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .records-table th, .records-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .records-table th {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    
+    .records-table tr:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .tag.success {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+    }
+    
+    .tag.warning {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+    }
+    
+    .tag.danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+    
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      color: var(--border);
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <a href="checklist.html">检查清单</a>
+            <span>/</span>
+            <span>检查记录</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <a href="checklist.html" class="header-btn" title="检查清单">
+            <i class="ri-checkbox-circle-line"></i>
+          </a>
+          <button class="header-btn" title="刷新" onclick="loadRecords()">
+            <i class="ri-refresh-line"></i>
+          </button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <div class="page-content">
+          <div class="tabs-bar" id="tabs-bar">
+            <button class="tab-btn active" data-tab="all">全部</button>
+            <button class="tab-btn" data-tab="project">📁 项目检查</button>
+            <button class="tab-btn" data-tab="task">📋 任务检查</button>
+            <button class="tab-btn" data-tab="system">⚙️ 系统检查</button>
+          </div>
+          
+          <div class="stats-bar">
+            <div class="stat-card">
+              <div class="value" id="stat-total">0</div>
+              <div class="label">总检查次数</div>
+            </div>
+            <div class="stat-card success">
+              <div class="value" id="stat-passed">0</div>
+              <div class="label">通过检查项</div>
+            </div>
+            <div class="stat-card warning">
+              <div class="value" id="stat-fixed">0</div>
+              <div class="label">已自动修复</div>
+            </div>
+            <div class="stat-card danger">
+              <div class="value" id="stat-failed">0</div>
+              <div class="label">失败检查项</div>
+            </div>
+          </div>
+          
+          <div class="content-card">
+            <div class="section-header">
+              <div class="section-title">检查记录列表</div>
+            </div>
+            <table class="records-table">
+              <thead>
+                <tr>
+                  <th>检查类型</th>
+                  <th>检查时间</th>
+                  <th>检查项</th>
+                  <th>通过</th>
+                  <th>失败</th>
+                  <th>修复</th>
+                  <th>耗时</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="records-tbody">
+                <tr>
+                  <td colspan="8" class="empty-state">
+                    <i class="ri-file-list-line"></i>
+                    <p>暂无检查记录</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // 加载检查记录
+    async function loadRecords() {
+      const type = document.querySelector('.tab-btn.active').dataset.tab;
+      
+      try {
+        const res = await fetch(`/api/checklists/reports?type=${type}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          renderRecords(data.data || []);
+          updateStats(data.data || []);
+          filterRecords(type);
+        }
+      } catch (error) {
+        console.error('加载失败:', error);
+      }
+    }
+    
+    // 渲染记录列表
+    function renderRecords(records) {
+      const tbody = document.getElementById('records-tbody');
+      
+      if (records.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="empty-state">
+              <i class="ri-file-list-line"></i>
+              <p>暂无检查记录</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = records.map(r => `
+        <tr data-type="${r.type}">
+          <td><span class="tag ${getTypeTag(r.type)}">${getTypeLabel(r.type)}</span></td>
+          <td>${formatTime(r.timestamp)}</td>
+          <td>${r.total_checks || 0}</td>
+          <td style="color:var(--success);">${r.passed || 0}</td>
+          <td style="color:var(--danger);">${r.failed || 0}</td>
+          <td style="color:var(--warning);">${r.fixed || 0}</td>
+          <td>${r.duration_ms || 0}ms</td>
+          <td>
+            <button class="btn btn-sm btn-secondary" onclick="viewDetail('${r.filename}')">
+              <i class="ri-eye-line"></i>
+              详情
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+    
+    // 更新统计
+    function updateStats(records) {
+      let total = 0, passed = 0, failed = 0, fixed = 0;
+      
+      records.forEach(r => {
+        total++;
+        passed += r.passed || 0;
+        failed += r.failed || 0;
+        fixed += r.fixed || 0;
+      });
+      
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-passed').textContent = passed;
+      document.getElementById('stat-failed').textContent = failed;
+      document.getElementById('stat-fixed').textContent = fixed;
+    }
+    
+    // 查看详情
+    async function viewDetail(filename) {
+      try {
+        const res = await fetch(`/api/checklists/reports/${filename}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          alert(JSON.stringify(data.report, null, 2));
+        }
+      } catch (error) {
+        alert('加载详情失败');
+      }
+    }
+    
+    // 辅助函数
+    function getTypeTag(type) {
+      const tags = { project: 'success', task: 'success', system: 'warning' };
+      return tags[type] || '';
+    }
+    
+    function getTypeLabel(type) {
+      const labels = { project: '项目检查', task: '任务检查', system: '系统检查' };
+      return labels[type] || type;
+    }
+    
+    function formatTime(isoString) {
+      const date = new Date(isoString);
+      return date.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // 过滤记录显示
+    function filterRecords(tabType) {
+      const rows = document.querySelectorAll('#records-tbody tr[data-type]');
+      rows.forEach(row => {
+        const rowType = row.dataset.type;
+        if (rowType === tabType || tabType === 'all') {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+    
+    // Tab 切换
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadRecords();
+      });
+    });
+    
+    // 初始化
+    loadRecords();
+  </script>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'checklists' });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

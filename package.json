@@ -1,0 +1,60 @@
+{
+  "name": "openclaw-task-system",
+  "version": "1.0.0",
+  "description": "OpenClaw AI Agent 任务管理系统 - 支持任务分配、Agent 通信、自动化工作流、反思系统和飞书集成",
+  "main": "src/server.js",
+  "bin": {
+    "task-cli": "./cli.js",
+    "task-sync": "./scripts/sync-index.js",
+    "task-configure": "./scripts/configure-openclaw.js",
+    "task-setup": "./scripts/setup.js"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop all",
+    "pm2:logs": "pm2 logs",
+    "test": "jest",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration"
+  },
+  "keywords": [
+    "openclaw",
+    "task-management",
+    "agent-orchestration",
+    "automation",
+    "ai-agents"
+  ],
+  "author": "顾良晨",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/openclaw-task-system.git"
+  },
+  "dependencies": {
+    "@chenglou/pretext": "^0.0.3",
+    "axios": "^1.14.0",
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^12.8.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^5.2.1",
+    "glob": "^13.0.6",
+    "hljs": "^6.2.3",
+    "ioredis": "^5.4.2",
+    "js-yaml": "^4.1.1",
+    "jsonwebtoken": "^9.0.3",
+    "marked": "^17.0.5",
+    "moment": "^2.30.1",
+    "node-cron": "^4.2.1",
+    "node-fetch": "^3.3.2",
+    "node-schedule": "^2.1.1",
+    "redis": "^5.11.0",
+    "sqlite3": "^6.0.1",
+    "uuid": "^13.0.0",
+    "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0"
+  }
+}

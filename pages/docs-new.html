@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <title>文档中心 - 任务系统</title>
+  
+  <!-- 统一框架样式 (必须在最前面) -->
+  <link rel="stylesheet" href="css/frame.css">
+  
+  <!-- 侧边栏组件 -->
+  <link rel="stylesheet" href="css/sidebar.css">
+  <script src="js/sidebar.js"></script>
+  
+  <!-- 页面专用样式 (在框架之后) -->
+  <style>
+    /* 页面专用样式 - 只写页面特定的样式 */
+    .page-content {
+      padding: 24px;
+    }
+    
+    .page-header {
+      margin-bottom: 24px;
+    }
+    
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    
+    /* 统计卡片 */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .stat-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    
+    /* 工具栏 */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .search-input {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      width: 280px;
+    }
+    
+    .filter-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .filter-tab {
+      padding: 6px 12px;
+      border-radius: 4px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 13px;
+    }
+    
+    .filter-tab.active {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    /* 文档卡片网格 */
+    .docs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    
+    /* 文档卡片 */
+    .doc-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .doc-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* 弹窗样式 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal-content {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+    }
+    
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    .modal-close:hover {
+      color: var(--text-primary);
+    }
+    
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+    }
+    
+    /* 文档图标 */
+    .doc-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    
+    .doc-icon.md {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+    }
+    
+    .doc-icon.pdf {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+    
+    /* 文档标签 */
+    .doc-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    
+    .doc-tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+    
+    .doc-tag.openclaw {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .doc-tag.task-system {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+    
+    /* 详情标签 */
+    .detail-tag {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    
+    .detail-path {
+      display: block;
+      background: var(--bg-tertiary);
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      word-break: break-all;
+    }
+    
+    /* 加载状态 */
+    .loading-container {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+    
+    .empty-container {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-tertiary);
+    }
+  </style>
+  <link rel="stylesheet" href="css/page-tips.css">
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <!-- 顶部栏 -->
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <span>文档中心</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="refreshDocs()">🔄</button>
+          <button class="header-btn" title="添加文档">➕</button>
+        </div>
+      </header>
+      
+      <!-- 内容区 -->
+      <div class="content page-content">
+        <div class="page-header">
+          <h1 class="page-title">📚 文档中心</h1>
+            <div id="tipsContainer"></div>
+          <p class="page-subtitle">管理所有技术文档和知识库</p>
+        </div>
+        
+        <!-- 统计卡片 -->
+        <div class="stats-bar">
+          <div class="stat-item">
+            <div class="stat-icon">📄</div>
+            <div>
+              <div class="stat-value" id="totalCount">--</div>
+              <div class="stat-label">总文档</div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">📗</div>
+            <div>
+              <div class="stat-value" id="openclawCount">--</div>
+              <div class="stat-label">OpenClaw</div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">📙</div>
+            <div>
+              <div class="stat-value" id="taskSystemCount">--</div>
+              <div class="stat-label">任务系统</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 工具栏 -->
+        <div class="toolbar">
+          <input type="text" class="search-input" placeholder="搜索文档..." id="searchInput" oninput="handleSearch()">
+          <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterDocs('all', this)">全部</button>
+            <button class="filter-tab" onclick="filterDocs('openclaw', this)">OpenClaw</button>
+            <button class="filter-tab" onclick="filterDocs('task-system', this)">任务系统</button>
+          </div>
+        </div>
+        
+        <!-- 文档列表 -->
+        <div class="docs-grid" id="docsGrid">
+          <!-- 文档卡片将通过JS动态生成 -->
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 文档详情弹窗 -->
+  <div class="modal-overlay" id="docModal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">文档详情</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- 文档内容 -->
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // 页面级脚本 - 页面专用逻辑
+    const API_BASE = window.location.origin;
+    
+    // 全局数据
+    let allDocs = [];
+    let filteredDocs = [];
+    let docMapping = {};
+    
+    // 读取文档名称映射
+    async function loadDocMapping() {
+      try {
+        const response = await fetch(`${API_BASE}/api/doc-mapping/docs`);
+        const result = await response.json();
+        if (result.data) {
+          docMapping = result.data;
+        }
+      } catch (e) {
+        console.error('加载文档映射失败:', e);
+      }
+    }
+    
+    // 翻译文档名称
+    function translateDocName(fileName) {
+      return docMapping[fileName]?.name || fileName.replace(/\.(md|pdf|docx?|xlsx?|html)$/i, '');
+    }
+    
+    // 获取统计信息
+    function getStats() {
+      const openclawCount = filteredDocs.filter(doc => doc.category.includes('OpenClaw')).length;
+      const taskSystemCount = filteredDocs.filter(doc => doc.category.includes('任务系统')).length;
+      
+      document.getElementById('totalCount').textContent = filteredDocs.length;
+      document.getElementById('openclawCount').textContent = openclawCount;
+      document.getElementById('taskSystemCount').textContent = taskSystemCount;
+    }
+    
+    // 刷新文档列表
+    async function refreshDocs() {
+      const grid = document.getElementById('docsGrid');
+      grid.innerHTML = `
+        <div class="loading-container">
+          <i class="ri-loader-4-line ri-spin" style="font-size: 32px;"></i>
+          <p style="margin-top: 12px;">加载中...</p>
+        </div>
+      `;
+      
+      await loadDocs();
+    }
+    
+    // 搜索处理
+    function handleSearch() {
+      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+      filterDocs(keyword ? 'search' : 'all');
+    }
+    
+    // 过滤文档
+    function filterDocs(type, btn) {
+      // 更新按钮状态
+      if (btn) {
+        document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+        btn.classList.add('active');
+      }
+      
+      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+      
+      if (type === 'search' || keyword) {
+        filteredDocs = allDocs.filter(doc => 
+          doc.title.toLowerCase().includes(keyword) ||
+          doc.description?.toLowerCase().includes(keyword) ||
+          doc.tags?.toLowerCase().includes(keyword)
+        );
+      } else if (type === 'openclaw') {
+        filteredDocs = allDocs.filter(doc => doc.category.includes('OpenClaw'));
+      } else if (type === 'task-system') {
+        filteredDocs = allDocs.filter(doc => doc.category.includes('任务系统'));
+      } else {
+        filteredDocs = [...allDocs];
+      }
+      
+      renderDocs();
+      getStats();
+    }
+    
+    // 加载文档
+    async function loadDocs() {
+      try {
+        const response = await fetch(`${API_BASE}/api/documents-index`);
+        const result = await response.json();
+        
+        if (result.success) {
+          allDocs = result.data.items || result.data || [];
+          
+          // 过滤掉归档文件夹中的文档
+          filteredDocs = allDocs.filter(doc => 
+            !doc.file_path.includes('archive') && 
+            !doc.file_path.includes('Archive') &&
+            !doc.file_path.includes('_archive')
+          );
+          
+          renderDocs();
+          getStats();
+        } else {
+          throw new Error(result.error || '加载失败');
+        }
+      } catch (e) {
+        console.error('加载文档失败:', e);
+        document.getElementById('docsGrid').innerHTML = `
+          <div class="empty-container">
+            <i class="ri-file-list-2-line" style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;"></i>
+            <p>无法加载文档列表</p>
+            <p style="font-size: 12px; margin-top: 8px;">${e.message}</p>
+            <button onclick="refreshDocs()" style="margin-top: 16px; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; background: var(--primary); color: white;">
+              重试
+            </button>
+          </div>
+        `;
+      }
+    }
+    
+    // 渲染文档列表
+    function renderDocs() {
+      const grid = document.getElementById('docsGrid');
+      
+      if (filteredDocs.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-container">
+            <i class="ri-search-line" style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;"></i>
+            <p>未找到匹配的文档</p>
+          </div>
+        `;
+        return;
+      }
+      
+      const html = filteredDocs.map(doc => {
+        // 获取中文名称
+        const title = translateDocName(doc.title);
+        const category = doc.category.split(' / ')[0] || '其他';
+        const categoryColor = {
+          'OpenClaw': 'rgba(16, 185, 129, 0.15)',
+          '任务系统': 'rgba(245, 158, 11, 0.15)',
+          '知识库': 'rgba(99, 102, 241, 0.15)',
+          '飞书桥': 'rgba(251, 146, 60, 0.15)'
+        }[category] || 'rgba(59, 130, 246, 0.15)';
+        
+        // 解析标签
+        let tags = [];
+        try {
+          tags = JSON.parse(doc.tags || '[]');
+        } catch (e) {
+          tags = [];
+        }
+        
+        return `
+          <div class="doc-card" onclick="viewDoc('${doc.id}')">
+            <div class="doc-icon ${doc.icon || 'md'}">
+              ${doc.icon === 'pdf' ? '📕' : '📄'}
+            </div>
+            <div class="doc-title">${title}</div>
+            <div class="doc-meta">
+              <span style="color: ${doc.category.includes('OpenClaw') ? 'var(--success)' : doc.category.includes('任务系统') ? 'var(--warning)' : 'var(--text-secondary)'}">
+                ${category}
+              </span>
+              <span style="margin: 0 8px; opacity: 0.5;">·</span>
+              <span>更新于 ${doc.updated_at}</span>
+            </div>
+            ${tags.length > 0 ? `
+            <div class="doc-tags">
+              ${tags.map(tag => `<span class="doc-tag" style="background: ${categoryColor}; color: var(--text-primary)">${tag}</span>`).join('')}
+            </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+      
+      grid.innerHTML = html;
+    }
+    
+    // 查看文档详情
+    async function viewDoc(docId) {
+      const doc = allDocs.find(d => d.id === docId);
+      if (!doc) return;
+      
+      const title = translateDocName(doc.title);
+      const category = doc.category.split(' / ')[0] || '其他';
+      
+      // 解析标签
+      let tags = [];
+      try {
+        tags = JSON.parse(doc.tags || '[]');
+      } catch (e) {
+        tags = [];
+      }
+      
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+          <i class="ri-loader-4-line ri-spin" style="font-size: 32px;"></i>
+          <p style="margin-top: 12px;">加载中...</p>
+        </div>
+      `;
+      document.getElementById('docModal').style.display = 'flex';
+      
+      // 获取文档内容
+      try {
+        const response = await fetch(`${API_BASE}/api/documents/${docId}`);
+        const result = await response.json();
+        
+        if (result.success && result.data.content) {
+          const content = result.data.content;
+          
+          document.getElementById('modalBody').innerHTML = `
+            <div style="margin-bottom: 20px;">
+              <h3 style="font-size: 16px; margin-bottom: 12px;">文档信息</h3>
+              <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
+                <span class="detail-tag" style="background: ${category === 'OpenClaw' ? 'rgba(16, 185, 129, 0.15)' : category === '任务系统' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(59, 130, 246, 0.15)'}">
+                  ${category}
+                </span>
+                ${tags.map(tag => `<span class="detail-tag">${tag}</span>`).join('')}
+              </div>
+              
+              <div style="margin-bottom: 12px;">
+                <span class="doc-tag" style="margin-bottom: 8px;">文档路径:</span>
+                <code class="detail-path">${doc.file_path}</code>
+              </div>
+            </div>
+            
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+              <h3 style="font-size: 16px; margin-bottom: 12px;">文档内容</h3>
+              <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 16px; max-height: 400px; overflow-y: auto;">
+                <pre style="white-space: pre-wrap; word-break: break-word; margin: 0; font-size: 13px; line-height: 1.6;">${escapeHtml(content.substring(0, 5000))}${content.length > 5000 ? '\n\n... (内容过长，仅显示前5000字符)' : ''}</pre>
+              </div>
+            </div>
+            
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+              <div style="display: flex; gap: 12px;">
+                <button onclick="viewInBrowser('${doc.file_path}')" style="padding: 10px 20px; border: 1px solid var(--primary); border-radius: 6px; background: transparent; color: var(--primary); cursor: pointer; font-size: 14px;">
+                  在浏览器中查看
+                </button>
+                <button onclick="window.open('/api/documents/${docId}?download=1', '_blank')" style="padding: 10px 20px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-tertiary); color: var(--text-primary); cursor: pointer; font-size: 14px;">
+                  下载文档
+                </button>
+              </div>
+            </div>
+          `;
+        } else {
+          throw new Error(result.error || '获取文档内容失败');
+        }
+      } catch (e) {
+        document.getElementById('modalBody').innerHTML = `
+          <div style="text-align: center; padding: 40px;">
+            <i class="ri-error-warning-line" style="font-size: 32px; color: var(--danger);"></i>
+            <p style="margin-top: 12px; color: var(--danger);">${e.message}</p>
+            <button onclick="closeModal()" style="margin-top: 16px; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; background: var(--primary); color: white;">
+              关闭
+            </button>
+          </div>
+        `;
+      }
+    }
+    
+    // HTML 转义
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // 在浏览器中查看
+    function viewInBrowser(filePath) {
+      // 将本地文件路径转换为可访问的 URL
+      const encodedPath = encodeURIComponent(filePath);
+      window.open(`/api/doc-content?path=${encodedPath}`, '_blank');
+    }
+    
+    // 关闭弹窗
+    function closeModal() {
+      document.getElementById('docModal').style.display = 'none';
+    }
+    
+    // 点击弹窗外关闭
+    document.getElementById('docModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeModal();
+      }
+    });
+    
+    // 键盘关闭
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+    
+    // 初始化文档列表
+    async function init() {
+      // 加载文档映射
+      await loadDocMapping();
+      
+      // 加载文档列表
+      await loadDocs();
+      
+      // 初始过滤
+      filterDocs('all');
+    }
+    
+    // 加载文档
+    loadDocs();
+  </script>
+  
+  <script>
+    Sidebar.init({ activePage: 'documents' });
+  </script>
+  <script src="js/page-tips.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tipsContainer = document.getElementById('tipsContainer');
+      if (tipsContainer && PageTips) {
+        PageTips.init('docs-new', tipsContainer);
+      }
+    });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

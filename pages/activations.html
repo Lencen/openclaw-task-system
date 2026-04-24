@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>激活记录 - 任务管理系统</title>
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .page-title { font-size: 24px; font-weight: 600; color: var(--text-primary); }
+    .search-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; text-align: center; }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--primary-color); }
+    .stat-label { color: var(--text-secondary); margin-top: 4px; font-size: 13px; }
+    .table-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+    .data-table th { background: var(--bg-secondary); font-weight: 600; color: var(--text-secondary); }
+    .data-table tr:hover { background: var(--hover-bg); }
+    .status-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .status-active { background: #e6f7ee; color: #00a854; }
+    .status-deactivated { background: #f0f0f0; color: #666; }
+    .status-expired { background: #fff7e6; color: #fa8c16; }
+    .action-btn { padding: 3px 6px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-right: 4px; }
+    .btn-view { background: var(--primary-color); color: white; }
+    .btn-deactivate { background: #f5222d; color: white; }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 12px; }
+    .page-btn { padding: 6px 10px; border: 1px solid var(--border-color); background: white; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .page-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+    .page-info { color: var(--text-secondary); font-size: 13px; }
+    .btn { padding: 6px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .btn-primary { background: var(--primary-color); color: white; }
+    .machine-id { font-family: monospace; background: #f5f5f5; padding: 2px 4px; border-radius: 2px; font-size: 11px; }
+    .os-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; background: #e6f7ff; color: #1890ff; }
+    .heartbeat-status { display: flex; align-items: center; gap: 4px; }
+    .heartbeat-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .heartbeat-online { background: #52c41a; }
+    .heartbeat-offline { background: #d9d9d9; }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar" id="sidebar"></aside>
+    
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">激活记录</h1>
+      </div>
+      
+      <div class="stats-cards" id="statsCards">
+        <div class="stat-card">
+          <div class="stat-value" id="totalActivations">-</div>
+          <div class="stat-label">激活总数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="activeActivations" style="color: #52c41a;">-</div>
+          <div class="stat-label">在线设备</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="deactivatedActivations">-</div>
+          <div class="stat-label">已解绑</div>
+        </div>
+      </div>
+      
+      <div class="search-bar">
+        <input type="text" class="form-input" id="searchInput" placeholder="搜索机器ID..." style="max-width: 200px;">
+        <select class="form-select" id="statusFilter" style="width: 120px;">
+          <option value="">全部状态</option>
+          <option value="active">在线</option>
+          <option value="deactivated">已解绑</option>
+        </select>
+        <button class="btn btn-primary" onclick="loadActivations()">搜索</button>
+      </div>
+      
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>激活ID</th>
+              <th>许可证</th>
+              <th>客户</th>
+              <th>机器ID</th>
+              <th>主机名</th>
+              <th>系统</th>
+              <th>IP地址</th>
+              <th>状态</th>
+              <th>激活时间</th>
+              <th>最后心跳</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="activationTableBody">
+            <tr><td colspan="11" style="text-align: center; padding: 40px;">加载中...</td></tr>
+          </tbody>
+        </table>
+        <div class="pagination" id="pagination">
+          <span class="page-info">第 1 页，共 0 条</span>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script>
+    const API_BASE = '/api';
+    let currentPage = 1;
+    const pageSize = 20;
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStats();
+      loadActivations();
+    });
+    
+    async function loadStats() {
+      try {
+        const response = await fetch(`${API_BASE}/activations/stats`);
+        const result = await response.json();
+        if (result.success) {
+          document.getElementById('totalActivations').textContent = result.data.total;
+          document.getElementById('activeActivations').textContent = result.data.active;
+          document.getElementById('deactivatedActivations').textContent = result.data.deactivated;
+        }
+      } catch (error) {
+        console.error('加载统计数据失败:', error);
+      }
+    }
+    
+    async function loadActivations() {
+      const machineId = document.getElementById('searchInput').value;
+      const status = document.getElementById('statusFilter').value;
+      
+      try {
+        const params = new URLSearchParams({ page: currentPage, pageSize });
+        if (machineId) params.append('machineId', machineId);
+        if (status) params.append('status', status);
+        
+        const response = await fetch(`${API_BASE}/activations?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          renderActivations(result.data);
+        }
+      } catch (error) {
+        console.error('加载激活记录失败:', error);
+      }
+    }
+    
+    function renderActivations(data) {
+      const tbody = document.getElementById('activationTableBody');
+      
+      if (data.list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 40px;">暂无数据</td></tr>';
+        return;
+      }
+      
+      const rows = data.list.map(act => {
+        const isOnline = act.last_heartbeat && (Date.now() - new Date(act.last_heartbeat).getTime() < 5 * 60 * 1000);
+        
+        return `
+          <tr>
+            <td><code style="font-size: 11px;">${act.id}</code></td>
+            <td><span style="font-family: monospace; font-size: 11px;">${act.license_key?.substring(0, 15)}...</span></td>
+            <td>${act.customer_name || '-'}</td>
+            <td><span class="machine-id">${act.machine_id?.substring(0, 16) || '-'}</span></td>
+            <td>${act.hostname || '-'}</td>
+            <td>${act.os_type ? `<span class="os-badge">${act.os_type}</span>` : '-'}</td>
+            <td>${act.ip_address || '-'}</td>
+            <td><span class="status-badge status-${act.status}">${getStatusLabel(act.status)}</span></td>
+            <td>${formatDateTime(act.activated_at)}</td>
+            <td>
+              <div class="heartbeat-status">
+                <span class="heartbeat-dot ${isOnline ? 'heartbeat-online' : 'heartbeat-offline'}"></span>
+                <span>${act.last_heartbeat ? formatDateTime(act.last_heartbeat) : '-'}</span>
+              </div>
+            </td>
+            <td>
+              <button class="action-btn btn-view" onclick="viewActivation('${act.id}')">详情</button>
+              ${act.status === 'active' ? `<button class="action-btn btn-deactivate" onclick="deactivate('${act.id}')">解绑</button>` : ''}
+            </td>
+          </tr>
+        `;
+      });
+      
+      tbody.innerHTML = rows.join('');
+      renderPagination(data);
+    }
+    
+    function renderPagination(data) {
+      const totalPages = Math.ceil(data.total / pageSize);
+      let html = `<span class="page-info">第 ${currentPage} 页，共 ${data.total} 条</span>`;
+      
+      if (totalPages > 1) {
+        if (currentPage > 1) html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})">上一页</button>`;
+        for (let i = 1; i <= Math.min(totalPages, 5); i++) {
+          html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+        if (currentPage < totalPages) html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})">下一页</button>`;
+      }
+      
+      document.getElementById('pagination').innerHTML = html;
+    }
+    
+    function goToPage(page) { currentPage = page; loadActivations(); }
+    
+    function viewActivation(id) {
+      alert('激活详情功能开发中...');
+    }
+    
+    async function deactivate(id) {
+      if (!confirm('确定要解绑这个设备吗？')) return;
+      
+      try {
+        const response = await fetch(`${API_BASE}/activations/${id}/deactivate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          loadActivations();
+          loadStats();
+          alert('设备已解绑');
+        } else {
+          alert('解绑失败: ' + result.error);
+        }
+      } catch (error) {
+        alert('解绑失败: ' + error.message);
+      }
+    }
+    
+    function getStatusLabel(status) {
+      const labels = { active: '在线', deactivated: '已解绑', expired: '已过期' };
+      return labels[status] || status;
+    }
+    
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    }
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

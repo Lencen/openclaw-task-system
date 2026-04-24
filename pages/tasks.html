@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务列表 - Morning Task System</title>
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/tips.css">
+  <style>
+    .toolbar { padding: 16px 24px; display: flex; gap: 16px; align-items: center; border-bottom: 1px solid var(--border); }
+    .filter-group { display: flex; gap: 8px; }
+    .filter-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 13px; }
+    .filter-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+    
+    .task-list { padding: 16px 24px; }
+    .task-item { background: var(--bg-secondary); border-radius: 8px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; }
+    .task-item:hover { background: var(--bg-tertiary); }
+    
+    .task-info { flex: 1; }
+    .task-title { font-size: 15px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+    .task-meta { font-size: 12px; color: var(--text-secondary); display: flex; gap: 12px; }
+    
+    .status-badge { padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+    .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .status-assigned { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+    .status-doing { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+    .status-done { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .status-failed { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    
+    .priority-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; }
+    .priority-P0 { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    .priority-P1 { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .priority-P2 { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+    .priority-P3 { background: rgba(148, 163, 184, 0.2); color: var(--text-secondary); }
+    
+    .empty { text-align: center; padding: 48px; color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    <main class="main">
+      <header class="header">
+        <h1>任务列表</h1>
+      </header>
+      <div class="content">
+        <div class="toolbar">
+          <div class="filter-group">
+            <button class="filter-btn active" data-status="all">全部</button>
+            <button class="filter-btn" data-status="pending">待分配</button>
+            <button class="filter-btn" data-status="doing">进行中</button>
+            <button class="filter-btn" data-status="done">已完成</button>
+            <button class="filter-btn" data-status="failed">失败</button>
+          </div>
+        </div>
+        <div class="task-list" id="task-list">
+          <div class="loading">加载中...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="js/sidebar.js"></script>
+  <script src="js/tips.js"></script>
+  <script>
+    TipsComponent.init('tasks');
+    Sidebar.init({ activePage: 'tasks' });
+    
+    let currentFilter = 'all';
+    
+    // 绑定筛选按钮
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.status;
+        loadTasks();
+      });
+    });
+    
+    loadTasks();
+    
+    async function loadTasks() {
+      try {
+        const url = currentFilter === 'all' 
+          ? '/api/tasks?limit=50' 
+          : `/api/tasks?status=${currentFilter}&limit=50`;
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (result.success && result.data && result.data.tasks) {
+          renderTasks(result.data.tasks);
+        } else if (result.tasks) {
+          renderTasks(result.tasks);
+        } else {
+          document.getElementById('task-list').innerHTML = '<div class="empty">暂无任务</div>';
+        }
+      } catch (err) {
+        document.getElementById('task-list').innerHTML = `<div class="empty">加载失败: ${err.message}</div>`;
+      }
+    }
+    
+    function renderTasks(tasks) {
+      if (tasks.length === 0) {
+        document.getElementById('task-list').innerHTML = '<div class="empty">暂无任务</div>';
+        return;
+      }
+      
+      let html = '';
+      for (const task of tasks) {
+        const statusClass = `status-${task.status}`;
+        const priorityClass = `priority-${task.priority || 'P2'}`;
+        
+        html += `
+          <div class="task-item" onclick="location.href='task-detail.html?id=${task.id}'">
+            <div class="task-info">
+              <div class="task-title">${task.title || task.id}</div>
+              <div class="task-meta">
+                <span>${task.id}</span>
+                <span>${formatTime(task.created_at)}</span>
+                ${task.assigned_agent ? `<span>👤 ${task.assigned_agent}</span>` : ''}
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span class="priority-badge ${priorityClass}">${task.priority || 'P2'}</span>
+              <span class="status-badge ${statusClass}">${task.status}</span>
+            </div>
+          </div>
+        `;
+      }
+      
+      document.getElementById('task-list').innerHTML = html;
+    }
+    
+    function formatTime(timestamp) {
+      if (!timestamp) return '-';
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+      
+      if (diff < 60000) return '刚刚';
+      if (diff < 3600000) return `${Math.floor(diff/60000)} 分钟前`;
+      if (diff < 86400000) return `${Math.floor(diff/3600000)} 小时前`;
+      return date.toLocaleDateString('zh-CN');
+    }
+  </script>
+</body>
+</html>

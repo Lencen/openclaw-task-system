@@ -1,0 +1,8 @@
+{
+  "port": 8081,
+  "host": "0.0.0.0",
+  "heartbeatInterval": 30000,
+  "taskTimeout": 3600000,
+  "maxConcurrentTasks": 10,
+  "logLevel": "info"
+}

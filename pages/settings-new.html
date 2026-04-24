@@ -1,0 +1,2264 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ========== 统一设计系统 ========== -->
+  <link href="assets/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles/design-system.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="styles/backup-config.css">
+
+  <title>系统设置 - 任务系统</title>
+  <style>
+    /* ========== 页面特定样式 ========== */
+    
+    /* ========== 布局框架 ========== */
+    /* 已移除，使用 frame.css */
+    
+    /* ========== 侧边栏 ========== */
+    .sidebar {
+      width: 200px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    
+    .sidebar-header {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      gap: 8px;
+    }
+    
+    .sidebar-logo { font-size: 18px; }
+    
+    .sidebar-nav {
+      flex: 1;
+      padding: 8px;
+      overflow-y: auto;
+    }
+    
+    .nav-section { margin-bottom: 16px; }
+    
+    .nav-section-title {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      padding: 8px 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    
+    .nav-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .nav-item.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+    }
+    
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    
+    .nav-badge {
+      margin-left: auto;
+      background: var(--danger);
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+    
+    /* ========== 主内容区 ========== */
+    /* 已移除，使用 frame.css */
+    
+    /* ========== 顶部栏 ========== */
+    /* 已移除，使用 frame.css */
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .page-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    /* ========== 内容区 ========== */
+    /* 已移除，使用 frame.css */
+    
+    /* ========== 设置导航 ========== */
+    .settings-nav {
+      width: 200px;
+      flex-shrink: 0;
+    }
+    
+    .settings-section {
+      margin-bottom: 20px;
+    }
+    
+    .settings-section-title {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      padding: 0 12px;
+    }
+    
+    .settings-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    
+    .settings-item:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+    
+    .settings-item.active {
+      background: var(--bg-secondary);
+      color: var(--primary);
+    }
+    
+    .settings-icon { font-size: 14px; width: 18px; }
+    
+    /* ========== 设置内容 ========== */
+    .settings-content {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .settings-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .settings-card-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .settings-card-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    
+    .settings-card-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    
+    .settings-card-body {
+      padding: 16px;
+    }
+    
+    /* ========== 模型卡片 ========== */
+    .model-group {
+      margin-bottom: 20px;
+    }
+    
+    .model-group-title {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    
+    .model-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .model-card:hover {
+      border-color: var(--primary);
+    }
+    
+    .model-card.selected {
+      border-color: var(--primary);
+      background: rgba(59, 130, 246, 0.1);
+    }
+    
+    .model-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    
+    .model-name {
+      font-size: 13px;
+      font-weight: 500;
+    }
+    
+    .model-status {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    
+    .model-status.active {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .model-status.inactive {
+      background: rgba(100, 116, 139, 0.15);
+      color: var(--text-tertiary);
+    }
+    
+    .model-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    
+    .model-speed {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 11px;
+    }
+    
+    .speed-value {
+      color: var(--text-secondary);
+      font-family: monospace;
+    }
+    
+    .speed-test-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-size: 10px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+    
+    .speed-test-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+    
+    .speed-time {
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+    
+    .model-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .model-action-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .model-action-btn.delete {
+      color: var(--danger);
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.1);
+    }
+    
+    .model-action-btn.delete:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: var(--danger);
+    }
+    
+    .model-action-btn.locked {
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+    
+    /* ========== 表单样式 ========== */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .form-select {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 13px;
+      cursor: pointer;
+    }
+    
+    .form-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .form-toggle:last-child {
+      border-bottom: none;
+    }
+    
+    .toggle-label {
+      font-size: 13px;
+    }
+    
+    .toggle-desc {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+    
+    .toggle-switch {
+      width: 40px;
+      height: 22px;
+      background: var(--bg-tertiary);
+      border-radius: 11px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .toggle-switch.active {
+      background: var(--primary);
+    }
+    
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: all 0.2s;
+    }
+    
+    .toggle-switch.active::after {
+      left: 20px;
+    }
+    
+    /* ========== 按钮 ========== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    /* ========== 响应式 ========== */
+    /* 移动端 Tab 切换 */
+    .mobile-tabs {
+      display: none;
+      padding: 12px;
+      gap: 8px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .mobile-tab {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    
+    .mobile-tab.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    @media (max-width: 1024px) {
+      .settings-nav { display: none; }
+      .mobile-tabs { display: flex; }
+      .model-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .mobile-tabs { display: flex; }
+      .model-grid { grid-template-columns: 1fr; }
+    }
+    
+    /* ========== Agent 列表样式 ========== */
+    .agent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .agent-loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+    
+    .agent-item {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .agent-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    
+    .agent-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .agent-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .agent-id {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-family: monospace;
+    }
+    
+    .agent-model {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    
+    .agent-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .agent-status.active {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .agent-status.inactive {
+      background: rgba(100, 116, 139, 0.15);
+      color: var(--text-tertiary);
+    }
+    
+    .agent-status.busy {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+    
+    .agent-status.error {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+    
+    .agent-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    
+    .agent-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .agent-btn {
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      transition: all 0.15s;
+    }
+    
+    .agent-btn:hover {
+      background: var(--bg-tertiary);
+      border-color: var(--primary);
+    }
+    
+    .agent-btn.danger {
+      color: var(--danger);
+    }
+    
+    .agent-btn.danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--danger);
+    }
+    
+    .agent-btn.success {
+      color: var(--success);
+    }
+    
+    .agent-btn.success:hover {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: var(--success);
+    }
+    
+    /* ========== 弹窗样式 ========== */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(2px);
+    }
+    
+    .modal-content {
+      position: relative;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 480px;
+      margin: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      z-index: 10000;
+    }
+    
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-close:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    
+    .modal-body {
+      padding: 20px;
+    }
+    
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* ========== Settings页面特有样式 ========== */
+
+    .settings-section {
+      margin-bottom: 20px;
+    }
+
+    .settings-section-title {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .settings-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+      margin-bottom: 2px;
+      font-size: 14px;
+    }
+
+    .settings-item:hover {
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .settings-item.active {
+      background: var(--ds-accent-primary);
+      color: white;
+    }
+
+    .settings-icon {
+      font-size: 18px;
+    }
+
+    .settings-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .settings-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .settings-card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .settings-card-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .settings-card-body {
+      color: var(--text-primary);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    <!-- ========== 设置内容区布局 ========== */
+    .settings-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ========== content容器布局 ========== */
+    .content {
+      display: flex;
+      gap: 24px;
+    }
+  </style>
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <!-- 侧边栏 -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容区 -->
+    <main class="main">
+      <!-- 顶部栏 -->
+      <header class="header">
+        <div class="header-left">
+          <h1 class="page-title"><i class="ri-settings-3-line"></i> 系统设置</h1>
+        </div>
+      </header>
+      
+      <!-- 移动端 Tab 切换（仅在移动端显示） -->
+      <div class="mobile-tabs">
+        <button class="mobile-tab active" data-tab="models">🤖 模型</button>
+        <button class="mobile-tab" data-tab="system">⚙️ 系统</button>
+        <button class="mobile-tab" data-tab="agents">🤖 Agent</button>
+        <button class="mobile-tab" data-tab="backup">💾 备份</button>
+      </div>
+      
+      <!-- 内容区 -->
+      <div class="content">
+        <!-- 设置导航 -->
+        <div class="settings-nav">
+          <div class="settings-section">
+            <div class="settings-section-title">配置</div>
+            <div class="settings-item active" data-tab="models">
+              <span class="settings-icon">🤖</span>
+              <span>模型配置</span>
+            </div>
+            <div class="settings-item" data-tab="system">
+              <span class="settings-icon">⚙️</span>
+              <span>系统配置</span>
+            </div>
+            <div class="settings-item" data-tab="agents">
+              <span class="settings-icon">🤖</span>
+              <span>Agent 配置</span>
+            </div>
+          </div>
+          <div class="settings-section">
+            <div class="settings-section-title">其他</div>
+            <div class="settings-item" data-tab="backup">
+              <span class="settings-icon">💾</span>
+              <span>系统备份</span>
+            </div>
+            <div class="settings-item">
+              <span class="settings-icon">🔑</span>
+              <span>API 密钥</span>
+            </div>
+            <div class="settings-item">
+              <span class="settings-icon">🔌</span>
+              <span>扩展管理</span>
+            </div>
+          </div>
+          <div class="settings-section">
+            <div class="settings-section-title">偏好</div>
+            <div class="settings-item">
+              <span class="settings-icon">🔔</span>
+              <span>通知设置</span>
+            </div>
+            <div class="settings-item">
+              <span class="settings-icon">🎨</span>
+              <span>外观主题</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 设置内容 -->
+        <div class="settings-content">
+          <!-- Tab: 模型配置 -->
+          <div class="tab-content active" data-tab-content="models">
+            <!-- 组织架构入口 -->
+            <div class="settings-card" style="border-left: 3px solid var(--primary);">
+            <div class="settings-card-header">
+              <div class="settings-card-title">🏛️ Agent 组织架构</div>
+              <div class="settings-card-desc">可视化管理和配置 Agent 组织关系</div>
+            </div>
+            <div class="settings-card-body">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <p style="margin-bottom: 8px; color: var(--text-secondary);">
+                    当前已配置 <strong style="color: var(--primary);">10</strong> 个 Agent，支持拖拽调整组织结构。
+                  </p>
+                  <p style="color: var(--text-tertiary); font-size: 12px;">
+                    在组织架构页面可以：查看 Agent 层级关系、调整组织结构、配置 Subagent 调用权限
+                  </p>
+                </div>
+                <a href="organization.html" class="btn btn-primary" style="text-decoration: none;">
+                  <i class="ri-organization-chart"></i> 打开组织架构
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 模型配置 -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <div class="settings-card-title">🤖 模型配置</div>
+              <div class="settings-card-desc">配置 Agent 使用的语言模型</div>
+            </div>
+            <div class="settings-card-body">
+              <div style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 16px;">
+                <button class="btn btn-secondary" onclick="testAllModelsSpeed()" id="testAllSpeedBtn">
+                  ⚡ 一键测速
+                </button>
+                <button class="btn btn-primary" onclick="openAddModelModal()">
+                  <i class="ri-add-line"></i> 添加模型
+                </button>
+              </div>
+              <div id="modelList">
+                <div class="agent-loading">加载模型列表中...</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 通用设置 -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <div class="settings-card-title">⚙️ 通用设置</div>
+            </div>
+            <div class="settings-card-body">
+              <div class="form-toggle">
+                <div>
+                  <div class="toggle-label">自动保存</div>
+                  <div class="toggle-desc">自动保存任务更改</div>
+                </div>
+                <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+              </div>
+              <div class="form-toggle">
+                <div>
+                  <div class="toggle-label">任务提醒</div>
+                  <div class="toggle-desc">任务截止前发送提醒通知</div>
+                </div>
+                <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+              </div>
+              <div class="form-toggle">
+                <div>
+                  <div class="toggle-label">Agent 自动分配</div>
+                  <div class="toggle-desc">根据任务类型自动分配最佳 Agent</div>
+                </div>
+                <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+              </div>
+              <div class="form-toggle">
+                <div>
+                  <div class="toggle-label">深色模式</div>
+                  <div class="toggle-desc">使用深色主题界面</div>
+                </div>
+                <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 保存按钮 -->
+          <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <button class="btn btn-secondary">重置</button>
+            <button class="btn btn-primary">保存设置</button>
+          </div>
+          </div>
+          
+          <!-- Tab: 系统配置 -->
+          <div class="tab-content" data-tab-content="system" style="display: none;">
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div class="settings-card-title">⚙️ 系统配置</div>
+                <div class="settings-card-desc">全局系统设置</div>
+              </div>
+              <div class="settings-card-body">
+                <div class="form-group">
+                  <label class="form-label">系统名称</label>
+                  <input type="text" class="form-input" value="Task System" placeholder="输入系统名称">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">日志级别</label>
+                  <select class="form-select">
+                    <option value="debug">Debug</option>
+                    <option value="info" selected>Info</option>
+                    <option value="warn">Warning</option>
+                    <option value="error">Error</option>
+                  </select>
+                </div>
+                <div class="form-toggle">
+                  <div>
+                    <div class="toggle-label">调试模式</div>
+                    <div class="toggle-desc">启用详细日志输出</div>
+                  </div>
+                  <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                </div>
+                <div class="form-toggle">
+                  <div>
+                    <div class="toggle-label">自动备份</div>
+                    <div class="toggle-desc">每天自动备份系统数据</div>
+                  </div>
+                  <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div class="settings-card-title">🌐 网络设置</div>
+              </div>
+              <div class="settings-card-body">
+                <div class="form-group">
+                  <label class="form-label">API 超时时间（秒）</label>
+                  <input type="number" class="form-input" value="30" min="5" max="300">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">重试次数</label>
+                  <input type="number" class="form-input" value="3" min="0" max="10">
+                </div>
+                <div class="form-toggle">
+                  <div>
+                    <div class="toggle-label">代理服务器</div>
+                    <div class="toggle-desc">使用代理服务器连接外部 API</div>
+                  </div>
+                  <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+              <button class="btn btn-secondary">重置</button>
+              <button class="btn btn-primary">保存设置</button>
+            </div>
+          </div>
+          
+          <!-- Tab: 系统备份 -->
+          <div class="tab-content" data-tab-content="backup" style="display: none;">
+            <!-- 备份概览卡片 -->
+            <div class="settings-card" style="border-left: 3px solid var(--primary);">
+              <div class="settings-card-header">
+                <div class="settings-card-title">💾 备份系统概览</div>
+                <div class="settings-card-desc">OpenClaw 升级版自动备份系统 v2.0</div>
+              </div>
+              <div class="settings-card-body">
+                <div class="backup-stats">
+                  <div class="backup-stat-item">
+                    <div class="backup-stat-label">总备份数量</div>
+                    <div class="backup-stat-value" id="backup-total-count">-</div>
+                  </div>
+                  <div class="backup-stat-item">
+                    <div class="backup-stat-label">总备份大小</div>
+                    <div class="backup-stat-value" id="backup-total-size">-</div>
+                  </div>
+                  <div class="backup-stat-item">
+                    <div class="backup-stat-label">自动状态</div>
+                    <div class="backup-stat-value" style="color: var(--success);">
+                      <i class="ri-checkbox-circle-fill"></i> 已启用
+                    </div>
+                  </div>
+                </div>
+                <div style="margin-top: 16px;">
+                  <button class="btn btn-primary" onclick="refreshBackupStats()">
+                    <i class="ri-refresh-line"></i> 刷新统计
+                  </button>
+                  <button class="btn" onclick="window.open('backup-guide.html', '_blank')">
+                    <i class="ri-book-open-line"></i> 查看备份指南
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 备份说明卡片 -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div class="settings-card-title">📋 备份说明</div>
+                <div class="settings-card-desc">备份系统的核心功能和用途</div>
+              </div>
+              <div class="settings-card-body">
+                <div class="backup-info-grid">
+                  <div class="backup-info-item">
+                    <div class="backup-info-icon">🧠</div>
+                    <div class="backup-info-title">记忆备份</div>
+                    <div class="backup-info-desc">
+                      <strong>小时级备份</strong>：每小时一次，保留7天，快速回溯当日内容<br>
+                      <strong>每日归档</strong>：每天一次，保留30天，长期保存完整记忆
+                    </div>
+                  </div>
+                  <div class="backup-info-item">
+                    <div class="backup-info-icon">🎯</div>
+                    <div class="backup-info-title">任务系统备份</div>
+                    <div class="backup-info-desc">
+                      <strong>数据备份</strong>：每12小时一次，保留30天<br>
+                      <strong>迁移备份</strong>：手动触发，保留14天，可直接迁移启用
+                    </div>
+                  </div>
+                  <div class="backup-info-item">
+                    <div class="backup-info-icon">💬</div>
+                    <div class="backup-info-title">会话备份</div>
+                    <div class="backup-info-desc">
+                      <strong>实时备份</strong>：每10分钟一次，保留30天<br>
+                      <strong>全量覆盖</strong>：覆盖所有Agent的会话记录
+                    </div>
+                  </div>
+                  <div class="backup-info-item">
+                    <div class="backup-info-icon">⚙️</div>
+                    <div class="backup-info-title">配置备份</div>
+                    <div class="backup-info-desc">
+                      <strong>每日备份</strong>：每天02:00，保留30天<br>
+                      <strong>包含内容</strong>：openclaw.json、核心文档、记忆系统
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 自动化备份任务列表 -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div class="settings-card-title">🤖 自动化备份任务</div>
+                <div class="settings-card-desc">通过 Crontab 自动执行的备份任务</div>
+              </div>
+              <div class="settings-card-body">
+                <table class="backup-table">
+                  <thead>
+                    <tr>
+                      <th>备份类型</th>
+                      <th>执行频率</th>
+                      <th>保留周期</th>
+                      <th>目标目录</th>
+                      <th>状态</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <span class="backup-type-icon">🧠</span>
+                        <span>记忆小时级备份</span>
+                      </td>
+                      <td>每小时一次</td>
+                      <td>7天</td>
+                      <td>memory-hourly/</td>
+                      <td><span class="status-badge active">运行中</span></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="backup-type-icon">🧠</span>
+                        <span>记忆每日归档</span>
+                      </td>
+                      <td>每天 02:00</td>
+                      <td>30天</td>
+                      <td>memory-daily/</td>
+                      <td><span class="status-badge active">运行中</span></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="backup-type-icon">💬</span>
+                        <span>会话备份</span>
+                      </td>
+                      <td>每10分钟</td>
+                      <td>30天</td>
+                      <td>sessions/</td>
+                      <td><span class="status-badge active">运行中</span></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="backup-type-icon">🎯</span>
+                        <span>任务数据备份</span>
+                      </td>
+                      <td>每12小时 (00:00/12:00)</td>
+                      <td>30天</td>
+                      <td>task-system/</td>
+                      <td><span class="status-badge active">运行中</span></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="backup-type-icon">⚙️</span>
+                        <span>OpenClaw配置备份</span>
+                      </td>
+                      <td>每天 03:00</td>
+                      <td>30天</td>
+                      <td>config/</td>
+                      <td><span class="status-badge active">运行中</span></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="backup-type-icon">📦</span>
+                        <span>完整系统备份</span>
+                      </td>
+                      <td>每3天 (04:00) - 1,4,7...</td>
+                      <td>30天</td>
+                      <td>full/</td>
+                      <td><span class="status-badge active">运行中</span></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="backup-type-icon">🧹</span>
+                        <span>旧备份清理</span>
+                      </td>
+                      <td>每天 05:00</td>
+                      <td>自动清理</td>
+                      <td>所有目录</td>
+                      <td><span class="status-badge active">运行中</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- 手动备份操作 -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div class="settings-card-title">🎮 手动备份操作</div>
+                <div class="settings-card-desc">立即触发的备份任务</div>
+              </div>
+              <div class="settings-card-body">
+                <div class="backup-actions">
+                  <div class="backup-action-item">
+                    <div class="backup-action-header">
+                      <span class="backup-action-icon">🧠</span>
+                      <div class="backup-action-info">
+                        <div class="backup-action-title">记忆备份</div>
+                        <div class="backup-action-desc">备份当前的记忆系统（小时级）</div>
+                      </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="triggerBackup('memory-hourly')">
+                      <i class="ri-save-line"></i> 立即备份
+                    </button>
+                  </div>
+
+                  <div class="backup-action-item">
+                    <div class="backup-action-header">
+                      <span class="backup-action-icon">🎯</span>
+                      <div class="backup-action-info">
+                        <div class="backup-action-title">任务系统迁移备份</div>
+                        <div class="backup-action-desc">生成完整的任务系统迁移包（~8.7M）</div>
+                      </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="triggerBackup('task-migration')">
+                      <i class="ri-upload-2-line"></i> 生成迁移包
+                    </button>
+                  </div>
+
+                  <div class="backup-action-item">
+                    <div class="backup-action-header">
+                      <span class="backup-action-icon">📦</span>
+                      <div class="backup-action-info">
+                        <div class="backup-action-title">完整系统备份</div>
+                        <div class="backup-action-desc">备份整个OpenClaw系统（源代码+数据）</div>
+                      </div>
+                    </div>
+                    <button class="btn" onclick="triggerBackup('full')">
+                      <i class="ri-refresh-line"></i> 立即备份
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 备份历史 -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div class="settings-card-title">📊 备份历史</div>
+                <div class="settings-card-desc">最近执行的备份记录</div>
+              </div>
+              <div class="settings-card-body">
+                <div id="backup-history">
+                  <div class="backup-history-loading">加载备份历史中...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Agent 配置 -->
+          <div class="tab-content" data-tab-content="agents" style="display: none;">
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div class="settings-card-title">🤖 Agent 管理</div>
+                <div class="settings-card-desc">查看和管理所有 Agent 的状态与配置</div>
+              </div>
+              <div class="settings-card-body">
+                <div class="agent-list" id="agentList">
+                  <div class="agent-loading">加载中...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 弹窗放在 body 下，确保正确显示 -->
+  <!-- Agent 模型修改弹窗 -->
+  <div class="modal" id="modelModal" style="display: none;">
+    <div class="modal-overlay" onclick="closeModelModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">修改 Agent 模型</h3>
+        <button class="modal-close" onclick="closeModelModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Agent ID</label>
+          <input type="text" class="form-input" id="modalAgentId" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Agent 名称</label>
+          <input type="text" class="form-input" id="modalAgentName" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">选择模型</label>
+          <select class="form-select" id="modalModelSelect">
+            <option value="qwencoding/glm-5">GLM-5 (阿里云)</option>
+            <option value="qwencoding/qwen3-max">Qwen3-Max (阿里云)</option>
+            <option value="nvidia-2/z-ai/glm5">GLM-5 (NVIDIA)</option>
+            <option value="nvidia-2/deepseek-ai/deepseek-v3.2">DeepSeek-V3.2 (NVIDIA)</option>
+            <option value="nvidia-1/qwen/qwen3-coder-480b">Qwen3-Coder (NVIDIA)</option>
+            <option value="nvidia-2/moonshotai/kimi-k2.5">Kimi-K2.5 (NVIDIA)</option>
+            <option value="uos/GLM-5">GLM-5 (UOS)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModelModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveAgentModel()">保存</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 添加模型弹窗 -->
+  <div class="modal" id="addModelModal" style="display: none;">
+    <div class="modal-overlay" onclick="closeAddModelModal()"></div>
+    <div class="modal-content" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 class="modal-title">添加模型</h3>
+        <button class="modal-close" onclick="closeAddModelModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <!-- Provider 选择 -->
+        <div class="form-group">
+          <label class="form-label">Provider *</label>
+          <select class="form-select" id="newModelProvider" onchange="onProviderChange()">
+            <option value="">-- 选择 Provider --</option>
+            <option value="qwencoding">qwencoding (阿里云)</option>
+            <option value="nvidia-1">nvidia-1</option>
+            <option value="nvidia-2">nvidia-2</option>
+            <option value="uos">UOS</option>
+            <option value="custom">➕ 自定义新 Provider</option>
+          </select>
+        </div>
+        
+        <!-- 自定义 Provider 名称（仅自定义时显示） -->
+        <div class="form-group" id="customProviderGroup" style="display: none;">
+          <label class="form-label">Provider 名称 *</label>
+          <input type="text" class="form-input" id="customProviderName" placeholder="如: openai">
+        </div>
+        
+        <!-- 模型选择（已有 Provider 时显示） -->
+        <div class="form-group" id="modelSelectGroup" style="display: none;">
+          <label class="form-label">选择模型 *</label>
+          <select class="form-select" id="newModelSelect" onchange="onModelSelect()">
+            <option value="">-- 选择模型 --</option>
+          </select>
+        </div>
+        
+        <!-- 自定义模型 ID（自定义 Provider 或手动输入时显示） -->
+        <div class="form-group" id="customModelIdGroup" style="display: none;">
+          <label class="form-label">模型 ID *</label>
+          <input type="text" class="form-input" id="newModelId" placeholder="如: gpt-4o">
+          <small style="color: var(--text-muted); font-size: 11px;">格式: model-name 或 org/model-name</small>
+        </div>
+        
+        <!-- 模型名称（可选） -->
+        <div class="form-group" id="modelNameGroup">
+          <label class="form-label">显示名称</label>
+          <input type="text" class="form-input" id="newModelName" placeholder="如: GPT-4o">
+        </div>
+        
+        <!-- API Key -->
+        <div class="form-group" id="apiKeyGroup">
+          <label class="form-label">API Key <span id="apiKeyRequired" style="display: none; color: var(--danger);">*</span></label>
+          <input type="password" class="form-input" id="newModelApiKey" placeholder="留空则使用系统配置">
+          <small id="apiKeyHint" style="color: var(--text-muted); font-size: 11px;">留空则使用系统配置</small>
+        </div>
+        
+        <!-- Base URL -->
+        <div class="form-group" id="baseUrlGroup">
+          <label class="form-label">Base URL <span id="baseUrlRequired" style="display: none; color: var(--danger);">*</span></label>
+          <input type="text" class="form-input" id="newModelBaseUrl" placeholder="自定义 API 端点">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAddModelModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveNewModel()">添加</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 数据存储
+    let modelsData = [];
+    let providersData = [];
+    let agentsData = [];
+    let currentEditAgent = null;
+    let selectedModel = null;
+    
+    // 各 Provider 可用的模型列表
+    const PROVIDER_MODELS = {
+      'qwencoding': [
+        { id: 'glm-5', name: 'GLM-5' },
+        { id: 'glm-4.7', name: 'GLM-4.7' },
+        { id: 'qwen3-max', name: 'Qwen3 Max' },
+        { id: 'qwen3-coder-next', name: 'Qwen3 Coder Next' },
+        { id: 'qwen3-coder-plus', name: 'Qwen3 Coder Plus' },
+        { id: 'qwen3.5-plus', name: 'Qwen3.5 Plus' },
+        { id: 'kimi-k2.5', name: 'Kimi K2.5' },
+        { id: 'MiniMax-M2.5', name: 'MiniMax M2.5' }
+      ],
+      'nvidia-1': [
+        { id: 'qwen/qwen3.5-397b-a17b', name: 'Qwen 3.5 397B' },
+        { id: 'qwen/qwen3-coder-480b-a35b-instruct', name: 'Qwen 3 Coder 480B' }
+      ],
+      'nvidia-2': [
+        { id: 'deepseek-ai/deepseek-v3.2', name: 'DeepSeek V3.2' },
+        { id: 'moonshotai/kimi-k2.5', name: 'Kimi K2.5' },
+        { id: 'minimaxai/minimax-m2.5', name: 'MiniMax M2.5' },
+        { id: 'z-ai/glm5', name: 'GLM-5' },
+        { id: 'meta/llama-3.2-11b-vision-instruct', name: 'Llama 3.2 11B Vision' },
+        { id: 'meta/llama-3.2-90b-vision-instruct', name: 'Llama 3.2 90B Vision' },
+        { id: 'microsoft/phi-3.5-vision-instruct', name: 'Phi-3.5 Vision' },
+        { id: 'nvidia/nemotron-nano-12b-v2-vl', name: 'Nemotron Nano 12B VL' }
+      ],
+      'uos': [
+        { id: 'GLM-4.7', name: 'GLM-4.7' },
+        { id: 'GLM-5', name: 'GLM-5' }
+      ]
+    };
+    
+    // Provider 选择变化
+    function onProviderChange() {
+      const provider = document.getElementById('newModelProvider').value;
+      const isCustom = provider === 'custom';
+      const isExisting = provider && !isCustom;
+      
+      // 显示/隐藏相关字段
+      document.getElementById('customProviderGroup').style.display = isCustom ? 'block' : 'none';
+      document.getElementById('modelSelectGroup').style.display = isExisting ? 'block' : 'none';
+      document.getElementById('customModelIdGroup').style.display = isCustom ? 'block' : 'none';
+      
+      // API Key 和 Base URL 的必填状态
+      document.getElementById('apiKeyRequired').style.display = isCustom ? 'inline' : 'none';
+      document.getElementById('baseUrlRequired').style.display = isCustom ? 'inline' : 'none';
+      document.getElementById('apiKeyHint').style.display = isCustom ? 'none' : 'block';
+      
+      // 填充模型选择列表
+      if (isExisting && PROVIDER_MODELS[provider]) {
+        const select = document.getElementById('newModelSelect');
+        select.innerHTML = '<option value="">-- 选择模型 --</option>' +
+          PROVIDER_MODELS[provider].map(m => 
+            `<option value="${m.id}" data-name="${m.name}">${m.name} (${m.id})</option>`
+          ).join('');
+      }
+      
+      // 清空其他字段
+      if (isCustom) {
+        document.getElementById('newModelSelect').innerHTML = '<option value="">-- 选择模型 --</option>';
+      }
+    }
+    
+    // 模型选择变化
+    function onModelSelect() {
+      const select = document.getElementById('newModelSelect');
+      const selected = select.options[select.selectedIndex];
+      const name = selected.getAttribute('data-name') || '';
+      document.getElementById('newModelName').value = name;
+    }
+    
+    // Tab 切换逻辑
+    document.querySelectorAll('.settings-item[data-tab]').forEach(item => {
+      item.addEventListener('click', () => {
+        // 移除所有 active 状态
+        document.querySelectorAll('.settings-item').forEach(i => i.classList.remove('active'));
+        // 添加当前 active
+        item.classList.add('active');
+        
+        // 隐藏所有 tab 内容
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.style.display = 'none';
+        });
+        
+        // 显示对应 tab 内容
+        const tabId = item.dataset.tab;
+        const tabContent = document.querySelector(`[data-tab-content="${tabId}"]`);
+        if (tabContent) {
+          tabContent.style.display = 'block';
+        }
+        
+        // 如果切换到 Agent 配置 tab，加载 Agent 数据
+        if (tabId === 'agents') {
+          loadAgents();
+        }
+        // 如果切换到模型配置 tab，加载模型数据
+        if (tabId === 'models') {
+          loadModels();
+        }
+      });
+    });
+    
+    // 移动端 Tab 切换逻辑
+    document.querySelectorAll('.mobile-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        // 移除所有 active 状态
+        document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
+        // 添加当前 active
+        tab.classList.add('active');
+        
+        // 隐藏所有 tab 内容
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.style.display = 'none';
+        });
+        
+        // 显示对应 tab 内容
+        const tabId = tab.dataset.tab;
+        const tabContent = document.querySelector(`[data-tab-content="${tabId}"]`);
+        if (tabContent) {
+          tabContent.style.display = 'block';
+        }
+        
+        // 如果切换到 Agent 配置 tab，加载 Agent 数据
+        if (tabId === 'agents') {
+          loadAgents();
+        }
+        // 如果切换到模型配置 tab，加载模型数据
+        if (tabId === 'models') {
+          loadModels();
+        }
+      });
+    });
+
+    // ========== 备份配置功能 ==========
+
+    // 初始化备份配置
+    async function initBackupConfig() {
+      console.log('[Backup Config] 初始化备份配置');
+      await loadBackupStats();
+      await loadBackupHistory();
+    }
+
+    // 加载备份统计数据
+    async function loadBackupStats() {
+      try {
+        const response = await fetch('/api/backup/stats');
+        if (!response.ok) throw new Error('获取备份统计失败');
+        const data = await response.json();
+
+        // 更新统计数据
+        if (data.success) {
+          document.getElementById('backup-total-count').textContent = data.stats.totalBackups || '0';
+          document.getElementById('backup-total-size').textContent = data.stats.totalSize || '0 B';
+        }
+      } catch (error) {
+        console.error('[Backup Config] 加载备份统计失败:', error);
+        // 使用默认值
+        document.getElementById('backup-total-count').textContent = '0';
+        document.getElementById('backup-total-size').textContent = '0 B';
+      }
+    }
+
+    // 刷新备份统计
+    async function refreshBackupStats() {
+      await loadBackupStats();
+      await loadBackupHistory();
+    }
+
+    // 加载备份历史
+    async function loadBackupHistory() {
+      const historyEl = document.getElementById('backup-history');
+      historyEl.innerHTML = '<div class="backup-history-loading">加载备份历史中...</div>';
+
+      try {
+        const response = await fetch('/api/backup/history?limit=10');
+        if (!response.ok) throw new Error('获取备份历史失败');
+        const data = await response.json();
+
+        if (data.success && data.history && data.history.length > 0) {
+          historyEl.innerHTML = data.history.map(item => `
+            <div class="backup-history-item">
+              <div>
+                <div class="backup-history-type">
+                  ${item.typeIcon || '📦'} ${item.type || '备份'}
+                </div>
+                <div class="backup-history-time">${new Date(item.time).toLocaleString('zh-CN')}</div>
+              </div>
+              <div style="text-align: right;">
+                <div class="backup-history-size">${item.sizeFormatted || item.size}</div>
+                <div class="backup-history-status success">
+                  ✓ 成功
+                </div>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          historyEl.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 40px;">暂无备份记录</div>';
+        }
+      } catch (error) {
+        console.error('[Backup Config] 加载备份历史失败:', error);
+        historyEl.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 40px;">加载备份历史失败</div>';
+      }
+    }
+
+    // 触发手动备份
+    async function triggerBackup(type) {
+      const typeNames = {
+        'memory-hourly': '记忆小时级备份',
+        'task-migration': '任务系统迁移备份',
+        'full': '完整系统备份'
+      };
+
+      const confirmMsg = `确认执行 ${typeNames[type] || type} 吗？`;
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const response = await fetch('/api/backup/trigger', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ type })
+        });
+
+        if (!response.ok) throw new Error('触发备份失败');
+
+        const data = await response.json();
+        if (data.success) {
+          alert(`${typeNames[type] || type} 已开始执行，请稍后查看结果`);
+          await refreshBackupStats();
+        } else {
+          alert(`备份失败: ${data.message || '未知错误'}`);
+        }
+      } catch (error) {
+        console.error('[Backup Config] 触发备份失败:', error);
+        alert(`备份失败: ${error.message}`);
+      }
+    }
+
+    // 获取备份类型图标
+    function getBackupIcon(type) {
+      const icons = {
+        'memory-hourly': '🧠',
+        'memory-daily': '🧠',
+        'task-system': '🎯',
+        'task-migration': '🎯',
+        'sessions': '💬',
+        'config': '⚙️',
+        'full': '📦'
+      };
+      return icons[type] || '📦';
+    }
+
+    // 获取备份类型名称
+    function getBackupTypeName(type) {
+      const names = {
+        'memory-hourly': '记忆小时级备份',
+        'memory-daily': '记忆每日归档',
+        'task-system': '任务数据备份',
+        'task-migration': '任务系统迁移备份',
+        'sessions': '会话备份',
+        'config': '配置备份',
+        'full': '完整备份'
+      };
+      return names[type] || type;
+    }
+
+    // 导出 loadBackupStats 到全局，供刷新按钮调用
+    window.loadBackupStats = loadBackupStats;
+    window.refreshBackupStats = refreshBackupStats;
+    window.triggerBackup = triggerBackup;
+
+    // ========== 原有功能 ==========
+    
+    // 页面加载时加载模型数据
+    document.addEventListener('DOMContentLoaded', () => {
+      loadModels();
+      
+      // 初始化备份配置
+      initBackupConfig();
+    });
+    
+    // 加载模型列表
+    async function loadModels() {
+      const listEl = document.getElementById('modelList');
+      listEl.innerHTML = '<div class="agent-loading">加载模型列表中...</div>';
+      
+      try {
+        console.log('[loadModels] 开始加载...');
+        
+        // 并行加载模型和提供商
+        const [modelsRes, providersRes] = await Promise.all([
+          fetch('/api/model-management/models'),
+          fetch('/api/model-management/providers')
+        ]);
+        
+        console.log('[loadModels] API 响应状态:', modelsRes.status, providersRes.status);
+        
+        if (!modelsRes.ok) throw new Error('获取模型列表失败: ' + modelsRes.status);
+        if (!providersRes.ok) throw new Error('获取提供商列表失败: ' + providersRes.status);
+        
+        const modelsJson = await modelsRes.json();
+        const providersJson = await providersRes.json();
+        
+        console.log('[loadModels] 模型数量:', modelsJson.models?.length || 0);
+        console.log('[loadModels] 提供商数量:', providersJson.providers?.length || 0);
+        
+        modelsData = modelsJson.models || modelsJson || [];
+        providersData = providersJson.providers || providersJson || [];
+        
+        console.log('[loadModels] 准备渲染...');
+        renderModels();
+        console.log('[loadModels] 渲染完成');
+      } catch (error) {
+        console.error('[loadModels] 加载失败:', error);
+        listEl.innerHTML = '<div class="agent-loading" style="color: var(--danger);">加载失败: ' + error.message + '<br><small>请检查浏览器控制台获取详细信息</small></div>';
+      }
+    }
+    
+    // 获取提供商图标
+    function getProviderIcon(providerName) {
+      const icons = {
+        'nvidia': '🔷',
+        'nvidia-1': '🔷',
+        'nvidia-2': '🔷',
+        'qwencoding': '🔶',
+        '阿里云': '🔶',
+        'aliyun': '🔶',
+        'uos': '🔷',
+        'deepseek': '💎',
+        'openai': '🟢',
+        'anthropic': '🟣',
+        'google': '🔵'
+      };
+      const key = providerName.toLowerCase();
+      for (const k in icons) {
+        if (key.includes(k)) return icons[k];
+      }
+      return '⚡';
+    }
+    
+    // 获取提供商状态颜色
+    function getProviderStatus(provider) {
+      // 检查提供商是否有可用模型
+      const providerModels = modelsData.filter(m => {
+        const modelProvider = m.provider || m.gateway || '';
+        return modelProvider.toLowerCase().includes((provider.name || provider.id || '').toLowerCase());
+      });
+      
+      const hasEnabled = providerModels.some(m => m.enabled !== false);
+      return hasEnabled ? 'var(--success)' : 'var(--text-tertiary)';
+    }
+    
+    // 渲染模型列表
+    function renderModels() {
+      const listEl = document.getElementById('modelList');
+      
+      if (modelsData.length === 0) {
+        listEl.innerHTML = '<div class="agent-loading">暂无模型</div>';
+        return;
+      }
+      
+      // 按提供商分组
+      const grouped = {};
+      
+      modelsData.forEach(model => {
+        const provider = model.provider || model.gateway || 'default';
+        if (!grouped[provider]) {
+          grouped[provider] = {
+            name: provider,
+            models: []
+          };
+        }
+        grouped[provider].models.push(model);
+      });
+      
+      // 生成 HTML
+      let html = '';
+      
+      for (const providerKey in grouped) {
+        const group = grouped[providerKey];
+        const statusColor = getProviderStatus({ name: providerKey });
+        const icon = getProviderIcon(providerKey);
+        
+        html += `
+          <div class="model-group">
+            <div class="model-group-title">
+              <span>${icon} ${group.name}</span>
+              <span style="font-size: 11px; color: ${statusColor};">● 已连接</span>
+            </div>
+            <div class="model-grid">
+              ${group.models.map(model => {
+                const isEnabled = model.enabled !== false;
+                const isDefault = model.isDefault || model.default;
+                const modelName = model.name || model.id || model.model_id || 'Unknown';
+                const modelId = model.id || model.model_id || model.name;
+                const statusClass = isEnabled ? 'active' : 'inactive';
+                const statusText = isDefault ? '默认' : (isEnabled ? '可用' : '已禁用');
+                const selectedClass = isDefault ? 'selected' : '';
+                const isCustom = model.source === 'custom';
+                const speed = model.speed || model.latency;
+                const speedDisplay = speed ? `${speed}ms` : '--';
+                const lastTest = model.lastSpeedTest ? new Date(model.lastSpeedTest).toLocaleString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '';
+                
+                return `
+                  <div class="model-card ${selectedClass}" data-model-id="${modelId}" data-full-id="${providerKey}/${modelId}">
+                    <div class="model-header">
+                      <span class="model-name">${modelName}</span>
+                      <span class="model-status ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="model-meta">${modelId}</div>
+                    <div class="model-speed">
+                      <span class="speed-value" id="speed-${modelId.replace(/[^a-zA-Z0-9]/g, '_')}">${speedDisplay}</span>
+                      <button class="speed-test-btn" onclick="event.stopPropagation(); testModelSpeed('${modelId}')" title="测速">
+                        ⚡
+                      </button>
+                      ${lastTest ? `<span class="speed-time">${lastTest}</span>` : ''}
+                    </div>
+                    <div class="model-actions">
+                      <button class="model-action-btn ${isCustom ? 'delete' : 'locked'}" onclick="event.stopPropagation(); ${isCustom ? `confirmDeleteModel('${modelId}', '${modelName}')` : `showSystemModelTip()`}" title="${isCustom ? '删除模型' : '系统模型不可删除'}">
+                        ${isCustom ? '🗑️ 删除' : '🔒 系统'}
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+      
+      listEl.innerHTML = html;
+    }
+    
+    // 测试模型速度
+    async function testModelSpeed(modelId) {
+      const speedEl = document.getElementById(`speed-${modelId.replace(/[^a-zA-Z0-9]/g, '_')}`);
+      if (speedEl) {
+        speedEl.textContent = '测速中...';
+      }
+      
+      try {
+        const response = await fetch('/api/model-management/models/speed-test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ modelId })
+        });
+        
+        if (!response.ok) throw new Error('测速失败');
+        
+        const data = await response.json();
+        if (speedEl && data.speed) {
+          speedEl.textContent = `${data.speed}ms`;
+          speedEl.style.color = data.speed < 1000 ? 'var(--success)' : (data.speed < 3000 ? 'var(--warning)' : 'var(--danger)');
+        }
+      } catch (error) {
+        if (speedEl) {
+          speedEl.textContent = '失败';
+          speedEl.style.color = 'var(--danger)';
+        }
+      }
+    }
+    
+    // 选择模型
+    function selectModel(modelId) {
+      // 移除之前的选中状态
+      document.querySelectorAll('.model-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      
+      // 添加选中状态
+      const selectedCard = document.querySelector(`.model-card[data-model-id="${modelId}"]`);
+      if (selectedCard) {
+        selectedCard.classList.add('selected');
+      }
+      
+      selectedModel = modelId;
+    }
+    
+    // 测试模型
+    async function testModel(modelId) {
+      try {
+        const response = await fetch('/api/model-management/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: modelId })
+        });
+        
+        if (!response.ok) throw new Error('测试失败');
+        
+        const result = await response.json();
+        alert(result.success ? '模型测试成功！' : '模型测试失败: ' + (result.error || '未知错误'));
+      } catch (error) {
+        alert('模型测试失败: ' + error.message);
+      }
+    }
+    
+    // 确认删除模型（二次确认）
+    function confirmDeleteModel(modelId, modelName) {
+      const confirmed = confirm(
+        `⚠️ 确定要删除模型吗？\n\n` +
+        `模型: ${modelName}\n` +
+        `ID: ${modelId}\n\n` +
+        `注意：删除后无法恢复！`
+      );
+      
+      if (confirmed) {
+        // 第二次确认
+        const doubleConfirm = confirm(
+          `🔴 最后确认\n\n` +
+          `您真的要删除 "${modelName}" 吗？\n\n` +
+          `此操作不可撤销！`
+        );
+        
+        if (doubleConfirm) {
+          deleteModel(modelId);
+        }
+      }
+    }
+    
+    // 显示系统模型提示
+    function showSystemModelTip() {
+      alert('🔒 这是系统预定义模型，不能删除。\n\n如需禁用该模型，请通过配置文件操作。');
+    }
+    
+    // 一键测速所有模型
+    async function testAllModelsSpeed() {
+      const btn = document.getElementById('testAllSpeedBtn');
+      const originalText = btn.innerHTML;
+      
+      btn.disabled = true;
+      btn.innerHTML = '⏳ 测速中...';
+      
+      // 更新所有模型显示为"测速中..."
+      document.querySelectorAll('.speed-value').forEach(el => {
+        el.textContent = '⏳';
+        el.style.color = 'var(--text-secondary)';
+      });
+      
+      try {
+        const response = await fetch('/api/model-management/models/speed-test-all', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) throw new Error('批量测速失败');
+        
+        const data = await response.json();
+        
+        if (data.success && data.results) {
+          // 更新每个模型的速度显示
+          data.results.forEach(result => {
+            // 尝试多种ID格式匹配
+            const possibleIds = [
+              result.id,
+              result.id.split('/').slice(1).join('/'), // 去掉provider前缀
+              result.id.split('/').pop() // 只取最后一段
+            ];
+            
+            for (const id of possibleIds) {
+              const speedEl = document.getElementById(`speed-${id.replace(/[^a-zA-Z0-9]/g, '_')}`);
+              if (speedEl) {
+                if (result.success) {
+                  speedEl.textContent = `${result.speed}ms`;
+                  speedEl.style.color = result.speed < 1000 ? 'var(--success)' : (result.speed < 3000 ? 'var(--warning)' : 'var(--danger)');
+                } else {
+                  speedEl.textContent = '失败';
+                  speedEl.style.color = 'var(--danger)';
+                }
+                break;
+              }
+            }
+          });
+          
+          const successCount = data.results.filter(r => r.success).length;
+          const failCount = data.results.filter(r => !r.success).length;
+          alert(`✅ 测速完成！\n\n成功: ${successCount} 个\n失败: ${failCount} 个`);
+        }
+      } catch (error) {
+        alert('批量测速失败: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+    
+    // 加载 Agent 列表
+    async function loadAgents() {
+      const listEl = document.getElementById('agentList');
+      listEl.innerHTML = '<div class="agent-loading">加载中...</div>';
+      
+      try {
+        const response = await fetch('/api/agents/status');
+        if (!response.ok) throw new Error('获取 Agent 状态失败');
+        
+        const data = await response.json();
+        agentsData = data.agents || data || [];
+        
+        if (agentsData.length === 0) {
+          listEl.innerHTML = '<div class="agent-loading">暂无 Agent</div>';
+          return;
+        }
+        
+        renderAgentList(agentsData);
+      } catch (error) {
+        console.error('加载 Agent 失败:', error);
+        listEl.innerHTML = '<div class="agent-loading" style="color: var(--danger);">加载失败: ' + error.message + '</div>';
+      }
+    }
+    
+    // 渲染 Agent 列表
+    function renderAgentList(agents) {
+      const listEl = document.getElementById('agentList');
+      
+      listEl.innerHTML = agents.map(agent => {
+        const status = agent.status || 'inactive';
+        const statusText = {
+          'active': '运行中',
+          'inactive': '已停止',
+          'busy': '忙碌',
+          'error': '错误'
+        }[status] || status;
+        
+        const name = agent.name || agent.id;
+        const model = agent.model || agent.default_model || '未设置';
+        const id = agent.id || agent.agent_id;
+        
+        return `
+          <div class="agent-item">
+            <div class="agent-avatar">🤖</div>
+            <div class="agent-info">
+              <div class="agent-name">
+                ${name}
+                <span class="agent-id">${id}</span>
+              </div>
+              <div class="agent-model">模型: ${model}</div>
+            </div>
+            <div class="agent-status ${status}">
+              <span class="agent-status-dot"></span>
+              ${statusText}
+            </div>
+            <div class="agent-actions">
+              <button class="agent-btn" onclick="openModelModal('${id}', '${name}', '${model}')">
+                修改模型
+              </button>
+              <button class="agent-btn ${status === 'active' ? 'danger' : 'success'}" onclick="toggleAgent('${id}', '${status}')">
+                ${status === 'active' ? '禁用' : '启用'}
+              </button>
+              <button class="agent-btn danger" onclick="deleteAgent('${id}', '${name}')" title="删除 Agent">
+                删除
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    // 打开模型修改弹窗
+    function openModelModal(agentId, agentName, currentModel) {
+      currentEditAgent = agentId;
+      document.getElementById('modalAgentId').value = agentId;
+      document.getElementById('modalAgentName').value = agentName;
+      
+      // 设置当前模型
+      const select = document.getElementById('modalModelSelect');
+      for (let i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === currentModel) {
+          select.selectedIndex = i;
+          break;
+        }
+      }
+      
+      document.getElementById('modelModal').style.display = 'flex';
+    }
+    
+    // 关闭模型修改弹窗
+    function closeModelModal() {
+      document.getElementById('modelModal').style.display = 'none';
+      currentEditAgent = null;
+    }
+    
+    // 保存 Agent 模型修改
+    async function saveAgentModel() {
+      if (!currentEditAgent) return;
+      
+      const newModel = document.getElementById('modalModelSelect').value;
+      
+      try {
+        // 使用正确的 API 路径
+        const response = await fetch(`/api/agent-management/agents/${currentEditAgent}/model`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: newModel })
+        });
+        
+        if (!response.ok) throw new Error('修改模型失败');
+        
+        closeModelModal();
+        loadAgents(); // 刷新列表
+      } catch (error) {
+        alert('修改模型失败: ' + error.message);
+      }
+    }
+    
+    // 启用/禁用 Agent
+    async function toggleAgent(agentId, currentStatus) {
+      const action = currentStatus === 'active' ? 'disable' : 'enable';
+      
+      try {
+        // 使用正确的 API 路径
+        const response = await fetch(`/api/agent-management/agents/${agentId}/${action}`, {
+          method: 'PUT'
+        });
+        
+        if (!response.ok) throw new Error('操作失败');
+        
+        loadAgents(); // 刷新列表
+      } catch (error) {
+        alert('操作失败: ' + error.message);
+      }
+    }
+    
+    // 删除 Agent
+    async function deleteAgent(agentId, agentName) {
+      if (!confirm(`确定要删除 Agent "${agentName}" 吗？\n\n注意：删除后无法恢复！`)) return;
+      
+      try {
+        const response = await fetch(`/api/agent-management/agents/${agentId}`, {
+          method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || '删除失败');
+        }
+        
+        loadAgents(); // 刷新列表
+      } catch (error) {
+        alert('删除 Agent 失败: ' + error.message);
+      }
+    }
+    
+    // 打开添加模型弹窗
+    function openAddModelModal() {
+      document.getElementById('addModelModal').style.display = 'flex';
+    }
+    
+    // 关闭添加模型弹窗
+    function closeAddModelModal() {
+      document.getElementById('addModelModal').style.display = 'none';
+    }
+    
+    // 保存新模型
+    async function saveNewModel() {
+      const provider = document.getElementById('newModelProvider').value;
+      const isCustom = provider === 'custom';
+      
+      // 获取模型 ID
+      let modelId = '';
+      if (isCustom) {
+        modelId = document.getElementById('newModelId').value.trim();
+      } else {
+        const select = document.getElementById('newModelSelect');
+        modelId = select.value;
+      }
+      
+      const name = document.getElementById('newModelName').value.trim() || modelId;
+      const apiKey = document.getElementById('newModelApiKey').value.trim();
+      const baseUrl = document.getElementById('newModelBaseUrl').value.trim();
+      const customProviderName = document.getElementById('customProviderName').value.trim();
+      
+      // 验证必填字段
+      if (!provider) {
+        alert('请选择 Provider');
+        return;
+      }
+      
+      if (!modelId) {
+        alert('请选择或输入模型 ID');
+        return;
+      }
+      
+      if (isCustom) {
+        if (!customProviderName) {
+          alert('请填写 Provider 名称');
+          return;
+        }
+        if (!apiKey) {
+          alert('自定义 Provider 必须填写 API Key');
+          return;
+        }
+        if (!baseUrl) {
+          alert('自定义 Provider 必须填写 Base URL');
+          return;
+        }
+      }
+      
+      // 构建完整模型 ID
+      const fullId = isCustom ? `${customProviderName}/${modelId}` : `${provider}/${modelId}`;
+      const finalProvider = isCustom ? customProviderName : provider;
+      
+      try {
+        const response = await fetch('/api/model-management/models', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            id: fullId,
+            provider: finalProvider,
+            apiKey: apiKey || undefined,
+            baseUrl: baseUrl || undefined,
+            enabled: true,
+            source: 'custom'
+          })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || '添加模型失败');
+        }
+        
+        closeAddModelModal();
+        loadModels(); // 刷新列表
+        
+        // 重置表单
+        document.getElementById('newModelProvider').value = '';
+        document.getElementById('newModelName').value = '';
+        document.getElementById('newModelId').value = '';
+        document.getElementById('newModelApiKey').value = '';
+        document.getElementById('newModelBaseUrl').value = '';
+        document.getElementById('customProviderName').value = '';
+        onProviderChange(); // 重置显示状态
+      } catch (error) {
+        alert('添加模型失败: ' + error.message);
+      }
+    }
+    
+    // 删除模型（已通过 confirmDeleteModel 二次确认）
+    async function deleteModel(modelId) {
+      try {
+        const response = await fetch(`/api/model-management/models/${encodeURIComponent(modelId)}`, {
+          method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || '删除模型失败');
+        }
+        
+        alert('✅ 模型已删除');
+        loadModels(); // 刷新列表
+      } catch (error) {
+        alert('删除模型失败: ' + error.message);
+      }
+    }
+  </script>
+
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'settings' });
+  </script>
+<script>FieldTips.init({pageType:"general"});</script></body>
+</html>

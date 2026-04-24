@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reflection 流程监控 - 任务管理系统</title>
+  
+  <!-- 图标库 -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+  
+  <!-- 统一框架样式（必须引入） -->
+  <link rel="stylesheet" href="css/frame.css">
+  
+  <!-- 侧边栏组件 -->
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <!-- 页面专用样式 -->
+  <style>
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary);
+      margin: 8px 0;
+    }
+    
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    
+    .reflection-list {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    
+    .reflection-item {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .reflection-item:last-child {
+      border-bottom: none;
+    }
+    
+    .reflection-info h4 {
+      margin: 0 0 4px 0;
+      color: var(--text-primary);
+    }
+    
+    .reflection-info p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    
+    .reflection-status {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .status-pending { background: #6b7280; color: white; }
+    .status-in-progress { background: #f59e0b; color: white; }
+    .status-completed { background: #10b981; color: white; }
+    .status-skipped { background: #ef4444; color: white; }
+    
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .refresh-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .loading {
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- 统一侧边栏容器 -->
+    <div id="sidebar-container"></div>
+    
+    <!-- 主内容区 -->
+    <main class="main">
+      <!-- 顶部栏 -->
+      <header class="header">
+        <div class="header-left">
+          <div class="breadcrumb">
+            <a href="dashboard-new.html">首页</a>
+            <span>/</span>
+            <span>Reflection 流程监控</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="refresh-btn" id="refreshBtn">
+            <i class="ri-refresh-line"></i>
+            刷新
+          </button>
+          <button class="header-btn" title="导出数据">
+            <i class="ri-download-line"></i>
+          </button>
+        </div>
+      </header>
+      
+      <!-- 内容区 -->
+      <div class="content">
+        <div class="page-header">
+          <h1>Reflection 流程监控</h1>
+          <p>监控任务反思流程的执行情况和状态</p>
+        </div>
+        
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="totalTasks">0</div>
+            <div class="stat-label">总任务数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="pendingReflections">0</div>
+            <div class="stat-label">待反思任务</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="inProgressReflections">0</div>
+            <div class="stat-label">反思进行中</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="completedReflections">0</div>
+            <div class="stat-label">已完成反思</div>
+          </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="action-buttons">
+          <button class="btn-primary" id="viewPendingBtn">
+            <i class="ri-eye-line"></i>
+            查看待反思任务
+          </button>
+          <button class="btn-outline" id="exportBtn">
+            <i class="ri-file-chart-line"></i>
+            导出反思报告
+          </button>
+        </div>
+        
+        <!-- 待反思任务列表 -->
+        <div style="margin-top: 24px;">
+          <h3>待反思任务</h3>
+          <div class="reflection-list" id="pendingList">
+            <div style="padding: 24px; text-align: center; color: var(--text-secondary);">
+              加载中...
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'reflection-monitor' });
+  </script>
+  
+  <!-- 页面专用脚本 -->
+  <script>
+    class ReflectionMonitor {
+      constructor() {
+        this.init();
+      }
+      
+      init() {
+        this.bindEvents();
+        this.loadStats();
+        this.loadPendingReflections();
+      }
+      
+      bindEvents() {
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+          this.refreshAll();
+        });
+        
+        document.getElementById('viewPendingBtn').addEventListener('click', () => {
+          this.showPendingReflections();
+        });
+        
+        document.getElementById('exportBtn').addEventListener('click', () => {
+          this.exportReport();
+        });
+      }
+      
+      async refreshAll() {
+        const btn = document.getElementById('refreshBtn');
+        btn.classList.add('loading');
+        
+        try {
+          await Promise.all([
+            this.loadStats(),
+            this.loadPendingReflections()
+          ]);
+        } finally {
+          setTimeout(() => btn.classList.remove('loading'), 500);
+        }
+      }
+      
+      async loadStats() {
+        try {
+          // 获取所有任务
+          const tasksResponse = await fetch('/api/tasks');
+          const tasksData = await tasksResponse.json();
+          
+          // 获取所有反思
+          const pendingResponse = await fetch('/api/reflection/pending');
+          const pendingData = await pendingResponse.json();
+          
+          // 计算统计信息
+          const totalTasks = tasksData.tasks ? tasksData.tasks.length : 0;
+          const pendingReflections = pendingData.data ? pendingData.data.tasks.length : 0;
+          
+          // 这里简化处理，实际可能需要更复杂的统计逻辑
+          document.getElementById('totalTasks').textContent = totalTasks;
+          document.getElementById('pendingReflections').textContent = pendingReflections;
+          document.getElementById('inProgressReflections').textContent = '0'; // 简化显示
+          document.getElementById('completedReflections').textContent = '0'; // 简化显示
+        } catch (error) {
+          console.error('加载统计信息失败:', error);
+        }
+      }
+      
+      async loadPendingReflections() {
+        try {
+          const response = await fetch('/api/reflection/pending');
+          const data = await response.json();
+          
+          const listElement = document.getElementById('pendingList');
+          
+          if (!data.success) {
+            listElement.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-secondary);">加载失败</div>';
+            return;
+          }
+          
+          if (!data.data || !data.data.tasks || data.data.tasks.length === 0) {
+            listElement.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-secondary);">暂无待反思任务</div>';
+            return;
+          }
+          
+          let html = '';
+          data.data.tasks.forEach(task => {
+            html += `
+              <div class="reflection-item">
+                <div class="reflection-info">
+                  <h4>${task.title}</h4>
+                  <p>任务ID: ${task.id} | 创建时间: ${new Date(task.created_at).toLocaleString()}</p>
+                </div>
+                <div>
+                  <span class="reflection-status status-pending">待反思</span>
+                  <button class="btn-outline" onclick="window.location.href='reflection-editor.html?taskId=${task.id}'" style="margin-left: 8px;">
+                    开始反思
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+          
+          listElement.innerHTML = html;
+        } catch (error) {
+          console.error('加载待反思任务失败:', error);
+          document.getElementById('pendingList').innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-secondary);">加载失败</div>';
+        }
+      }
+      
+      showPendingReflections() {
+        window.location.href = 'reflection-pending.html';
+      }
+      
+      exportReport() {
+        alert('反思报告导出功能即将推出');
+      }
+    }
+    
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      new ReflectionMonitor();
+    });
+  </script>
+</body>
+</html>

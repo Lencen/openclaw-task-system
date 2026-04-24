@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>记忆系统 - 任务管理系统</title>
+  
+  <!-- 统一框架样式 -->
+  <link rel="stylesheet" href="css/frame.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  
+  <!-- Markdown 渲染 -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <style>
+    /* ========== 页面专用样式 ========== */
+    
+    /* Tab 切换 */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: var(--bg-secondary);
+      padding: 4px;
+      border-radius: 12px;
+      width: fit-content;
+    }
+    
+    .tab-btn {
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+    
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+    
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* 内容网格 - 两栏布局 */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    
+    @media (max-width: 1000px) {
+      [style*="grid-template-columns: 2fr 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+      
+      [style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+    }
+    
+    /* 卡片样式 */
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .card-header {
+      padding: 14px 16px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .card-badge {
+      background: var(--border);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    
+    .card-body {
+      padding: 16px;
+    }
+    
+    .card-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-tertiary);
+    }
+
+    /* 规则卡片 */
+    .rule-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    
+    .rule-card h3 {
+      color: var(--primary);
+      font-size: 1em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .rule-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .rule-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    
+    .rule-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .rule-list .step {
+      background: var(--primary);
+      color: #fff;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    
+    .rule-list .content {
+      flex: 1;
+    }
+    
+    .rule-list .content strong {
+      color: var(--text-primary);
+    }
+    
+    .rule-list .content span {
+      color: var(--text-secondary);
+      font-size: 0.9em;
+    }
+    
+    /* 统计卡片 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    @media (max-width: 900px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .stat-card .value {
+      font-size: 1.8em;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .stat-card .label {
+      color: var(--text-secondary);
+      font-size: 0.85em;
+      margin-top: 4px;
+    }
+    
+    /* 文件列表 */
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
+    }
+    
+    .file-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .file-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    
+    .file-card .file-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .file-card .file-name {
+      color: var(--primary);
+      font-weight: 500;
+      font-size: 0.95em;
+    }
+    
+    .file-card .file-size {
+      color: var(--text-secondary);
+      font-size: 0.8em;
+    }
+    
+    .file-card .file-preview {
+      color: var(--text-secondary);
+      font-size: 0.85em;
+      line-height: 1.4;
+      max-height: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .file-card .file-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75em;
+      margin-top: 8px;
+    }
+    
+    .file-badge.core {
+      background: rgba(59, 130, 246, 0.2);
+      color: var(--primary);
+    }
+    
+    .file-badge.daily {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+    }
+    
+    .file-badge.notice {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+    }
+    
+    /* 详情模态框 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal-overlay.show {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 80vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.1em;
+      color: var(--primary);
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    
+    .memory-content {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: monospace;
+      font-size: 0.9em;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+    
+    /* 搜索区域 */
+    .search-section {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .search-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .btn {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    /* 区块标题 */
+    .section-title {
+      font-size: 1.1em;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .section {
+      margin-bottom: 24px;
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    /* Markdown 渲染样式 */
+    .markdown-content {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    
+    .markdown-content h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+      margin: 12px 0 6px 0;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .markdown-content h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 10px 0 4px 0;
+    }
+    
+    .markdown-content p {
+      margin: 6px 0;
+      color: var(--text-secondary);
+    }
+    
+    .markdown-content ul, .markdown-content ol {
+      margin: 6px 0;
+      padding-left: 16px;
+      color: var(--text-secondary);
+    }
+    
+    .markdown-content li {
+      margin: 3px 0;
+    }
+    
+    .markdown-content code {
+      background: var(--bg-tertiary);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 11px;
+    }
+    
+    .markdown-content pre {
+      background: var(--bg-tertiary);
+      padding: 8px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 11px;
+    }
+    
+    .markdown-content pre code {
+      background: transparent;
+      padding: 0;
+    }
+    
+    .markdown-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0;
+      font-size: 11px;
+    }
+    
+    .markdown-content th, .markdown-content td {
+      border: 1px solid var(--border);
+      padding: 4px 6px;
+      text-align: left;
+    }
+    
+    .markdown-content th {
+      background: var(--bg-tertiary);
+      font-weight: 600;
+    }
+    
+    .markdown-content strong {
+      color: var(--text-primary);
+    }
+    
+    .markdown-content a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    
+    .markdown-content a:hover {
+      text-decoration: underline;
+    }
+    
+    .markdown-content blockquote {
+      border-left: 2px solid var(--primary);
+      padding-left: 8px;
+      margin: 6px 0;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+    
+    /* 启动读取项 */
+    .startup-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-primary);
+      transition: all 0.15s;
+    }
+    
+    .startup-item:hover {
+      border-color: var(--primary);
+      background: var(--bg-secondary);
+    }
+    
+    .startup-icon {
+      font-size: 16px;
+    }
+  </style>
+  <link rel="stylesheet" href="css/page-tips.css">
+<script src="js/field-tips.js"></script></head>
+<body>
+  <div class="layout">
+    <div id="sidebar-container"></div>
+    
+    <main class="main">
+      <header class="header">
+        <div class="header-left">
+          <h1 class="header-title">💾 记忆系统</h1>
+        </div>
+          <div id="tipsContainer"></div>
+        <div class="header-right">
+          <button class="header-btn" title="刷新" onclick="loadAll()"><i class="ri-refresh-line"></i></button>
+        </div>
+      </header>
+      
+      <div class="content">
+        <!-- Tab 切换 -->
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="switchTab('rules')">📜 记忆规则</button>
+          <button class="tab-btn" onclick="switchTab('files')">📁 记忆文件</button>
+          <button class="tab-btn" onclick="switchTab('search')">🔍 搜索记忆</button>
+        </div>
+        
+        <!-- Tab 1: 记忆规则 -->
+        <div id="tab-rules" class="tab-content active">
+          <!-- 第一行：身份信息（全宽展开） -->
+          <div class="card" style="margin-bottom: 16px;">
+            <div class="card-header">
+              <span class="card-title">🧠 身份信息</span>
+              <select id="agentSelector" onchange="loadIdentityPreview()" style="padding: 4px 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 12px; margin-left: auto;">
+                <option value="main">main</option>
+                <option value="coder">coder</option>
+                <option value="deep">deep</option>
+                <option value="fast">fast</option>
+                <option value="chat">chat</option>
+                <option value="office">office</option>
+              </select>
+            </div>
+            <div class="card-body">
+              <div id="soulContent" class="markdown-content">
+                加载中...
+              </div>
+            </div>
+          </div>
+          
+          <!-- 第二行：核心记忆（全宽） -->
+          <div class="card" style="margin-bottom: 16px;">
+            <div class="card-header">
+              <span class="card-title">⭐ 核心记忆 (MEMORY.md)</span>
+              <span class="card-badge">长期记忆</span>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+              <div id="coreMemoryRendered" class="markdown-content">
+                加载中...
+              </div>
+            </div>
+          </div>
+          
+          <!-- 第三行：启动读取 + 自动写入 + 进化成果（三栏） -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+            <!-- 启动读取 -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">🚀 启动读取</span>
+              </div>
+              <div class="card-body">
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  <div class="startup-item" onclick="showMemoryDetail('SOUL.md')" title="角色定义">
+                    <span class="startup-icon">🧠</span>
+                    <span>SOUL</span>
+                  </div>
+                  <div class="startup-item" onclick="showMemoryDetail('USER.md')" title="用户信息">
+                    <span class="startup-icon">👤</span>
+                    <span>USER</span>
+                  </div>
+                  <div class="startup-item" onclick="showMemoryDetail('EVOLUTION-LOG.md')" title="进化成果">
+                    <span class="startup-icon">🧬</span>
+                    <span>EVOLUTION</span>
+                  </div>
+                  <div class="startup-item" onclick="showMemoryDetail('MEMORY.md')" title="长期记忆">
+                    <span class="startup-icon">⭐</span>
+                    <span>MEMORY</span>
+                  </div>
+                  <div class="startup-item" onclick="showMemoryDetail('')" title="今天记忆">
+                    <span class="startup-icon">📅</span>
+                    <span>今日</span>
+                  </div>
+                  <div class="startup-item" onclick="showMemoryDetail('')" title="近7天记忆">
+                    <span class="startup-icon">📆</span>
+                    <span>近7天</span>
+                  </div>
+                  <div class="startup-item" title="重要通知">
+                    <span class="startup-icon">📢</span>
+                    <span>NOTICE</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 自动写入规则 -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">✍️ 自动写入</span>
+              </div>
+              <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg-tertiary); border-radius: 6px;">
+                    <span style="font-size: 18px;">🎯</span>
+                    <div>
+                      <div style="font-weight: 500; font-size: 12px;">关键词触发</div>
+                      <div style="color: var(--text-secondary); font-size: 10px;">记住、记得、重要</div>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg-tertiary); border-radius: 6px;">
+                    <span style="font-size: 18px;">✅</span>
+                    <div>
+                      <div style="font-weight: 500; font-size: 12px;">任务完成</div>
+                      <div style="color: var(--text-secondary); font-size: 10px;">完成/成功</div>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg-tertiary); border-radius: 6px;">
+                    <span style="font-size: 18px;">🔄</span>
+                    <div>
+                      <div style="font-weight: 500; font-size: 12px;">用户纠正</div>
+                      <div style="color: var(--text-secondary); font-size: 10px;">不对、错了</div>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg-tertiary); border-radius: 6px;">
+                    <span style="font-size: 18px;">⚖️</span>
+                    <div>
+                      <div style="font-weight: 500; font-size: 12px;">决策选择</div>
+                      <div style="color: var(--text-secondary); font-size: 10px;">决定、选择</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 进化成果 -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">🧬 进化成果</span>
+                <span id="evolutionDate" class="card-badge">-</span>
+              </div>
+              <div class="card-body">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+                  <div style="text-align: center; padding: 8px; background: var(--bg-tertiary); border-radius: 6px;">
+                    <div style="font-size: 18px; font-weight: 600; color: var(--primary);" id="evoKnowledge">-</div>
+                    <div style="font-size: 10px; color: var(--text-secondary);">知识点</div>
+                  </div>
+                  <div style="text-align: center; padding: 8px; background: var(--bg-tertiary); border-radius: 6px;">
+                    <div style="font-size: 18px; font-weight: 600; color: var(--success);" id="evoWorkflows">-</div>
+                    <div style="font-size: 10px; color: var(--text-secondary);">工作流</div>
+                  </div>
+                  <div style="text-align: center; padding: 8px; background: var(--bg-tertiary); border-radius: 6px;">
+                    <div style="font-size: 18px; font-weight: 600; color: var(--warning);" id="evoSkills">-</div>
+                    <div style="font-size: 10px; color: var(--text-secondary);">技能</div>
+                  </div>
+                  <div style="text-align: center; padding: 8px; background: var(--bg-tertiary); border-radius: 6px;">
+                    <div style="font-size: 18px; font-weight: 600; color: var(--danger);" id="evoLessons">-</div>
+                    <div style="font-size: 10px; color: var(--text-secondary);">教训</div>
+                  </div>
+                </div>
+                <div style="margin-top: 6px; padding: 8px; background: var(--bg-tertiary); border-radius: 6px;">
+                  <div id="evoLatest" style="font-size: 11px; color: var(--text-primary);">加载中...</div>
+                </div>
+              </div>
+              <div class="card-footer" style="padding: 6px;">
+                <a href="/evolution-log.html" class="btn btn-primary" style="width: 100%; text-decoration: none; text-align: center; display: block; font-size: 11px; padding: 4px;">查看完整 →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tab 2: 记忆文件 -->
+        <div id="tab-files" class="tab-content">
+          <!-- 统计卡片 -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="value" id="totalFiles">-</div>
+              <div class="label">记忆文件总数</div>
+            </div>
+            <div class="stat-card">
+              <div class="value" id="totalSize">-</div>
+              <div class="label">总大小</div>
+            </div>
+            <div class="stat-card">
+              <div class="value" id="oldestDate">-</div>
+              <div class="label">最早记忆</div>
+            </div>
+            <div class="stat-card">
+              <div class="value" id="recentCount">-</div>
+              <div class="label">近7天文件</div>
+            </div>
+          </div>
+          
+          <!-- 核心记忆 -->
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <span class="card-title">⭐ 核心记忆</span>
+              <span class="card-badge">重要</span>
+            </div>
+            <div class="card-body">
+              <div id="coreFiles" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+                加载中...
+              </div>
+            </div>
+          </div>
+          
+          <!-- 每日记忆 -->
+          <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+              <span class="card-title">📅 每日记忆</span>
+              <span class="card-badge" id="dailyCount">-</span>
+            </div>
+            <div class="card-body">
+              <div id="dailyFiles" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+                加载中...
+              </div>
+            </div>
+          </div>
+          
+          <!-- 通知文件 -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">📢 重要通知</span>
+              <span class="card-badge" id="noticeCount">-</span>
+            </div>
+            <div class="card-body">
+              <div id="noticeFiles" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+                加载中...
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tab 3: 搜索记忆 -->
+        <div id="tab-search" class="tab-content">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🔍 搜索记忆</span>
+            </div>
+            <div class="card-body">
+              <div class="search-section">
+                <input type="text" class="search-input" id="searchInput" placeholder="输入关键词搜索记忆...">
+                <button class="btn btn-primary" onclick="searchMemory()">搜索</button>
+              </div>
+              <div id="searchResults"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 详情模态框 -->
+  <div id="memoryModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">记忆详情</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="modalContent" class="memory-content">
+          加载中...
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 统一侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    Sidebar.init({ activePage: 'memory-dashboard' });
+  </script>
+  
+  <!-- 页面逻辑 -->
+  <script>
+    const API_BASE = '/api/memory';
+    
+    // Tab 切换
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+    
+    // 加载核心记忆内容预览
+    async function loadCoreMemoryPreview() {
+      try {
+        const res = await fetch(`${API_BASE}/file?path=MEMORY.md`);
+        const data = await res.json();
+        
+        if (data.success) {
+          // 取前 8000 字符，渲染为 HTML
+          const content = data.content.slice(0, 8000);
+          const html = marked.parse(content);
+          document.getElementById('coreMemoryRendered').innerHTML = html + (data.content.length > 8000 ? '<p style="color: var(--text-secondary); font-size: 11px; text-align: center; padding: 8px;">... 更多内容请查看 MEMORY.md ...</p>' : '');
+        } else {
+          document.getElementById('coreMemoryRendered').textContent = '暂无核心记忆';
+        }
+      } catch (e) {
+        document.getElementById('coreMemoryRendered').textContent = '加载失败';
+      }
+    }
+    
+    // 加载身份信息预览
+    async function loadIdentityPreview() {
+      const agent = document.getElementById('agentSelector').value;
+      
+      try {
+        // 加载 SOUL.md（支持 per-agent）
+        const soulRes = await fetch(`${API_BASE}/file?path=SOUL.md&agent=${agent}`);
+        const soulData = await soulRes.json();
+        
+        // 加载 USER.md
+        const userRes = await fetch(`${API_BASE}/file?path=USER.md`);
+        const userData = await userRes.json();
+        
+        // 构建 HTML 内容
+        let html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">';
+        
+        if (soulData.success && soulData.content) {
+          // 提取角色定义
+          const content = soulData.content;
+          
+          // 提取核心特质
+          const traitsMatch = content.match(/##\s*核心特质([\s\S]*?)(?=##|$)/);
+          // 提取工作职责
+          const dutiesMatch = content.match(/##\s*工作职责([\s\S]*?)(?=##|$)/);
+          // 提取技能标签
+          const skillsMatch = content.match(/##\s*技能标签([\s\S]*?)(?=##|$)/);
+          // 提取边界
+          const borderMatch = content.match(/##\s*边界([\s\S]*?)(?=##|$)/);
+          
+          html += `<div>
+            <div style="font-weight: 600; color: var(--primary); font-size: 13px; margin-bottom: 8px;">🧠 ${soulData.path || 'SOUL.md'}</div>
+            ${traitsMatch ? `<div style="margin-bottom: 12px;"><div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">核心特质</div><div style="font-size: 12px;">${marked.parse(traitsMatch[1].slice(0, 300))}</div></div>` : ''}
+            ${dutiesMatch ? `<div style="margin-bottom: 12px;"><div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">工作职责</div><div style="font-size: 12px;">${marked.parse(dutiesMatch[1].slice(0, 300))}</div></div>` : ''}
+            ${skillsMatch ? `<div style="margin-bottom: 12px;"><div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">技能标签</div><div style="font-size: 12px;">${marked.parse(skillsMatch[1])}</div></div>` : ''}
+            ${borderMatch ? `<div><div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">边界</div><div style="font-size: 12px;">${marked.parse(borderMatch[1].slice(0, 400))}</div></div>` : ''}
+          </div>`;
+        }
+        
+        if (userData.success && userData.content) {
+          html += `<div>
+            <div style="font-weight: 600; color: var(--primary); font-size: 13px; margin-bottom: 8px;">👤 USER.md</div>
+            <div style="font-size: 12px;">${marked.parse(userData.content)}</div>
+          </div>`;
+        }
+        
+        html += '</div>';
+        
+        document.getElementById('soulContent').innerHTML = html || '暂无身份定义';
+        
+        // 加载进化成果统计
+        loadEvolutionStats();
+      } catch (e) {
+        console.error('加载身份信息失败:', e);
+        document.getElementById('soulContent').textContent = '加载失败';
+      }
+    }
+    
+    // 加载进化成果统计
+    async function loadEvolutionStats() {
+      try {
+        const res = await fetch(`${API_BASE}/file?path=EVOLUTION-LOG.md`);
+        const data = await res.json();
+        
+        if (data.success && data.content) {
+          const content = data.content;
+          
+          // 提取统计数据
+          const dateMatch = content.match(/\*\*最后更新\*\*:\s*(\S+)/);
+          const knowledgeMatch = content.match(/\|\s*知识点总数\s*\|\s*(\d+)/);
+          const workflowsMatch = content.match(/\|\s*生成工作流\s*\|\s*(\d+)/);
+          const skillsMatch = content.match(/\|\s*生成技能\s*\|\s*(\d+)/);
+          const lessonsMatch = content.match(/###\s*lesson[^()]*\((\d+)/i);
+          
+          document.getElementById('evolutionDate').textContent = dateMatch ? dateMatch[1] : '-';
+          document.getElementById('evoKnowledge').textContent = knowledgeMatch ? knowledgeMatch[1] : '0';
+          document.getElementById('evoWorkflows').textContent = workflowsMatch ? workflowsMatch[1] : '0';
+          document.getElementById('evoSkills').textContent = skillsMatch ? skillsMatch[1] : '0';
+          document.getElementById('evoLessons').textContent = lessonsMatch ? lessonsMatch[1] : '0';
+          
+          // 提取最新进化标题
+          const firstExperience = content.match(/###\s*experience[^()]*\n\d+\.\s*\*\*(.+?)\*\*/i);
+          if (firstExperience) {
+            document.getElementById('evoLatest').textContent = firstExperience[1];
+          } else {
+            document.getElementById('evoLatest').textContent = '暂无最新进化';
+          }
+        }
+      } catch (e) {
+        console.error('加载进化统计失败:', e);
+      }
+    }
+    
+    // 加载统计
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API_BASE}/stats`);
+        const data = await res.json();
+        
+        if (data.success) {
+          document.getElementById('totalFiles').textContent = data.stats.totalFiles || 0;
+          document.getElementById('totalSize').textContent = data.stats.totalSizeMB ? data.stats.totalSizeMB + ' MB' : '-';
+          document.getElementById('oldestDate').textContent = data.stats.oldestFile?.replace('.md', '') || '-';
+          
+          // 计算近7天文件数
+          const recentCount = (data.stats.recentFiles || []).length;
+          document.getElementById('recentCount').textContent = recentCount || '-';
+        }
+      } catch (e) {
+        console.error('加载统计失败:', e);
+      }
+    }
+    
+    // 加载文件列表
+    async function loadFiles() {
+      try {
+        const res = await fetch(`${API_BASE}/list?limit=200`);
+        const data = await res.json();
+        
+        if (data.success) {
+          // 分类显示
+          const coreFiles = [];
+          const dailyFiles = [];
+          const noticeFiles = [];
+          
+          (data.memories || []).forEach(m => {
+            if (m.file === 'MEMORY.md' || m.file === 'EVOLUTION-LOG.md') {
+              coreFiles.push(m);
+            } else if (m.file.startsWith('NOTICE-')) {
+              noticeFiles.push(m);
+            } else {
+              dailyFiles.push(m);
+            }
+          });
+          
+          // 渲染核心文件
+          document.getElementById('coreFiles').innerHTML = coreFiles.length > 0 
+            ? coreFiles.map(f => renderFileCard(f, 'core')).join('')
+            : '<div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 30px; color: var(--text-secondary);">暂无核心记忆文件</div>';
+          
+          // 渲染每日文件
+          document.getElementById('dailyFiles').innerHTML = dailyFiles.length > 0
+            ? dailyFiles.map(f => renderFileCard(f, 'daily')).join('')
+            : '<div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 30px; color: var(--text-secondary);">暂无每日记忆文件</div>';
+          document.getElementById('dailyCount').textContent = dailyFiles.length;
+          
+          // 渲染通知文件
+          document.getElementById('noticeFiles').innerHTML = noticeFiles.length > 0
+            ? noticeFiles.map(f => renderFileCard(f, 'notice')).join('')
+            : '<div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 30px; color: var(--text-secondary);">暂无通知文件</div>';
+          document.getElementById('noticeCount').textContent = noticeFiles.length;
+        }
+      } catch (e) {
+        console.error('加载文件列表失败:', e);
+      }
+    }
+    
+    // 渲染文件卡片
+    function renderFileCard(file, type) {
+      const badgeClass = type === 'core' ? 'core' : (type === 'notice' ? 'notice' : 'daily');
+      const badgeText = type === 'core' ? '核心' : (type === 'notice' ? '通知' : '每日');
+      
+      return `
+        <div style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; padding: 14px; cursor: pointer; transition: all 0.15s;" onclick="showMemoryDetail('${file.file}', '${type}')" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-weight: 600; font-size: 13px; color: var(--text-primary);">${file.file || file.date}</span>
+            <span class="file-badge ${badgeClass}">${badgeText}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; color: var(--text-secondary); font-size: 12px;">
+            <span>${file.sizeKB || '-'}</span>
+            <span>${file.modified ? new Date(file.modified).toLocaleDateString() : ''}</span>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 显示记忆详情
+    async function showMemoryDetail(fileName, type) {
+      document.getElementById('modalTitle').textContent = fileName;
+      document.getElementById('modalContent').textContent = '加载中...';
+      document.getElementById('memoryModal').classList.add('show');
+      
+      try {
+        const res = await fetch(`${API_BASE}/file?path=${encodeURIComponent(fileName)}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          document.getElementById('modalContent').textContent = data.content;
+        } else {
+          document.getElementById('modalContent').textContent = '加载失败: ' + (data.error || '未知错误');
+        }
+      } catch (e) {
+        document.getElementById('modalContent').textContent = '加载失败: ' + e.message;
+      }
+    }
+    
+    // 关闭模态框
+    function closeModal() {
+      document.getElementById('memoryModal').classList.remove('show');
+    }
+    
+    // 搜索记忆
+    async function searchMemory() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) {
+        document.getElementById('searchResults').innerHTML = '<div class="empty-state">请输入搜索关键词</div>';
+        return;
+      }
+      
+      document.getElementById('searchResults').innerHTML = '<div class="empty-state">🔍 搜索中...</div>';
+      
+      try {
+        const res = await fetch(`${API_BASE}/search-direct?q=${encodeURIComponent(query)}&limit=20`);
+        const data = await res.json();
+        
+        if (data.success && data.results.length > 0) {
+          const html = data.results.map(r => `
+            <div class="file-card" onclick="showMemoryDetail('${r.file}', 'search')">
+              <div class="file-header">
+                <span class="file-name">${r.file}</span>
+                <span class="file-size">行 ${r.line || '-'}</span>
+              </div>
+              <div class="file-preview">${(r.preview || '').slice(0, 150)}${(r.preview || '').length > 150 ? '...' : ''}</div>
+            </div>
+          `).join('');
+          
+          document.getElementById('searchResults').innerHTML = `
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">找到 ${data.count} 条结果</p>
+            <div class="file-grid">${html}</div>
+          `;
+        } else {
+          document.getElementById('searchResults').innerHTML = '<div class="empty-state">未找到相关记忆</div>';
+        }
+      } catch (e) {
+        document.getElementById('searchResults').innerHTML = '<div class="empty-state">搜索失败: ' + e.message + '</div>';
+      }
+    }
+    
+    // 回车搜索
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') searchMemory();
+    });
+    
+    // ESC 关闭模态框
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+    
+    // 加载全部
+    function loadAll() {
+      loadStats();
+      loadFiles();
+      loadCoreMemoryPreview();
+      loadIdentityPreview();
+    }
+    
+    // 初始化
+    loadAll();
+  </script>
+  <script src="js/page-tips.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tipsContainer = document.getElementById('tipsContainer');
+      if (tipsContainer && PageTips) {
+        PageTips.init('memory-dashboard', tipsContainer);
+      }
+    });
+  </script>
+<script>FieldTips.init({pageType:"knowledge"});</script></body>
+</html>

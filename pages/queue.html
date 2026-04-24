@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务队列系统 - Agent任务调度中心</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text-primary: #ffffff;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #475569;
+            --accent: #3b82f6;
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+            --purple: #8b5cf6;
+            --q1: #ef4444; /* 重要且紧急 */
+            --q2: #3b82f6; /* 重要不紧急 */
+            --q3: #eab308; /* 不重要紧急 */
+            --q4: #22c55e; /* 不重要不紧急 */
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container { max-width: 1600px; margin: 0 auto; }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .header h1 {
+            margin: 0;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.5em;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .nav-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+        }
+        
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover { transform: translateY(-2px); }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            color: var(--text-primary);
+            font-size: 1.3em;
+            margin: 0 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #16a34a;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: black;
+        }
+        
+        .btn-warning:hover {
+            background: #ca8a04;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .queue-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .queue-column {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+        }
+        
+        .queue-column h3 {
+            margin: 0 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .queue-count {
+            font-size: 12px;
+            background: var(--bg-hover);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .task-item {
+            background: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            border-left: 4px solid transparent;
+        }
+        
+        .task-item:hover {
+            background: #475569;
+            transform: translateX(5px);
+        }
+        
+        .task-item.q1 { border-left-color: var(--q1); }
+        .task-item.q2 { border-left-color: var(--q2); }
+        .task-item.q3 { border-left-color: var(--q3); }
+        .task-item.q4 { border-left-color: var(--q4); }
+        
+        .task-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        
+        .task-meta {
+            display: flex;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .task-priority {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 10px;
+        }
+        
+        .priority-p0 { background: #7f1d1d; color: #fca5a5; }
+        .priority-p1 { background: #991b1b; color: #f87171; }
+        .priority-p2 { background: #854d0e; color: #fde047; }
+        .priority-p3 { background: #1e40af; color: #93c5fd; }
+        
+        .task-description {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            max-height: 60px;
+            overflow: hidden;
+        }
+        
+        .task-assignee {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .assignee-badge {
+            background: var(--bg-primary);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .assignee-badge.assigned {
+            color: var(--accent);
+        }
+        
+        .assignee-badge.unassigned {
+            color: var(--warning);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .agent-status {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .agent-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .agent-dot.online { background: var(--success); }
+        .agent-dot.idle { background: var(--warning); }
+        .agent-dot.offline { background: var(--danger); }
+        
+        .manual-assign {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .manual-assign select {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        @media (max-width: 768px) {
+            .queue-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 任务队列系统</h1>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="window.location.href='index.html'">🏠 首页</button>
+                <button class="nav-btn" onclick="window.location.href='quadrant-dashboard.html'">📊 四象限</button>
+                <button class="nav-btn" onclick="window.location.href='monitor.html'">🛡️ 监控</button>
+                <button class="nav-btn" onclick="location.reload()">🔄 刷新</button>
+                <button class="nav-btn" onclick="openWarRoom()">🚀 War Room</button>
+            </div>
+        </div>
+        
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value" id="totalTasks">0</div>
+                <div class="stat-label">总任务数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingTasks" style="color: var(--warning)">0</div>
+                <div class="stat-label">待处理</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="doingTasks" style="color: var(--accent)">0</div>
+                <div class="stat-label">进行中</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="criticalTasks" style="color: var(--danger)">0</div>
+                <div class="stat-label">P0/P1紧急</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title">📜 队列规则说明</h2>
+            <div style="background: var(--bg-hover); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <!-- 优先级规则 -->
+                    <div>
+                        <h3 style="color: var(--accent); margin-bottom: 10px;">优先级排序</h3>
+                        <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: var(--danger); font-weight: bold;">P0</span>
+                                <span>最高优先级 - 系统紧急任务</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: #f97316; font-weight: bold;">P1</span>
+                                <span>高优先级 - 重要功能开发</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: var(--warning); font-weight: bold;">P2</span>
+                                <span>中优先级 - 常规任务</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: var(--accent); font-weight: bold;">P3</span>
+                                <span>低优先级 - 优化改进</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 象限分类 -->
+                    <div>
+                        <h3 style="color: var(--purple); margin-bottom: 10px;">四象限分类</h3>
+                        <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: var(--q1); font-weight: bold;">Q1 重要且紧急</span>
+                                <span>立即处理</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: var(--q2); font-weight: bold;">Q2 重要不紧急</span>
+                                <span>计划执行</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: var(--q3); font-weight: bold;">Q3 不重要紧急</span>
+                                <span>快速处理</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: var(--q4); font-weight: bold;">Q4 不重要不紧急</span>
+                                <span>最后处理</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Agent分配规则 -->
+                    <div>
+                        <h3 style="color: var(--success); margin-bottom: 10px;">Agent分配规则</h3>
+                        <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+                            <div>• 优先分配给 <strong>idle</strong> 状态的Agent</strong></div>
+                            <div>• 按 Agent 角色推荐：</div>
+                            <ul style="margin: 5px 0 5px 20px; padding: 0;">
+                                <li><strong>代码开发</strong> → coder / coder-1 / coder-2</li>
+                                <li><strong>深度分析</strong> → deep</li>
+                                <li><strong>快速响应</strong> → fast</li>
+                                <li><strong>沟通任务</strong> → chat</li>
+                                <li><strong>通用任务</strong> → main</li>
+                            </ul>
+                            <div>• 避免重复：相同任务不会被分配给多个Agent</div>
+                        </div>
+                    </div>
+
+                    <!-- 综合评分 -->
+                    <div>
+                        <h3 style="color: var(--text-primary); margin-bottom: 10px;">综合评分算法</h3>
+                        <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span>重要性</span>
+                                <span style="color: var(--accent);">40%</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span>紧急性</span>
+                                <span style="color: var(--accent);">30%</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span>依赖性</span>
+                                <span style="color: var(--accent);">15%</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span>可行性</span>
+                                <span style="color: var(--accent);">10%</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span>价值</span>
+                                <span style="color: var(--accent);">5%</span>
+                            </div>
+                            <div style="margin-top: 8px; color: var(--text-muted); font-size: 11px;">
+                                总分 = Σ(维度得分 × 权重)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 自动调度说明 -->
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    <h4 style="color: var(--text-primary); margin-bottom: 8px;">🔄 自动调度机制</h4>
+                    <div style="font-size: 12px; color: var(--text-secondary);">
+                        <div>• <strong>扫描频率</strong>：每 5 秒检测一次 pending 任务</div>
+                        <div>• <strong>调度器</strong>：agent-dispatcher 自动分配任务给空闲 Agent</div>
+                        <div>• <strong>状态更新</strong>：Agent 接收任务后状态变为 doing，完成后变为 completed</div>
+                        <div>• <strong>故障转移</strong>：Agent 离线超过阈值时，自动转移任务给其他 Agent</div>
+                    </div>
+
+                    <!-- 任务状态流转 -->
+                    <div style="margin-top: 15px;">
+                        <h4 style="color: var(--text-primary); margin-bottom: 8px;">📊 任务状态流转</h4>
+                        <div style="display: flex; align-items: center; gap: 10px; font-size: 11px; background: var(--bg-primary); padding: 10px; border-radius: 6px;">
+                            <span style="background: var(--warning); color: black; padding: 2px 8px; border-radius: 4px;">pending</span>
+                            <span>→</span>
+                            <span style="background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px;">doing</span>
+                            <span>→</span>
+                            <span style="background: var(--success); color: white; padding: 2px 8px; border-radius: 4px;">completed</span>
+                            <span style="color: var(--text-muted);">| 分支状态:</span>
+                            <span style="background: var(--danger); color: white; padding: 2px 8px; border-radius: 4px;">failed</span>
+                            <span style="background: var(--bg-hover); padding: 2px 8px; border-radius: 4px;">blocked</span>
+                        </div>
+                    </div>
+
+                    <!-- 手动操作 -->
+                    <div style="margin-top: 15px;">
+                        <h4 style="color: var(--text-primary); margin-bottom: 8px;">👤 手动操作</h4>
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            <div>• <strong>点击任务</strong>：查看任务详情页面</div>
+                            <div>• <strong>自动调度</strong>：手动触发任务分配给空闲 Agent</div>
+                            <div>• <strong>启动 Agent</strong>：启动所有离线的 Agent</div>
+                            <div>• <strong>恢复 Agent</strong>：自动检测并恢复离线 Agent</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">
+                <span>⚡ 队列视图</span>
+                <span class="agent-status">
+                    <span>Agent状态：</span>
+                    <span class="agent-dot online"></span> <span id="onlineAgents">0</span>
+                    <span class="agent-dot idle"></span> <span id="idleAgents">0</span>
+                    <span class="agent-dot offline"></span> <span id="offlineAgents">0</span>
+                </span>
+            </h2>
+            
+            <div class="controls">
+                <button class="btn btn-primary" onclick="autoSchedule()">🚀 自动调度</button>
+                <button class="btn btn-success" onclick="startAllAgents()">🤖 启动所有Agent</button>
+                <button class="btn btn-warning" onclick="recoverAgents()">🔧 恢复离线Agent</button>
+                <button class="btn btn-danger" onclick="clearNotifications()">🗑️ 清除通知</button>
+            </div>
+            
+            <div id="loading" class="loading">加载中...</div>
+            <div id="queueContainer" class="queue-container"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 配置
+        const API_BASE = window.TASK_API_BASE || (window.location.origin);
+        const REFRESH_INTERVAL = 10000; // 10秒刷新
+        
+        let tasks = [];
+        let agents = [];
+        
+        // 状态图标
+        const statusIcons = {
+            'pending': '⏳',
+            'doing': '🚀',
+            'completed': '✅',
+            'paused': '⏸️',
+            'deleted': '❌'
+        };
+        
+        const priorityColors = {
+            'P0': '#ef4444',
+            'P1': '#f97316',
+            'P2': '#eab308',
+            'P3': '#3b82f6'
+        };
+        
+        const quadrantColors = {
+            1: '#ef4444',
+            2: '#3b82f6',
+            3: '#eab308',
+            4: '#22c55e'
+        };
+        
+        // 初始化
+        async function init() {
+            await loadTasks();
+            await loadAgents();
+            startAutoRefresh();
+        }
+        
+        // 加载任务
+        async function loadTasks() {
+            try {
+                const response = await fetch(`${API_BASE}/api/tasks?showCompleted=true`);
+                const data = await response.json();
+                tasks = data.tasks || [];
+                
+                renderStats();
+                renderQueue();
+            } catch (error) {
+                console.error('加载任务失败:', error);
+            }
+        }
+        
+        // 加载Agent状态
+        async function loadAgents() {
+            try {
+                const response = await fetch(`${API_BASE}/api/agents/status`);
+                const data = await response.json();
+                agents = data.agents || [];
+                
+                updateAgentStats();
+            } catch (error) {
+                console.error('加载Agent状态失败:', error);
+            }
+        }
+        
+        // 更新Agent统计
+        function updateAgentStats() {
+            const online = agents.filter(a => a.status === 'online').length;
+            const idle = agents.filter(a => a.status === 'idle').length;
+            const offline = agents.filter(a => a.status === 'offline' || a.status === 'unknown').length;
+            
+            document.getElementById('onlineAgents').textContent = online;
+            document.getElementById('idleAgents').textContent = idle;
+            document.getElementById('offlineAgents').textContent = offline;
+        }
+        
+        // 渲染统计数据
+        function renderStats() {
+            const totalTasks = tasks.length;
+            const pendingTasks = tasks.filter(t => t.status === 'pending').length;
+            const doingTasks = tasks.filter(t => t.status === 'doing').length;
+            const criticalTasks = tasks.filter(t => 
+                (t.priority === 'P0' || t.priority === 'P1') &&
+                (t.status === 'pending' || t.status === 'doing')
+            ).length;
+            
+            document.getElementById('totalTasks').textContent = totalTasks;
+            document.getElementById('pendingTasks').textContent = pendingTasks;
+            document.getElementById('doingTasks').textContent = doingTasks;
+            document.getElementById('criticalTasks').textContent = criticalTasks;
+        }
+        
+        // 渲染队列
+        function renderQueue() {
+            const container = document.getElementById('queueContainer');
+            const loading = document.getElementById('loading');
+
+            if (!tasks || tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📦</div>
+                        <h3>队列为空</h3>
+                        <p>暂无任务，请创建新任务或等待系统分配</p>
+                    </div>
+                `;
+                loading.style.display = 'none';
+                return;
+            }
+
+            // 按象限分组（排除已完成和已删除的任务）
+            const byQuadrant = {
+                1: tasks.filter(t => (t.quadrant === 1 || !t.quadrant) && t.status !== 'completed' && t.status !== 'deleted'),
+                2: tasks.filter(t => (t.quadrant === 2 || !t.quadrant) && t.status !== 'completed' && t.status !== 'deleted'),
+                3: tasks.filter(t => (t.quadrant === 3 || !t.quadrant) && t.status !== 'completed' && t.status !== 'deleted'),
+                4: tasks.filter(t => (t.quadrant === 4 || !t.quadrant) && t.status !== 'completed' && t.status !== 'deleted')
+            };
+
+            const totalFilteredTasks = Object.values(byQuadrant).reduce((sum, arr) => sum + arr.length, 0);
+
+            if (totalFilteredTasks === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">✅</div>
+                        <h3>所有任务已完成</h3>
+                        <p>没有待处理的任务</p>
+                    </div>
+                `;
+                loading.style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = Object.entries(byQuadrant).map(([quadrant, quadrantTasks]) => `
+                <div class="queue-column">
+                    <h3>
+                        <span style="color: ${quadrantColors[quadrant]}">Q${quadrant} ${quadrantText(quadrant)}</span>
+                        <span class="queue-count">${quadrantTasks.length} 个任务</span>
+                    </h3>
+                    ${quadrantTasks.map(task => renderTaskItem(task)).join('')}
+                </div>
+            `).join('');
+
+            loading.style.display = 'none';
+        }
+        
+        // 获取象限文字
+        function quadrantText(q) {
+            const texts = {
+                1: '重要且紧急',
+                2: '重要不紧急',
+                3: '不重要紧急',
+                4: '不重要不紧急'
+            };
+            return texts[q] || '未知象限';
+        }
+        
+        // 渲染任务项
+        function renderTaskItem(task) {
+            const timeSince = getTimeSince(task.created_at);
+            const assignee = task.assignedAgent || '未分配';
+            const assigneeClass = task.assignedAgent ? 'assigned' : 'unassigned';
+            const completedSteps = task.completed_steps || 0;
+            const totalSteps = task.total_steps || 1;
+            const quadrant = task.quadrant || 4; // 默认为Q4
+
+            return `
+                <div class="task-item q${quadrant}" onclick="viewTask('${task.id}')">
+                    <div class="task-title">
+                        ${statusIcons[task.status] || '📄'} ${task.title || '未命名任务'}
+                    </div>
+                    <div class="task-meta">
+                        <span>Created: ${timeSince}</span>
+                        <span class="priority-${task.priority || 'p3'}">${task.priority || 'P3'}</span>
+                    </div>
+                    <div class="task-description">
+                        ${task.description ? task.description.substring(0, 100) + (task.description.length > 100 ? '...' : '') : '暂无描述'}
+                    </div>
+                    <div class="task-assignee">
+                        <span class="assignee-badge ${assigneeClass}">${assignee}</span>
+                        <span>步骤: ${completedSteps}/${totalSteps}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 获取时间距离
+        function getTimeSince(timestamp) {
+            if (!timestamp) return 'N/A';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
+            return `${Math.floor(diff / 86400000)}天前`;
+        }
+        
+        // 查看任务详情
+        function viewTask(taskId) {
+            window.open(`task-detail.html?id=${taskId}`, '_blank');
+        }
+        
+        // 自动调度（调用agent-dispatcher进行任务分配）
+        async function autoSchedule() {
+            try {
+                // 调用启动所有agents，触发自动分配
+                const response = await fetch(`${API_BASE}/api/agents/startup/start-all`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                alert(data.message || '任务分配已完成');
+                await loadTasks();
+                await loadAgents();
+            } catch (error) {
+                alert('任务分配失败: ' + error.message);
+            }
+        }
+
+        // 启动所有Agent
+        async function startAllAgents() {
+            if (!confirm('确定要启动所有Agent吗？')) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/agents/startup/start-all`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                alert(data.message || '启动完成');
+                await loadAgents();
+            } catch (error) {
+                alert('启动失败: ' + error.message);
+            }
+        }
+
+        // 恢复离线Agent
+        async function recoverAgents() {
+            try {
+                const response = await fetch(`${API_BASE}/api/agents/startup/recover`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                alert(data.message || '恢复完成');
+                await loadAgents();
+            } catch (error) {
+                alert('恢复失败: ' + error.message);
+            }
+        }
+        
+        // 清除通知
+        async function clearNotifications() {
+            try {
+                const response = await fetch(`${API_BASE}/api/notifications/mark-all-read/all`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                
+                alert('已清除所有未读通知');
+            } catch (error) {
+                alert('清除失败: ' + error.message);
+            }
+        }
+        
+        // 自动刷新
+        function startAutoRefresh() {
+            setInterval(async () => {
+                await loadTasks();
+                await loadAgents();
+            }, REFRESH_INTERVAL);
+        }
+        
+        // 打开War Room
+        function openWarRoom() {
+            window.open('agent-war-room-final.html', '_blank');
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>仪表盘 - Task System</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg-primary: #0f0f1a;
+      --bg-secondary: #1a1a2e;
+      --bg-tertiary: #252538;
+      --text-primary: #e0e0e0;
+      --text-secondary: #b0b0b0;
+      --text-tertiary: #888;
+      --border: #2d2d3a;
+      --primary: #3b82f6;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      display: flex;
+      min-height: 100vh;
+    }
+    /* 已移除，使用 frame.css */
+    /* 已移除，使用 frame.css */
+    /* 已移除，使用 frame.css */
+    .test-info {
+      background: var(--bg-secondary);
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .test-info h3 { margin-bottom: 8px; }
+    .test-info code { 
+      background: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
+          <link href="assets/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/frame.css">
+  <script src="js/field-tips.js"></script></head>
+<body>
+  <!-- 侧边栏容器 -->
+  <div id="sidebar-container"></div>
+  
+  <main class="main">
+    <header class="header">
+      <h1>📊 仪表盘</h1>
+    </header>
+    <div class="content">
+      <div class="test-info">
+        <h3>✅ 统一侧边栏组件测试</h3>
+        <p>此页面使用新的统一侧边栏组件。</p>
+        <p>使用方法：</p>
+        <pre><code>
+&lt;div id="sidebar-container"&gt;&lt;/div&gt;
+&lt;script src="js/sidebar.js"&gt;&lt;/script&gt;
+&lt;script&gt;Sidebar.init({ activePage: 'dashboard' });&lt;/script&gt;
+        </code></pre>
+      </div>
+      
+      <div class="test-info">
+        <h3>🎯 功能测试</h3>
+        <p>• 点击侧边栏菜单项测试导航</p>
+        <p>• 按 <code>Ctrl+B</code> 切换侧边栏折叠</p>
+        <p>• 刷新页面，折叠状态会保留</p>
+      </div>
+    </div>
+  </main>
+  
+  <!-- 引入侧边栏组件 -->
+  <script src="js/sidebar.js"></script>
+  <script>
+    // 初始化侧边栏，指定当前页面
+    Sidebar.init({ activePage: 'dashboard' });
+  </script>
+<script>FieldTips.init({pageType:"dashboard"});</script></body>
+</html>
