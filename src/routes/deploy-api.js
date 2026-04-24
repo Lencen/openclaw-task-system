@@ -11,7 +11,7 @@ const { v4: uuidv4 } = require('uuid');
 const moment = require('moment');
 
 // AES-256 加密辅助函数
-const AES_SECRET = process.env.DEPLOY_AES_SECRET || 'openclaw-remote-deploy-secret-key-2026';
+const AES_SECRET = process.env.DEPLOY_AES_SECRET || (() => { throw new Error('DEPLOY_AES_SECRET environment variable is required') })();
 
 /**
  * AES-256 加密

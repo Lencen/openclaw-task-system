@@ -30,7 +30,7 @@ function generateMachineId() {
 function generateMigrationToken(migrationId, machineId) {
   const timestamp = Date.now();
   const data = `${migrationId}:${machineId}:${timestamp}`;
-  const signature = crypto.createHmac('sha256', process.env.LICENSE_SECRET || 'default-secret')
+  const signature = crypto.createHmac('sha256', process.env.LICENSE_SECRET || (() => { throw new Error('LICENSE_SECRET environment variable is required') })())
     .update(data).digest('hex');
   return `mig_${Buffer.from(`${migrationId}:${timestamp}:${signature}`).toString('base64')}`;
 }
@@ -50,7 +50,7 @@ function verifyMigrationToken(token, expectedMachineId) {
     
     // 验证签名
     const data = `${migrationId}:${expectedMachineId}:${timestamp}`;
-    const expectedSignature = crypto.createHmac('sha256', process.env.LICENSE_SECRET || 'default-secret')
+    const expectedSignature = crypto.createHmac('sha256', process.env.LICENSE_SECRET || (() => { throw new Error('LICENSE_SECRET environment variable is required') })())
       .update(data).digest('hex');
     
     if (signature !== expectedSignature) {

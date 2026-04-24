@@ -168,7 +168,7 @@ function verifyPassword(password, hashedPassword, salt = '') {
  * JWT 实现（简化版）
  */
 const JWT = {
-  secret: process.env.JWT_SECRET || 'task-platform-secret-key',
+  secret: process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET environment variable is required') })(),
   expiresIn: 30 * 24 * 60 * 60 * 1000, // 30 天
   
   sign(payload) {
