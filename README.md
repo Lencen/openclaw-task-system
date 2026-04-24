@@ -118,6 +118,51 @@ npm start                    # 启动服务，浏览器打开即可体验
 | `DEPLOY_AES_SECRET` | 远程部署加密 | `openssl rand -hex 32` |
 | `LICENSE_SECRET` | 许可证签名 | `openssl rand -hex 32` |
 
+### 环境变量配置指南
+
+#### 1. 生成安全密钥
+
+使用 `openssl` 生成随机密钥（推荐）：
+
+```bash
+# 生成 JWT_SECRET
+openssl rand -hex 32
+
+# 生成 DEPLOY_AES_SECRET
+openssl rand -hex 32
+
+# 生成 LICENSE_SECRET
+openssl rand -hex 32
+```
+
+> Windows 用户可使用 PowerShell：`-join ((1..32) | ForEach-Object { "{0:x}" -f (Get-Random -Maximum 256) })`
+
+#### 2. 写入配置文件
+
+复制 `.env.example` 为 `.env`：
+
+```bash
+cp .env.example .env
+```
+
+编辑 `.env` 文件，填入生成的密钥：
+
+```env
+JWT_SECRET=你的密钥（如 3a8f2c... 共64位十六进制）
+DEPLOY_AES_SECRET=你的密钥
+LICENSE_SECRET=你的密钥
+```
+
+#### 3. 验证配置
+
+运行 `setup.js` 自动检测环境：
+
+```bash
+node scripts/setup.js
+```
+
+如果提示缺少必填变量，请检查 `.env` 文件。
+
 ### 不依赖 OpenClaw 运行
 
 如果没有安装 OpenClaw，`setup.js` 会生成默认配置模板，只需手动填入 `GATEWAY_TOKEN` 即可。
