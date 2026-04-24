@@ -97,13 +97,26 @@ npm start                    # 启动服务，浏览器打开即可体验
 | `PORT` | 否 | 服务端口 | `8081` |
 | `HOST` | 否 | 监听地址 | `0.0.0.0` |
 | `BASE_URL` | 否 | 外部访问地址 | `http://localhost:8081` |
+| `TASK_API_URL` | 否 | 任务系统 API 地址 | `http://localhost:8081` |
 | `GATEWAY_PORT` | 是 | Gateway 端口 | - |
 | `GATEWAY_TOKEN` | 是 | Gateway 认证 Token | - |
 | `GATEWAY_URL` | 是 | WebSocket 连接地址 | - |
 | `AGENT_LIST` | 否 | Agent 列表 | `main,coder,deep,fast,chat` |
 | `DEFAULT_MODEL` | 否 | 默认模型 | - |
-| `JWT_SECRET` | 否 | JWT 密钥 | 自动生成 |
+| `JWT_SECRET` | **是** | JWT 密钥，用于认证 | - |
+| `DEPLOY_AES_SECRET` | **是** | AES 加密密钥，用于部署 | - |
+| `LICENSE_SECRET` | **是** | 许可证签名密钥 | - |
 | `DEFAULT_ADMIN_PASSWORD` | 否 | 初始管理员密码 | `admin123` |
+
+### ⚠️ 安全要求
+
+以下环境变量**必须配置**，否则服务启动时会报错：
+
+| 变量 | 用途 | 如何生成 |
+|------|------|----------|
+| `JWT_SECRET` | 用户认证 | `openssl rand -hex 32` |
+| `DEPLOY_AES_SECRET` | 远程部署加密 | `openssl rand -hex 32` |
+| `LICENSE_SECRET` | 许可证签名 | `openssl rand -hex 32` |
 
 ### 不依赖 OpenClaw 运行
 
