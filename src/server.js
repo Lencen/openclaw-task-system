@@ -602,9 +602,9 @@ app.get('/api/scenarios', (req, res) => {
 // GET /api/projects
 app.get('/api/projects', (req, res) => {
   res.json({ success: true, projects: [
-    { id: 'proj-1', name: 'OpenClaw 任务系统 V2', description: '任务管理系统开源版本', status: 'active', progress: 85, total_tasks: 45, completed_tasks: 38, owner: '顾良晨', created_at: new Date(Date.now()-30*86400000).toISOString() },
-    { id: 'proj-2', name: '知识库系统', description: 'HOT/WARM/COLD三层知识库', status: 'active', progress: 72, total_tasks: 28, completed_tasks: 20, owner: '顾良晨', created_at: new Date(Date.now()-20*86400000).toISOString() },
-    { id: 'proj-3', name: '飞书自动化集成', description: '飞书消息通知与自动化报告', status: 'active', progress: 60, total_tasks: 15, completed_tasks: 9, owner: '顾良晨', created_at: new Date(Date.now()-15*86400000).toISOString() }
+    { id: 'proj-1', name: 'OpenClaw 任务系统 V2', description: '任务管理系统开源版本', status: 'active', progress: 85, total_tasks: 45, completed_tasks: 38, owner: '管理员', created_at: new Date(Date.now()-30*86400000).toISOString() },
+    { id: 'proj-2', name: '知识库系统', description: 'HOT/WARM/COLD三层知识库', status: 'active', progress: 72, total_tasks: 28, completed_tasks: 20, owner: '管理员', created_at: new Date(Date.now()-20*86400000).toISOString() },
+    { id: 'proj-3', name: '飞书自动化集成', description: '飞书消息通知与自动化报告', status: 'active', progress: 60, total_tasks: 15, completed_tasks: 9, owner: '管理员', created_at: new Date(Date.now()-15*86400000).toISOString() }
   ]});
 });
 
@@ -753,12 +753,12 @@ app.get('/api/file/read', (req, res) => {
 // GET /api/audit-logs
 app.get('/api/audit-logs', (req, res) => {
   res.json({ success: true, logs: [
-    { id: 'audit-1', action: 'task.create', user: '顾良晨', detail: '创建任务: 登录页面设计与实现', timestamp: new Date(Date.now()-7*86400000).toISOString() },
+    { id: 'audit-1', action: 'task.create', user: '管理员', detail: '创建任务: 登录页面设计与实现', timestamp: new Date(Date.now()-7*86400000).toISOString() },
     { id: 'audit-2', action: 'task.update', user: 'coder', detail: '更新任务状态: doing → done', timestamp: new Date(Date.now()-86400000).toISOString() },
     { id: 'audit-3', action: 'task.create', user: 'main', detail: '创建任务: Agent通信系统优化', timestamp: new Date(Date.now()-10*86400000).toISOString() },
     { id: 'audit-4', action: 'issue.create', user: 'monitor', detail: '自动创建问题: Agent通信偶发丢消息', timestamp: new Date(Date.now()-5*86400000).toISOString() },
     { id: 'audit-5', action: 'task.assign', user: 'main', detail: '分配任务: 任务看板视图开发 → coder', timestamp: new Date(Date.now()-3*86400000).toISOString() },
-    { id: 'audit-6', action: 'system.config', user: '顾良晨', detail: '修改 Gateway 配置', timestamp: new Date(Date.now()-8*86400000).toISOString() },
+    { id: 'audit-6', action: 'system.config', user: '管理员', detail: '修改 Gateway 配置', timestamp: new Date(Date.now()-8*86400000).toISOString() },
     { id: 'audit-7', action: 'task.complete', user: 'deep', detail: '完成任务: 飞书自动化报告功能', timestamp: new Date(Date.now()-5*86400000).toISOString() },
     { id: 'audit-8', action: 'agent.online', user: 'system', detail: 'Agent main 上线', timestamp: new Date().toISOString() }
   ]});
@@ -1179,11 +1179,11 @@ app.get("/api/chat-messages/stats", (req, res) => {
 // ========== 聊天消息列表 ==========
 app.get("/api/chat-messages", (req, res) => {
   res.json({ success: true, messages: [
-    { id: "msg-1", channel: "飞书", user: "顾良晨", content: "检查一下25上，这个演示环境，每个页面都填充数据呀", time: "2026-04-24T13:03:00Z", is_task: false },
-    { id: "msg-2", channel: "飞书", user: "顾良晨", content: "你可以做一些假数据吗，我们需要在另一个服务器上发布一个演示环境", time: "2026-04-24T11:00:00Z", is_task: true, task_id: "task-demo-1" },
-    { id: "msg-3", channel: "飞书", user: "顾良晨", content: "那你把25上昨天做验证在他那部署的task-system-v2这个项目删除了", time: "2026-04-24T10:30:00Z", is_task: true, task_id: "task-clean-25" },
-    { id: "msg-4", channel: "飞书", user: "顾良晨", content: "demo 风格要和实际的页面风格保持一致", time: "2026-04-24T09:15:00Z", is_task: false },
-    { id: "msg-5", channel: "飞书", user: "顾良晨", content: "需要确认一下，你redeme是怎么写的，里面的配置、数据都没有我个人的信息了吧", time: "2026-04-24T08:53:00Z", is_task: false }
+    { id: "msg-1", channel: "飞书", user: "管理员", content: "检查一下25上，这个演示环境，每个页面都填充数据呀", time: "2026-04-24T13:03:00Z", is_task: false },
+    { id: "msg-2", channel: "飞书", user: "管理员", content: "你可以做一些假数据吗，我们需要在另一个服务器上发布一个演示环境", time: "2026-04-24T11:00:00Z", is_task: true, task_id: "task-demo-1" },
+    { id: "msg-3", channel: "飞书", user: "管理员", content: "那你把25上昨天做验证在他那部署的task-system-v2这个项目删除了", time: "2026-04-24T10:30:00Z", is_task: true, task_id: "task-clean-25" },
+    { id: "msg-4", channel: "飞书", user: "管理员", content: "demo 风格要和实际的页面风格保持一致", time: "2026-04-24T09:15:00Z", is_task: false },
+    { id: "msg-5", channel: "飞书", user: "管理员", content: "需要确认一下，你redeme是怎么写的，里面的配置、数据都没有我个人的信息了吧", time: "2026-04-24T08:53:00Z", is_task: false }
   ], total: 2847 });
 });
 

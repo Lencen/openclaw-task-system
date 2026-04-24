@@ -110,15 +110,20 @@ npm start                    # 启动服务，浏览器打开即可体验
 
 ## OpenClaw 集成
 
-> 部署后，让 OpenClaw 自动对接任务系统。
+> 部署后，将模板文件复制到 OpenClaw 工作区即可自动对接。
 
-### 一键集成
+### 对接步骤
 
 ```bash
-# 1. 配置 OpenClaw（自动写入 taskSystem 配置到 openclaw.json）
-node scripts/configure-openclaw.js
+# 1. 复制模板到 OpenClaw 工作区
+cp templates/SOUL.md ~/.openclaw/workspace/SOUL.md
+cp templates/AGENTS.md ~/.openclaw/workspace/AGENTS.md
+cp templates/HEARTBEAT.md ~/.openclaw/workspace/HEARTBEAT.md
 
-# 2. 重启 OpenClaw
+# 2. 修改模板中的地址（如果任务系统不是 localhost:8081）
+# 将模板中的 http://localhost:8081 替换为实际地址
+
+# 3. 重启 OpenClaw
 openclaw gateway restart
 ```
 
@@ -131,25 +136,12 @@ openclaw gateway restart
 | 任务完成 | 自动触发反思流程 | 经验沉淀 |
 | Heartbeat 定时 | 检查修复队列 + 同步知识索引 | 自动修复 + 知识更新 |
 
-### 📖 部署后 OpenClaw 该读什么？
+### 安全说明
 
-部署任务系统后，OpenClaw Agent 需要读取以下文档来知道如何对接：
-
-| 文档 | 路径 | 作用 |
-|------|------|------|
-| **SOUL.md** | `~/.openclaw/workspace/SOUL.md` | 强制指令：每条消息调用任务意图检测 API |
-| **AGENTS.md** | `~/.openclaw/workspace/AGENTS.md` | 任务规则：什么时候创建任务/问题 |
-| **HEARTBEAT.md** | `~/.openclaw/workspace/HEARTBEAT.md` | 定时任务：修复队列检查、系统自检 |
-| **集成指南** | `docs/OPENCLAW-INTEGRATION.md` | 完整 API 文档、CLI 工具、集成流程 |
-| **任务意图规则** | `memory/TASK-ISSUE-RULES.md` | 任务/问题触发规则 |
-
-**核心原理**：OpenClaw Agent 启动时会读取 SOUL.md 和 AGENTS.md 中的指令，这些文件里已经写死了调用任务系统 API 的 curl 命令。Agent 不需要额外配置，只要任务系统运行在 8081 端口就能自动对接。
-
-**如果需要自定义端口**，修改 SOUL.md 中的 URL 即可：
-```bash
-# 把 localhost:8081 改成实际地址
-curl -s -X POST http://<实际IP>:<实际端口>/api/tasks/from-chat-sqlite
-```
+- ✅ **零侵入**：不修改 OpenClaw 核心配置（`openclaw.json`）
+- ✅ **可逆**：删除模板文件即可恢复原始状态
+- ✅ **可控**：只需改一个地址（`localhost:8081` → 实际地址）
+- ❌ **不影响 OpenClaw 运行**：即使任务系统未启动，OpenClaw 也正常工作
 
 ### 任务意图检测
 
@@ -312,6 +304,15 @@ npm install
 npm test
 npm run test:unit
 npm run test:integration
+```
+
+## 卸载
+
+如需完全移除任务管理系统，请参考 [UNINSTALL.md](UNINSTALL.md)。
+
+**快速卸载**：
+```bash
+./uninstall.sh    # 一键卸载
 ```
 
 ## 许可证
