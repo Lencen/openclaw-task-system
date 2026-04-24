@@ -29,7 +29,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/openclaw-task-system.git"
+    "url": "https://github.com/Lencen/openclaw-task-system.git"
   },
   "dependencies": {
     "@chenglou/pretext": "^0.0.3",

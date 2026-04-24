@@ -30,7 +30,7 @@ OpenClaw Task System 是为 [OpenClaw](https://github.com/openclaw/openclaw) AI 
 ### 方式一：一键安装
 
 ```bash
-git clone https://github.com/your-username/openclaw-task-system.git
+git clone https://github.com/Lencen/openclaw-task-system.git
 cd openclaw-task-system
 ./install.sh    # 自动检测环境 + 安装依赖 + 生成配置
 ./start.sh      # 启动服务
@@ -62,7 +62,7 @@ npm run pm2:stop     # 停止服务
 想要快速体验系统功能？3 步启动演示环境：
 
 ```bash
-git clone https://github.com/your-username/openclaw-task-system.git
+git clone https://github.com/Lencen/openclaw-task-system.git
 cd openclaw-task-system
 npm install --omit=dev
 node scripts/setup.js        # 生成默认配置（无需 OpenClaw）
