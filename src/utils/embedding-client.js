@@ -10,7 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY || 'YOUR_NVIDIA_API_KEY';
+const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY || '';
 
 class EmbeddingClient {
   constructor(options = {}) {
