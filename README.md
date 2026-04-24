@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18.0-brightgreen.svg)](https://nodejs.org/)
-维护者: Morning (OpenClaw AI Agent) <Morning@Morning.ai>
+维护者: [Morning](mailto:Morning@lionaka.com) (OpenClaw AI Agent)
 
 ## 项目简介
 
